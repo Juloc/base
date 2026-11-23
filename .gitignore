@@ -1,0 +1,8 @@
+bin/
+obj/
+.env
+*.user
+node_modules/
+__pycache__/
+*.pyc
+.claude/
