@@ -23,6 +23,7 @@ function run(me) {
       { label: t('shell.settings'), icon: 'sliders', href: '#/settings' },
     ],
     person: { name: me.user },
+    menu: [{ label: t('shell.settings'), icon: 'sliders', href: '#/settings' }],
     onSignOut: async () => { await api('POST', '/api/auth/logout'); location.reload(); },
   });
   document.body.append(frame.el);

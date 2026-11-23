@@ -57,7 +57,7 @@ sed -i 's|\.\.\\\.\.\\src\\Base\.Web\\|..\\..\\base\\src\\Base.Web\\|' "$app/$ns
 sed -i "s/--accent-hue: [0-9]*;/--accent-hue: $accent;/" "$app/wwwroot/app.css"
 
 # 3. the files at the root
-sed -e "s|samples/StartApp|src/$ns|g" -e 's|^ARG BASE_DIR=\.$|ARG BASE_DIR=base|' -e "s/StartApp/$ns/g" "$start/Dockerfile" > "$target/Dockerfile"
+sed -e 's|^#   docker build -f .*|#   docker build .|' -e "s|samples/StartApp|src/$ns|g" -e 's|^ARG BASE_DIR=\.$|ARG BASE_DIR=base|' -e "s/StartApp/$ns/g" "$start/Dockerfile" > "$target/Dockerfile"
 sed -e '/^    build:$/,/^      dockerfile: .*$/c\    build: .' "$start/docker-compose.yml" > "$target/docker-compose.yml"
 rename_in "$target/docker-compose.yml"
 cp "$BASE_ROOT/global.json" "$BASE_ROOT/.gitignore" "$BASE_ROOT/.dockerignore" "$target/"

@@ -486,6 +486,7 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
     title.textContent = view.title || '';
     document.title = view.title ? `${view.title} · ${app.name}` : app.name;
     backSlot.replaceChildren(view.back ? h('a', { class: 'btn ghost icon-only', href: view.back, 'aria-label': t('common.back') }, icon('left')) : '');
+    backSlot.hidden = !view.back;
     head.classList.toggle('has-back', !!view.back);
     actions.replaceChildren(...(view.actions || []));
     main.replaceChildren(view.body);
