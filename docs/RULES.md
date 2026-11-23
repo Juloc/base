@@ -1,0 +1,107 @@
+# The rulebook of the app family
+
+Version 0, for base 0.1.0. Every app built on the base follows these rules; the copy of this file inside an app (`base/RULES.md`) is the rulebook of the version that app was made with.
+
+How to read it:
+
+- A rule has a **number that never changes** (`AUTH-03`). Code comments, reviews and the agent rules of every repository cite the number. A rule that is dropped keeps its number as "withdrawn"; a number is never used again.
+- The level says how binding it is: **MUST** (Muss: no exception without changing the rulebook), **SHOULD** (Soll: the normal case; a deviation is written down with its reason in the app's `docs/DECISIONS.md`), **MAY** (Kann: allowed and prepared, not required).
+- *Why* is one sentence. *Test* names the test in `tests/Base.Tests` that checks the rule (`Class.Method`); a test (`RulebookTests`) makes sure every test named here exists. *Check* means `scripts/check-app.sh` looks at it in an app. A rule without either is checked by review and by looking at the running app.
+- Only rules the base itself keeps are in here. A rule is added when the second app needs it, not before.
+
+The numbers by area: CODE, DATA, AUTH, SEC, OPS, SHELL, FORM, LIST, DIALOG, COLOR, MOBILE, A11Y, I18N, KIT, TEST.
+
+## CODE: how an app is built
+
+- **CODE-01 (MUST)** An app works without any other app and without a hub; what another app adds is comfort, never a dependency. *Why:* an outage or an update elsewhere must never take an app down.
+- **CODE-02 (MUST)** .NET and ASP.NET Core, own code by default. Besides Microsoft's libraries only these packages run in an app: Npgsql (PostgreSQL) and Konscious Argon2 (password hash); later a WebAuthn library. A new package is a change to this rule. *Why:* every dependency is code nobody here has read, and an update path we do not control. *Test:* `RuleFileTests.Only_the_allowed_packages_are_referenced`
+- **CODE-03 (MUST)** Cryptography, password hashing, WebAuthn and TLS are never written by us: only the primitives of .NET and the libraries of CODE-02, used as their standards describe. *Why:* a mistake there is invisible until it is exploited. *Test:* `AccountLogicTests.Totp_matches_the_test_vectors_of_the_standard`, `AccountLogicTests.The_password_is_hashed_with_argon2id_and_a_salt`
+- **CODE-04 (SHOULD)** A failure that can be expected (wrong input, not found, not allowed) is returned as `Result` with an `Error` that has a stable code; exceptions are for bugs and outages. *Why:* the caller sees every way a call can end, and the browser can translate the code. *Test:* `CoreTests.A_result_carries_a_value_or_an_error_never_both`, `HttpTests.Errors_have_one_shape_with_a_code_and_the_wrong_fields`
+- **CODE-05 (MUST)** Code takes the time from a `TimeProvider`, never from `DateTime.Now` or `DateTimeOffset.UtcNow`. *Why:* everything with a deadline (lockout, codes, sessions) can be tested without waiting. *Test:* `RuleFileTests.No_code_asks_the_system_clock_directly`
+- **CODE-06 (MUST)** The browser side has no build step: plain CSS and JavaScript modules served as written; no npm, no bundler, no framework, nothing loaded from another server. *Why:* what is in the repository is what runs, in ten years too. *Test:* `RuleFileTests.The_browser_side_has_no_build_step_and_no_foreign_origin` *Check:* yes
+- **CODE-07 (MUST)** The base reaches an app as a copy in its folder `base/` (made by `scripts/new-app.sh`, renewed by `scripts/sync-base.sh`) with its version in the files. Nothing in `base/` is edited in the app; into the base goes only what two apps need. *Why:* every app builds alone, and one look shows which base it runs and whether it drifted. *Check:* yes (also run in CI on a freshly made app)
+
+## DATA: PostgreSQL
+
+- **DATA-01 (MUST)** Plain SQL through the helpers of `Base.Data`; values always travel as parameters, never inside the text; what belongs together is written in one transaction. No ORM. *Why:* the statement that runs is the one in the code, and injection has no place to happen. *Test:* `MigratorTests.A_failing_script_leaves_nothing_behind`
+- **DATA-02 (MUST)** The schema changes only through numbered SQL scripts (`NNN_name.sql`) that are applied at start, in order, each once and in its own transaction. An applied script is never edited (its checksum is stored and checked); a change is a new script. *Why:* every installation reaches the same schema by the same steps, without a hand on the database. *Test:* `MigratorTests.Scripts_run_in_the_order_of_their_numbers_and_only_once`, `MigratorTests.A_changed_applied_script_stops_the_start`, `MigratorTests.Two_servers_starting_together_apply_each_script_once`, `MigratorTests.A_number_used_twice_is_refused`
+- **DATA-03 (MUST)** A row that belongs to a person is read and changed only together with its owner: every statement names the `user_id` of the signed-in person. *Why:* guessing an id must never show or change somebody else's data. *Test:* `HttpTests.A_person_sees_and_changes_only_their_own_rows`
+
+## AUTH: accounts and sessions
+
+- **AUTH-01 (MUST)** A password is stored as an Argon2id hash only (64 MiB, 3 passes, a salt per password), has at least 12 characters and is never logged. *Why:* a stolen table must not give back passwords. *Test:* `AccountLogicTests.The_password_is_hashed_with_argon2id_and_a_salt`, `AccountLogicTests.The_password_policy_asks_for_length_not_for_symbols`, `AccountLogicTests.A_weaker_hash_is_accepted_and_marked_for_rehash_and_garbage_is_refused`
+- **AUTH-02 (MUST)** The session cookie is `HttpOnly` and `SameSite=Strict`; over HTTPS it is `Secure` and carries the prefix `__Host-` (this host only, never a domain cookie). Its name contains the id of the app. *Why:* no script and no other site or service can read, send or overwrite it. *Test:* `HttpTests.Https_adds_strict_transport_and_the_host_cookie`, `HttpTests.Over_plain_http_the_cookie_is_still_http_only_and_same_site`
+- **AUTH-03 (MUST)** A session is a random 256-bit value in the cookie; PostgreSQL stores only its SHA-256. *Why:* the table, a backup or a log cannot be used to sign in. *Test:* `SessionTests.Only_the_hash_of_the_token_is_stored`
+- **AUTH-04 (MUST)** Nothing of a session lives in memory or depends on a key made at start: a restart or an update signs nobody out. A session ends after 30 idle days and after 180 days at most, gets a new cookie value every 12 hours, and is one row per device that its person can see and end. *Why:* staying signed in must be boring, and a lost device must be removable. *Test:* `HttpTests.A_restart_of_the_server_signs_nobody_out`, `SessionTests.A_session_ends_after_30_idle_days_and_after_180_days_at_most`, `SessionTests.The_token_is_rotated_and_the_old_one_works_for_a_short_grace_only`, `SessionTests.Devices_are_listed_and_each_can_be_ended_by_its_person_only`, `HttpTests.Sign_out_ends_the_session_on_the_server`
+- **AUTH-05 (MUST)** Failed attempts count per account and per address and lock with a wait that doubles (from 30 seconds, at most 15 minutes); expensive checks are limited in number at the same time. *Why:* guessing must be slow whoever guesses and from wherever. *Test:* `AccountLogicTests.Failed_attempts_lock_with_a_growing_wait`, `AccountLogicTests.An_address_gets_more_attempts_than_an_account_and_old_failures_are_forgotten`, `AccountServiceTests.Wrong_attempts_lock_the_account_even_for_the_right_password`
+- **AUTH-06 (MUST)** Signing in needs a second factor. The authenticator secret (TOTP, RFC 6238) is stored encrypted with a key that is not in the database, and a code works once. *Why:* a password alone, a database dump alone or a code seen once must open nothing. *Test:* `AccountServiceTests.Nothing_in_the_database_can_be_used_to_sign_in`, `AccountServiceTests.A_one_time_code_works_once_also_for_two_requests_at_once`, `AccountLogicTests.A_secret_is_encrypted_bound_to_its_owner_and_never_twice_the_same`, `AccountLogicTests.A_code_works_in_its_step_and_the_neighbours_and_only_once`
+- **AUTH-07 (MUST)** Recovery codes are shown once, stored as hashes, and each works once. *Why:* the way back in when the phone is gone must not be a way in for anybody else. *Test:* `AccountLogicTests.Recovery_codes_are_random_and_stored_as_hashes`, `AccountServiceTests.A_recovery_code_signs_in_once`
+- **AUTH-08 (MUST)** A failed sign-in never tells whether the name, the password or the code was wrong, and an unknown name takes as long as a known one. *Why:* the answer must not help the next guess. *Test:* `AccountServiceTests.Sign_in_needs_password_and_second_factor_and_fails_the_same_way_for_every_reason`
+- **AUTH-09 (MUST)** A fresh installation has no account and no default password. The setup assistant creates the first account, and only with the setup code that the server writes to its log. *Why:* only somebody with access to the server may take a new installation. *Test:* `AccountServiceTests.The_first_account_needs_the_setup_code_from_the_log`, `AccountServiceTests.Setup_refuses_weak_input_and_guessing_the_code_locks`, `AccountLogicTests.The_setup_code_is_random_compared_loosely_and_dead_after_use`
+- **AUTH-10 (MUST)** Changing the password or the authenticator needs the current password, signs out the other devices and, like every sign-in and failed attempt, is written to the account's history; the history never holds a password, a code or a key. *Why:* a stolen session must not be able to keep the account, and its owner must be able to see what happened. *Test:* `AccountServiceTests.Changing_the_password_needs_the_current_one_and_signs_out_the_other_devices`, `AccountServiceTests.A_new_authenticator_replaces_the_old_one_and_the_recovery_codes`, `AccountServiceTests.What_happens_to_an_account_is_written_to_its_history_without_secrets`
+
+## SEC: the web side
+
+- **SEC-01 (MUST)** Every answer carries the security headers of the base (no sniffing, no referrer, no framing, same-origin policies, strict transport over HTTPS; answers of the API are never cached). *Why:* the browser's own protections are switched on by headers, and one page without them is the gap. *Test:* `HttpTests.Every_answer_carries_the_security_headers`
+- **SEC-02 (MUST)** The content policy allows only what the app itself serves: no inline script, no inline style, no event handler attributes, no other origin, no framing. Pages are written to fit it. *Why:* injected markup cannot run anything and cannot phone home. *Test:* `HttpTests.The_content_policy_allows_only_the_app_itself`, `RuleFileTests.Pages_have_no_inline_script_style_or_handlers` *Check:* yes
+- **SEC-03 (MUST)** Everything under `/api` needs a valid session, except the few public paths listed in one place (health, setup, sign-in). What needs a role checks it at the endpoint (`ctx.Require`); roles are a plain list per person. *Why:* a new endpoint is protected by default, not by remembering to protect it. *Test:* `HttpTests.The_api_needs_a_session_except_for_the_few_public_paths`, `HttpTests.Instance_settings_need_the_role_admin`
+- **SEC-04 (MUST)** A request that changes something (anything but GET and HEAD) must carry the header `X-Base: 1` and an `Origin` that matches the host; request bodies are small (64 KiB, 4 KiB for sign-in) unless a path says otherwise. GET never changes anything. *Why:* another site cannot make the browser act for the signed-in person, and nobody can fill the server's memory. *Test:* `HttpTests.A_changing_request_needs_the_own_header_and_the_own_origin`, `HttpTests.Bodies_are_small`
+- **SEC-05 (MUST)** Text from a person or a server enters a page as text (`h()` of `base.js`), never as markup: no `innerHTML`, `insertAdjacentHTML` or `eval` outside the one function that parses icons. *Why:* a note, a name or an error message must never become code. *Test:* `RuleFileTests.Markup_is_parsed_in_one_place_only` *Check:* yes
+- **SEC-06 (MUST)** Nothing private in a repository or its history: no domain names, no addresses of real networks (examples use the documentation ranges), no host names, keys, tokens, passwords, `.env` files or personal paths. *Why:* a repository is copied, shared and read by tools; what was pushed once stays. *Test:* `RuleFileTests.Nothing_private_is_in_the_repository`
+
+## OPS: running an app
+
+- **OPS-01 (MUST)** An app is one container plus one PostgreSQL, with one volume that holds everything worth keeping (a one-shot step may prepare that volume). The container runs as an ordinary user without capabilities, and the port is published to the own machine only. *Why:* one thing to start, one thing to back up, and nothing reachable that was not opened on purpose. *Test:* `RuleFileTests.The_compose_file_has_one_app_one_database_one_volume_and_no_variables` *Check:* yes
+- **OPS-02 (MUST)** The Compose file has no variables, no `.env` file and no secret: `docker compose up` works on a fresh machine. The database password is made at the first start and lives in the volume. *Why:* an installation that needs a file edited first is an installation that is done wrong half the time. *Test:* `RuleFileTests.The_compose_file_has_one_app_one_database_one_volume_and_no_variables` *Check:* yes
+- **OPS-03 (MUST)** What can be configured is a setting in the app, stored in the database: per person or for the installation, each with a rule on the server that checks the value; unknown keys are refused. From outside an app reads only `BASE_DB`, `BASE_DB_PASSWORD_FILE` and `BASE_DATA` (three more exist for tests and for working on the look: `BASE_SECRET_KEY`, `BASE_SETUP_CODE`, `BASE_UI_DIR`). *Why:* settings are found in one place, apply without a restart, and cannot be set to nonsense. *Test:* `HttpTests.Settings_accept_only_known_keys_and_checked_values`, `RuleFileTests.Only_the_documented_environment_settings_exist`
+- **OPS-04 (MUST)** `GET /api/health` answers without a session with the id of the app, its version, the version of the base and whether the database answers (503 when not); the container's own health check asks it. *Why:* a person, a proxy and a hub can all tell from outside what runs and whether it works. *Test:* `HttpTests.Health_tells_the_versions_and_whether_the_database_answers`
+- **OPS-05 (MUST)** Versions follow SemVer and stand in exactly one place (the base: `VERSION`; an app: `Directory.Build.props`); every release has an entry in `CHANGELOG.md`. *Why:* "which version runs there" has one answer, and an update says what it changes. *Test:* `RuleFileTests.The_version_is_semver_and_has_a_changelog_entry`
+- **OPS-06 (MUST)** Workflows use actions pinned by commit hash and ask for the fewest permissions. *Why:* a moved tag must not be able to change what builds our code. *Test:* `RuleFileTests.Actions_are_pinned_by_commit`
+
+## SHELL: the frame of an app
+
+- **SHELL-01 (MUST)** Every app uses the shell of the base (`shell()`): on a phone a head and a bar of at most five places at the bottom, on a wide screen the menu on the left; a page has one title (in the head and in the tab) and deep pages a way back. The person menu (settings, light or dark, sign out) is the same everywhere. *Why:* whoever knows one app of the family finds their way in all of them.
+
+## FORM: forms
+
+- **FORM-01 (MUST)** Every control has a visible label (`field()`); a placeholder is never the label. A button says what it does. *Why:* a form must be readable while and after it is filled in, by eyes and by a screen reader.
+- **FORM-02 (MUST)** The server checks every input (`Validator`) and answers with all wrong fields at once; the form shows each error in words at its field and puts the focus on the first one (`submit()`, `showErrors()`). *Why:* nobody should have to send a form three times to learn three things. *Test:* `CoreTests.The_validator_reports_every_wrong_field_at_once`, `HttpTests.Errors_have_one_shape_with_a_code_and_the_wrong_fields`
+
+## LIST: lists
+
+- **LIST-01 (MUST)** A list comes in pages: the server clamps the size and continues after a cursor (the key of the last row), never by offset. *Why:* a list stays fast and correct when it grows and while rows are added. *Test:* `CoreTests.Limits_are_clamped_and_never_trusted`, `CoreTests.A_page_knows_whether_there_is_more`, `HttpTests.A_list_comes_in_pages_newest_first`
+- **LIST-02 (MUST)** An empty list says what belongs here and offers the first step (`emptyState()`); loading and failure have their own look. *Why:* an empty white page reads as "broken".
+
+## DIALOG: dialogs
+
+- **DIALOG-01 (MUST)** A dialog is opened with `openDialog()`: a window that does not block the page on a wide screen, a sheet from below on a phone; it takes the focus, gives it back, and Escape closes it. No `alert`, `confirm`, `prompt` or modal dialog. Before something that cannot be undone the app asks (`confirmDialog()`), and the button names the action. *Why:* a dialog must never trap a person or hide what they need to look up. *Test:* `RuleFileTests.No_blocking_dialogs`
+
+## COLOR: colours
+
+- **COLOR-01 (MUST)** Colours come from the tokens of the base only. An app sets its own colour with exactly one variable, `--accent-hue`, and writes no colour value of its own. Light and dark both work; the person chooses (system, light, dark). *Why:* the family looks like one family, and a new colour cannot break contrast. *Test:* `RuleFileTests.An_app_sets_its_colour_with_one_variable`
+- **COLOR-02 (MUST)** Every pair of colours that carries text reaches a contrast of 4.5:1, borders of controls 3:1 (WCAG AA), in light and in dark and for every accent hue. *Why:* readable for tired eyes, in sunlight and on a bad screen. *Test:* `ContrastTests.Every_declared_pair_reaches_its_contrast_for_every_hue`
+
+## MOBILE: phones
+
+- **MOBILE-01 (MUST)** Everything a finger presses is at least 44 px high and wide. *Why:* smaller targets are missed. *Test:* `ContrastTests.The_touch_target_is_at_least_44_px`
+- **MOBILE-02 (MUST)** A page is designed for the phone first and gains on wide screens; nothing scrolls sideways (a table turns into cards). Every page is looked at in 375 px width before it is called done. *Why:* the phone is where the apps are used most, and it is the harder case.
+
+## A11Y: accessibility
+
+- **A11Y-01 (MUST)** A button that shows only an icon has an `aria-label`; colour is never the only signal (a state also has a word or an icon). *Why:* not everybody sees the icon or the colour.
+- **A11Y-02 (MUST)** Everything works with the keyboard, the focus is always visible, and motion stops for people who ask their device for less of it (`prefers-reduced-motion`). *Why:* not everybody uses a mouse, and for some people motion is a real problem. *Test:* `RuleFileTests.Focus_is_visible_and_motion_can_be_switched_off`
+
+## I18N: languages
+
+- **I18N-01 (MUST)** Every text a person sees goes through `t()`; German and English have exactly the same keys, German is the default. Dates and numbers go through the format helpers. (The catalogue is for developers and English only.) *Why:* a text typed into the code is a text that is missing in the other language. *Test:* `RuleFileTests.German_and_English_have_the_same_keys`, `RuleFileTests.Every_key_used_in_the_scripts_exists` *Check:* yes
+- **I18N-02 (MUST)** The server answers a failure with a stable code (and an English message for logs); the browser turns the code into the person's language, and every code the server can send has a text. *Why:* the server does not need to know who reads the answer. *Test:* `RuleFileTests.Every_error_code_of_the_server_has_a_text`
+
+## KIT: the parts of the look
+
+- **KIT-01 (MUST)** Icons come from the one icon file of the base (`icon()`): own drawings in one style, no brand logos, no icon font, no SVG pasted into a page. *Why:* one family of icons, and no licence to track.
+- **KIT-02 (MUST)** Every part of the look has an entry in the catalogue (`/base/catalog.html`) with a living example and its code; a new part arrives together with its entry. Before building something new, look there. *Why:* what cannot be found is built twice. *Test:* `RuleFileTests.Every_part_of_the_look_is_in_the_catalogue`
+
+## TEST: tests and checking
+
+- **TEST-01 (MUST)** Automated tests are for what protects (sign-in, sessions, the guard, migrations) and for pure logic; never for how something looks. Database tests run against a real PostgreSQL, each in its own schema (`BASE_TEST_DB`, `scripts/test.sh`). A flaky test is fixed or deleted, not retried. *Why:* few tests that mean something are run and believed.
+- **TEST-02 (MUST)** Work is checked by running it: start the app, look at it in the browser (phone width and wide, light and dark), and say plainly what was not checked. *Why:* green tests do not show a broken page.

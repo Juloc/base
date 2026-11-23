@@ -59,7 +59,7 @@ public static class Db
     }
 
     /// <summary>
-    /// Runs the work in one transaction: all of it is saved, or (when it throws) none of it (DATA-03).
+    /// Runs the work in one transaction: all of it is saved, or (when it throws) none of it (DATA-01).
     /// Use the given connection and transaction for every statement inside.
     /// </summary>
     public static async Task<T> InTransactionAsync<T>(this NpgsqlDataSource db, Func<NpgsqlConnection, NpgsqlTransaction, Task<T>> work, CancellationToken ct = default)

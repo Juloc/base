@@ -26,7 +26,7 @@ const demos = {
       ],
     });
   },
-  async confirm() {
+  async ask() {
     const yes = await confirmDialog({ title: 'Delete this entry?', text: '“Buy milk” is deleted for good.', confirmLabel: 'Delete', danger: true });
     toast(yes ? 'Deleted' : 'Kept');
   },

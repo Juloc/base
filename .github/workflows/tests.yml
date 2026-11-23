@@ -1,0 +1,63 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A new push to the same pull request cancels the old run. Pushes to main all run to the end.
+concurrency:
+  group: tests-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    # PostgreSQL for the database tests (each test makes its own schema, tests/Base.Tests/TestKit.cs). A throwaway account for this run only.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: base
+          POSTGRES_USER: base
+          POSTGRES_PASSWORD: ci-throwaway
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U base -d base"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      BASE_TEST_DB: Host=127.0.0.1;Port=5432;Database=base;Username=base;Password=ci-throwaway
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build base.slnx
+      - name: Tests (with database)
+        run: dotnet test --project tests/Base.Tests/Base.Tests.csproj --no-build
+
+  # The promise of the base: an app made by the script builds, is clean against the rules, and its image builds.
+  new-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+      - name: Make an app
+        run: scripts/new-app.sh ci-probe "$RUNNER_TEMP/ci-probe" --accent 152
+      - name: The made app builds
+        run: dotnet build "$RUNNER_TEMP/ci-probe/CiProbe.slnx"
+      - name: The made app is clean
+        run: scripts/check-app.sh "$RUNNER_TEMP/ci-probe"
+      - name: Its image builds
+        run: docker build -t ci-probe:ci "$RUNNER_TEMP/ci-probe"
+      - name: The image of the start app builds
+        run: docker build -f samples/StartApp/Dockerfile -t startapp:ci .

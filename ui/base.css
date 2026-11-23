@@ -2,7 +2,7 @@
  * The look of every app of the family: one stylesheet, no build step (CODE-06).
  * Order: reset, type, layout helpers, shell, controls, lists and tables, cards, dialog, menu, toast, states, sign-in.
  * Rules: colours and sizes only from tokens.css; phone first, wide screens add to it (MOBILE-02); every control is at least
- * --control-h high (44 px for a finger, MOBILE-01); focus is always visible (A11Y-02); motion stops for people who ask for it (A11Y-04).
+ * --control-h high (44 px for a finger, MOBILE-01); focus is always visible and motion stops for people who ask for it (A11Y-02).
  * The catalogue (/base/catalog.html) shows every part with its markup.
  * ===================================================================== */
 @import url("tokens.css");
@@ -233,7 +233,7 @@ a.row:hover, button.row:hover, .row.link:hover { background: var(--surface-2); }
 .row.done .row-title { color: var(--text-2); text-decoration: line-through; }
 @media (min-width: 900px) { .row { padding-inline: var(--s5); } }
 
-/* ---------- table: rows on wide screens; with the class "cards" each row becomes a small card on a phone (LIST-03) ---------- */
+/* ---------- table: rows on wide screens; with the class "cards" each row becomes a small card on a phone (MOBILE-02) ---------- */
 .table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: var(--text-m); }
 .table th { text-align: left; font: 600 var(--text-s)/1.4 var(--font); color: var(--text-2); padding: var(--s2) var(--s4); white-space: nowrap; }

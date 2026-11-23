@@ -12,7 +12,7 @@
 </head>
 <body>
 <!--
-  The living catalogue of the look (docs/RULES.md, CAT-01): every part of ui/ with an example and its code.
+  The living catalogue of the look (docs/RULES.md, KIT-02): every part of ui/ with an example and its code.
   The code next to an example is read from the example itself, so the two cannot drift apart.
   A new part gets its entry here in the same commit. This page is for the people (and agents) who build apps; it is English only.
   Markup: <section class="cat-item" id="..."> <h2> <p> <div class="cat-demo">the example</div> </section>
@@ -186,7 +186,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="tables">
         <h2 class="h1">Table</h2>
-        <p class="muted">For data with columns. With <code class="mono">.cards</code> and a <code class="mono">data-label</code> on each cell, every row turns into a small card on a phone instead of scrolling sideways (LIST-03).</p>
+        <p class="muted">For data with columns. With <code class="mono">.cards</code> and a <code class="mono">data-label</code> on each cell, every row turns into a small card on a phone instead of scrolling sideways (MOBILE-02).</p>
         <div class="cat-demo">
           <div class="card flush"><div class="table-wrap">
             <table class="table cards">
@@ -232,9 +232,9 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="dialogs">
         <h2 class="h1">Dialog</h2>
-        <p class="muted">A window that does not block the page: it can be moved by its title, the page behind stays usable; on a phone it is a sheet from below (DIALOG-01). Escape closes it and the focus returns (A11Y-03). Before something that cannot be undone, ask, and name the action on the button (DIALOG-02).</p>
+        <p class="muted">A window that does not block the page: it can be moved by its title, the page behind stays usable; on a phone it is a sheet from below (DIALOG-01). Escape closes it and the focus returns (DIALOG-01). Before something that cannot be undone, ask, and name the action on the button (DIALOG-01).</p>
         <div class="cat-demo" data-run="dialog"></div>
-        <div class="cat-demo" data-run="confirm"></div>
+        <div class="cat-demo" data-run="ask"></div>
       </section>
 
       <section class="cat-item" id="menus">
@@ -270,7 +270,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="shell">
         <h2 class="h1">Shell</h2>
-        <p class="muted">The frame of every app (SHELL-01): on a phone a head and a bar of up to five places at the bottom, thought of first (MOBILE-02); on a wide screen the menu on the left. The person menu (settings, light or dark, sign out) is the same everywhere (SHELL-02). <a href="/">Open the app</a> to see it live.</p>
+        <p class="muted">The frame of every app (SHELL-01): on a phone a head and a bar of up to five places at the bottom, thought of first (MOBILE-02); on a wide screen the menu on the left. The person menu (settings, light or dark, sign out) is the same everywhere (SHELL-01). <a href="/">Open the app</a> to see it live.</p>
         <div class="cat-demo" data-nocode>
           <div class="shell-sketch">
             <div class="sketch sketch-phone"><div class="sk-head">head · title · person</div><div class="sk-main">page</div><div class="sk-tabs">places</div></div>
@@ -290,7 +290,7 @@ router({ '/': listPage, '/notes/:id': notePage, '/settings': settingsPage }, fra
 
       <section class="cat-item" id="icons">
         <h2 class="h1">Icons</h2>
-        <p class="muted">One file, one style (ICON-01): <code class="mono">icon('name')</code> in JavaScript, <code class="mono">&lt;span data-icon="name"&gt;</code> in markup. An icon alone on a button needs an <code class="mono">aria-label</code> (A11Y-01).</p>
+        <p class="muted">One file, one style (KIT-01): <code class="mono">icon('name')</code> in JavaScript, <code class="mono">&lt;span data-icon="name"&gt;</code> in markup. An icon alone on a button needs an <code class="mono">aria-label</code> (A11Y-01).</p>
         <div class="cat-demo on-surface" data-nocode><div class="icon-grid" id="cat-icons"></div></div>
       </section>
 

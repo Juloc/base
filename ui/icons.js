@@ -1,5 +1,5 @@
 /* =====================================================================
- * The one icon file of the family (docs/RULES.md, ICON-01): simple stroke icons on a 24 px grid, drawn with currentColor.
+ * The one icon file of the family (docs/RULES.md, KIT-01): simple stroke icons on a 24 px grid, drawn with currentColor.
  * Most come from JulOS (own drawings; the older everyday ones follow the style of the Feather set, MIT, see THIRD-PARTY.md),
  * the rest were drawn for the base in the same style. No brand logos.
  * Shapes with an area carry class="f" (the style "duo" tints them), filled dots class="d".

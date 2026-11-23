@@ -6,7 +6,7 @@ namespace Base.Accounts;
 
 public sealed record UserRow(Guid Id, string Name, string PasswordHash, string TotpSecret, bool TotpConfirmed, long TotpLastStep, string[] Roles);
 
-/// <summary>Names of the roles the base itself knows. A role is a plain word in a person's list; an app may add its own (AUTH-11).</summary>
+/// <summary>Names of the roles the base itself knows. A role is a plain word in a person's list; an app may add its own (SEC-03).</summary>
 public static class Roles
 {
     public const string Admin = "admin";

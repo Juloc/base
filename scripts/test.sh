@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the tests. The database tests need a PostgreSQL: with BASE_TEST_DB set, that one is used; otherwise a throwaway
-# PostgreSQL is started in Docker on a free local port and removed again at the end (TEST-02).
+# PostgreSQL is started in Docker on a free local port and removed again at the end (TEST-01).
 # Usage: scripts/test.sh [arguments for dotnet test]
 set -euo pipefail
 cd "$(dirname "$0")/.."

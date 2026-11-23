@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/{{NS}}/{{NS}}.csproj" />
+  </Folder>
+  <Folder Name="/base/">
+    <Project Path="base/src/Base.Core/Base.Core.csproj" />
+    <Project Path="base/src/Base.Data/Base.Data.csproj" />
+    <Project Path="base/src/Base.Accounts/Base.Accounts.csproj" />
+    <Project Path="base/src/Base.Web/Base.Web.csproj" />
+  </Folder>
+</Solution>

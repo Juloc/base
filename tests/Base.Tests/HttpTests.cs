@@ -263,7 +263,7 @@ public class HttpTests
     {
         var trust = new ProxyTrust();
         Assert.True(trust.Unset);
-        Assert.True(trust.IsTrusted(IPAddress.Parse("172.18.0.1")));               // not set: every private network
+        Assert.True(trust.IsTrusted(IPAddress.Parse("10.0.0.1")));               // not set: every private network
         Assert.True(trust.IsTrusted(IPAddress.Loopback));
         Assert.False(trust.IsTrusted(IPAddress.Parse("203.0.113.9")));              // never the open internet
         Assert.False(trust.IsTrusted(null));
@@ -273,7 +273,7 @@ public class HttpTests
         Assert.True(trust.IsTrusted(IPAddress.Parse("192.0.2.10")));
         Assert.True(trust.IsTrusted(IPAddress.Parse("::ffff:192.0.2.10")));
         Assert.True(trust.IsTrusted(IPAddress.Parse("2001:db8::1")));
-        Assert.False(trust.IsTrusted(IPAddress.Parse("172.18.0.1")));
+        Assert.False(trust.IsTrusted(IPAddress.Parse("10.0.0.1")));
         Assert.False(trust.IsTrusted(IPAddress.Parse("192.0.2.11")));
 
         trust.Apply("[]");

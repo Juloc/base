@@ -178,7 +178,7 @@ const FOCUSABLE = 'input:not([type=hidden]):not([disabled]), select:not([disable
  *  actions  buttons at the bottom: { label, kind: 'primary' | 'danger' | 'ghost', run(dialog) }. run may be async; while it runs the button is busy.
  *           The dialog closes after run unless it returns false or throws. An action without run just closes.
  *  onClose  called once when it is closed, however that happened
- * Escape and the close button close it; the focus goes into the dialog and back to where it was (A11Y-03).
+ * Escape and the close button close it; the focus goes into the dialog and back to where it was (DIALOG-01).
  * Returns { el, body, close() }.
  */
 export function openDialog({ title, body, actions = [], onClose, wide = false }) {
@@ -238,7 +238,7 @@ function makeMovable(el, handle) {
   });
 }
 
-/** Asks before something that cannot be undone (DIALOG-02). Resolves to true when the person confirms. The button says what happens, never just "OK". */
+/** Asks before something that cannot be undone (DIALOG-01). Resolves to true when the person confirms. The button says what happens, never just "OK". */
 export function confirmDialog({ title, text, confirmLabel, danger = false }) {
   return new Promise((resolve) => {
     let answer = false;

@@ -16,7 +16,8 @@ namespace Base.Web;
 ///   BASE_DB                 connection to PostgreSQL (required)
 ///   BASE_DB_PASSWORD_FILE   file with the database password (the Compose file of every app uses it)
 ///   BASE_DATA               folder for the server's own key file (default: data)
-/// Everything else is a setting in the app.
+/// Everything else is a setting in the app. Only for tests and for working on the look: BASE_SECRET_KEY, BASE_SETUP_CODE (fixed values instead of
+/// generated ones) and BASE_UI_DIR (serve ui/ from disk).
 /// </summary>
 public static class BaseApp
 {
