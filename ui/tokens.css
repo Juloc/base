@@ -1,0 +1,120 @@
+/* =====================================================================
+ * Tokens of the look: colours, type, spacing, radii, shadows, motion. Everything else in base.css uses only these.
+ *
+ * ONE variable gives an app its own colour (COLOR-01): --accent-hue, an angle on the colour wheel (0 to 360).
+ *   :root { --accent-hue: 152; }      in the app's own app.css, nothing else
+ * The accent and a faint tint of every surface follow it. Light and dark come from light-dark(): the first value is light, the second dark.
+ * The browser picks by color-scheme; <html data-scheme="light|dark"> (set by boot.js from the person's choice) overrides the device.
+ *
+ * Colours are written as oklch(lightness chroma hue). Lightness is what makes contrast, and it is fixed here per role, so every hue passes.
+ * The lines "@contrast A B N" below are read by a test (ContrastTests): colour A on colour B reaches at least N:1 in light and in dark,
+ * for every accent hue (COLOR-02). Add a line when you add a pair that carries text or a control.
+ *
+ * @contrast text bg 4.5
+ * @contrast text surface 4.5
+ * @contrast text surface-2 4.5
+ * @contrast text surface-3 4.5
+ * @contrast text-2 bg 4.5
+ * @contrast text-2 surface 4.5
+ * @contrast text-2 surface-2 4.5
+ * @contrast text-2 surface-3 4.5
+ * @contrast accent bg 4.5
+ * @contrast accent surface 4.5
+ * @contrast accent surface-2 4.5
+ * @contrast on-accent accent 4.5
+ * @contrast on-accent-soft accent-soft 4.5
+ * @contrast danger bg 4.5
+ * @contrast danger surface 4.5
+ * @contrast danger surface-2 4.5
+ * @contrast on-danger danger 4.5
+ * @contrast on-danger-soft danger-soft 4.5
+ * @contrast ok bg 4.5
+ * @contrast ok surface 4.5
+ * @contrast on-ok-soft ok-soft 4.5
+ * @contrast warn bg 4.5
+ * @contrast warn surface 4.5
+ * @contrast on-warn-soft warn-soft 4.5
+ * @contrast line-strong bg 3
+ * @contrast line-strong surface 3
+ * @contrast line-strong surface-2 3
+ * @contrast accent surface-3 3
+ * ===================================================================== */
+:root {
+  color-scheme: light dark;
+  --accent-hue: 265;
+
+  /* ---- surfaces and text ---- */
+  --bg: light-dark(oklch(0.975 0.004 var(--accent-hue)), oklch(0.165 0.008 var(--accent-hue)));
+  --surface: light-dark(oklch(1 0 var(--accent-hue)), oklch(0.205 0.010 var(--accent-hue)));
+  --surface-2: light-dark(oklch(0.955 0.007 var(--accent-hue)), oklch(0.245 0.012 var(--accent-hue)));
+  --surface-3: light-dark(oklch(0.925 0.010 var(--accent-hue)), oklch(0.29 0.014 var(--accent-hue)));
+  --text: light-dark(oklch(0.22 0.015 var(--accent-hue)), oklch(0.94 0.006 var(--accent-hue)));
+  --text-2: light-dark(oklch(0.44 0.02 var(--accent-hue)), oklch(0.76 0.015 var(--accent-hue)));
+  --line: light-dark(oklch(0.89 0.008 var(--accent-hue)), oklch(0.33 0.014 var(--accent-hue)));
+  --line-strong: light-dark(oklch(0.60 0.02 var(--accent-hue)), oklch(0.58 0.02 var(--accent-hue)));
+
+  /* ---- the accent of the app ---- */
+  --accent: light-dark(oklch(0.48 0.15 var(--accent-hue)), oklch(0.80 0.10 var(--accent-hue)));
+  --on-accent: light-dark(oklch(0.99 0.01 var(--accent-hue)), oklch(0.20 0.05 var(--accent-hue)));
+  --accent-soft: light-dark(oklch(0.93 0.035 var(--accent-hue)), oklch(0.30 0.05 var(--accent-hue)));
+  --on-accent-soft: light-dark(oklch(0.32 0.10 var(--accent-hue)), oklch(0.92 0.04 var(--accent-hue)));
+
+  /* ---- states: the same in every app ---- */
+  --danger: light-dark(oklch(0.52 0.19 27), oklch(0.76 0.13 25));
+  --on-danger: light-dark(oklch(0.99 0.01 27), oklch(0.20 0.05 25));
+  --danger-soft: light-dark(oklch(0.94 0.03 27), oklch(0.30 0.06 25));
+  --on-danger-soft: light-dark(oklch(0.36 0.13 27), oklch(0.90 0.05 25));
+  --ok: light-dark(oklch(0.47 0.12 150), oklch(0.78 0.14 150));
+  --ok-soft: light-dark(oklch(0.94 0.04 150), oklch(0.30 0.05 150));
+  --on-ok-soft: light-dark(oklch(0.33 0.09 150), oklch(0.90 0.07 150));
+  --warn: light-dark(oklch(0.50 0.11 70), oklch(0.82 0.13 80));
+  --warn-soft: light-dark(oklch(0.95 0.05 85), oklch(0.31 0.05 80));
+  --on-warn-soft: light-dark(oklch(0.36 0.08 70), oklch(0.91 0.07 85));
+
+  /* ---- type: the system font, no web fonts ---- */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-s: 0.8125rem;
+  --text-m: 0.9375rem;
+  --text-l: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-xxl: 2rem;
+
+  /* ---- spacing: steps of 4 px ---- */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+
+  /* ---- radii ---- */
+  --r-s: 6px;
+  --r-m: 10px;
+  --r-l: 16px;
+  --r-full: 999px;
+
+  /* ---- sizes ---- */
+  --touch: 44px;                 /* the smallest target for a finger (MOBILE-01) */
+  --control-h: var(--touch);     /* height of buttons and fields; smaller only with a mouse on a wide screen (below) */
+  --side-w: 256px;
+  --head-h: 56px;
+  --tabs-h: 60px;
+  --content-w: 920px;
+
+  /* ---- shadows and motion ---- */
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.06), 0 1px 3px oklch(0 0 0 / 0.08);
+  --shadow-2: 0 4px 10px oklch(0 0 0 / 0.08), 0 16px 40px oklch(0 0 0 / 0.16);
+  --dur: 160ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root[data-scheme="light"] { color-scheme: light; }
+:root[data-scheme="dark"] { color-scheme: dark; }
+
+/* a mouse hits smaller targets: on a wide screen that is not driven by a finger the controls are more compact */
+@media (min-width: 900px) and (not (pointer: coarse)) {
+  :root { --control-h: 36px; }
+}
