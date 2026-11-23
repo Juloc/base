@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Base.Core/Base.Core.csproj" />
+    <Project Path="src/Base.Data/Base.Data.csproj" />
+    <Project Path="src/Base.Accounts/Base.Accounts.csproj" />
+    <Project Path="src/Base.Web/Base.Web.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/StartApp/StartApp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Base.Tests/Base.Tests.csproj" />
+  </Folder>
+</Solution>

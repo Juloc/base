@@ -6,3 +6,6 @@ node_modules/
 __pycache__/
 *.pyc
 .claude/
+TestResults/
+# local data folder of an app started with dotnet run (secret.key lives there)
+data/
