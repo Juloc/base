@@ -222,6 +222,7 @@ export default {
   'history.person.deleted': 'Deleted',
   'history.hub.created': 'Created through the centre',
   'history.hub.login': 'Signed in through the centre',
+  'history.hub.role_kept': 'Role of the centre not applied (last administrator)',
   'history.hub.refused': 'Sign-in through the centre refused',
   'history.hub.logout': 'Signed out by the centre',
   'history.hub.settings': 'Centre settings changed',

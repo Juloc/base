@@ -31,7 +31,7 @@ public sealed class AccountService(UserStore users, SessionStore sessions, Passw
     private static Error Field(string field, string code, string message) =>
         new(ErrorKind.Invalid, code, message, new Dictionary<string, string> { [field] = code });
 
-    public async Task<bool> SetupNeededAsync(CancellationToken ct = default) => !await users.AnyConfirmedAsync(ct);
+    public async Task<bool> SetupNeededAsync(CancellationToken ct = default) => !await users.AnyCanSignInAsync(ct);
 
     // ---- First setup: the first account, protected by the code from the server log (AUTH-09) ----
 

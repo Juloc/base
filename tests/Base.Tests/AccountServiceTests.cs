@@ -201,4 +201,54 @@ public class AccountServiceTests
         Assert.DoesNotContain("password 123", all);
         Assert.Null(await a.Sessions.ResolveAsync(token, rotate: false));
     }
+
+    [Fact]
+    public async Task The_last_administrator_keeps_the_role_when_the_hub_says_otherwise()
+    {
+        await using var db = await TestDb.CreateAsync();
+        var a = new TestAccounts(db);
+        var first = await a.Hub.SignInAsync(new HubIdentity("sub-anna", "sid-1", "anna", "admin"), TestAccounts.Ip, "test agent", TestContext.Current.CancellationToken);
+        Assert.True(first.Ok);
+
+        // the only active administrator: the hub says member, the sign-in works, the role stays
+        var again = await a.Hub.SignInAsync(new HubIdentity("sub-anna", "sid-2", "anna", "member"), TestAccounts.Ip, "test agent", TestContext.Current.CancellationToken);
+        Assert.True(again.Ok);
+        Assert.Equal(["admin"], again.Value.Roles);
+        Assert.Equal("admin", (await a.Users.FindByHubSubAsync("sub-anna", TestContext.Current.CancellationToken))!.Role);
+        Assert.Equal(1L, await db.ScalarAsync<long>("select count(*) from account_audit where event = 'hub.role_kept' and user_name = 'anna'"));
+        Assert.Equal(0L, await db.ScalarAsync<long>("select count(*) from account_audit where event = 'person.role'"));
+
+        // with a second administrator the role does change
+        await a.Hub.SignInAsync(new HubIdentity("sub-bert", "sid-3", "bert", "admin"), TestAccounts.Ip, "test agent", TestContext.Current.CancellationToken);
+        var changed = await a.Hub.SignInAsync(new HubIdentity("sub-anna", "sid-4", "anna", "member"), TestAccounts.Ip, "test agent", TestContext.Current.CancellationToken);
+        Assert.Equal(["member"], changed.Value.Roles);
+        Assert.Equal("member", (await a.Users.FindByHubSubAsync("sub-anna", TestContext.Current.CancellationToken))!.Role);
+        Assert.Equal(1L, await db.ScalarAsync<long>("select count(*) from account_audit where event = 'person.role' and user_name = 'anna'"));
+
+        // and now bert is the last one
+        var kept = await a.Hub.SignInAsync(new HubIdentity("sub-bert", "sid-5", "bert", "viewer"), TestAccounts.Ip, "test agent", TestContext.Current.CancellationToken);
+        Assert.Equal(["admin"], kept.Value.Roles);
+    }
+
+    [Fact]
+    public async Task Setup_stays_closed_while_a_person_of_the_hub_is_the_only_account()
+    {
+        await using var db = await TestDb.CreateAsync();
+        var a = new TestAccounts(db);
+        Assert.True(await a.Service.SetupNeededAsync());
+
+        // a begun setup (no confirmed authenticator yet) does not close it
+        var begin = await a.Service.BeginSetupAsync(a.SetupCode.Value, "jul", TestAccounts.Password, TestAccounts.Ip);
+        Assert.True(begin.Ok);
+        Assert.True(await a.Service.SetupNeededAsync());
+        await db.ExecAsync("delete from users");
+
+        // a person of the hub alone is an account that can sign in
+        Assert.True((await a.Hub.SignInAsync(new HubIdentity("sub-anna", "sid-1", "anna", "admin"), TestAccounts.Ip, "test agent")).Ok);
+        Assert.False(await a.Service.SetupNeededAsync());
+        var refused = await a.Service.BeginSetupAsync(a.SetupCode.Value, "eve", TestAccounts.Password, TestAccounts.Ip);
+        Assert.Equal("setup.done", refused.Error!.Code);
+        Assert.Equal(1L, await db.ScalarAsync<long>("select count(*) from users"));
+    }
 }
+

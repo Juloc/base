@@ -35,8 +35,15 @@ public sealed class HubAccounts(UserStore users, SessionStore sessions, AuditSto
         }
         else if (user.Role != who.Role)
         {
-            await users.SetRolesAsync(user.Id, [who.Role!], ct);
-            await AuditAsync(user.Name, "person.role", ip, $"by the central sign-in, {user.Role} to {who.Role}");
+            // the same protection as for an administrator's change (AUTH-12): the last active administrator keeps the role, the sign-in still succeeds
+            if (await users.TrySetRoleAsync(user.Id, who.Role!, ct))
+                await AuditAsync(user.Name, "person.role", ip, $"by the central sign-in, {user.Role} to {who.Role}");
+            else
+            {
+                await AuditAsync(user.Name, "hub.role_kept", ip, $"the central sign-in said {who.Role}, not applied: the last administrator keeps the role {user.Role}");
+                log.LogWarning("Central sign-in: the role {Role} for {User} was not applied, the last administrator keeps {Kept}", Truncate(who.Role), user.Name, user.Role);
+                who = who with { Role = user.Role };
+            }
         }
         var token = await sessions.CreateAsync(user.Id, ip, userAgent, ct, hubSid: who.Sid, hubHint: who.Hint);
         await AuditAsync(user.Name, "hub.login", ip);

@@ -223,6 +223,7 @@ export default {
   'history.person.deleted': 'Gelöscht',
   'history.hub.created': 'Über die Zentrale angelegt',
   'history.hub.login': 'Über die Zentrale angemeldet',
+  'history.hub.role_kept': 'Rolle der Zentrale nicht übernommen (letzte Administration)',
   'history.hub.refused': 'Anmeldung über die Zentrale abgelehnt',
   'history.hub.logout': 'Von der Zentrale abgemeldet',
   'history.hub.settings': 'Zentrale eingestellt',

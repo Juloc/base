@@ -47,8 +47,9 @@ public sealed class UserStore(NpgsqlDataSource db, SecretBox box)
     private UserRow Read(NpgsqlDataReader r) =>
         new(r.GetGuid(0), r.GetString(1), r.GetString(2), Open(r.GetGuid(0), r.GetString(3)), r.GetBoolean(4), r.GetInt64(5), r.GetFieldValue<string[]>(6), r.GetString(7), r.TextOrNull(8));
 
-    public async Task<bool> AnyConfirmedAsync(CancellationToken ct = default) =>
-        await db.ScalarAsync<bool>("select exists (select 1 from users where totp_confirmed)", ct);
+    /// <summary>True when an account exists that can sign in at all: one whose own sign-in is confirmed, or a person of the central sign-in. The first setup is open only while there is none (AUTH-09).</summary>
+    public async Task<bool> AnyCanSignInAsync(CancellationToken ct = default) =>
+        await db.ScalarAsync<bool>("select exists (select 1 from users where totp_confirmed or hub_sub is not null)", ct);
 
     public Task<UserRow?> FindByNameAsync(string name, CancellationToken ct = default) =>
         db.FirstAsync($"select {Columns} from users where lower(name) = lower($1)", Read, ct, name);
@@ -89,6 +90,15 @@ public sealed class UserStore(NpgsqlDataSource db, SecretBox box)
     public Task ConfirmAsync(Guid id, CancellationToken ct = default) => db.ExecAsync("update users set totp_confirmed = true where id = $1", ct, id);
 
     public Task SetRolesAsync(Guid id, string[] roles, CancellationToken ct = default) => db.ExecAsync("update users set roles = $2 where id = $1", ct, id, roles);
+
+    /// <summary>
+    /// Changes the one role of a person, unless that would leave the app without an active administrator (AUTH-12): the one place for every way a role changes
+    /// (an administrator's change and the sign-in through the hub). The check and the change are one statement. False: the role was not changed.
+    /// </summary>
+    public async Task<bool> TrySetRoleAsync(Guid id, string role, CancellationToken ct = default) =>
+        await db.ExecAsync(
+            "update users set roles = $2 where id = $1 and not (state = 'active' and 'admin' = any(roles) and (totp_confirmed or hub_sub is not null) and $3 <> 'admin' " +
+            "and (select count(*) from users where state = 'active' and 'admin' = any(roles) and (totp_confirmed or hub_sub is not null)) <= 1)", ct, id, new[] { role }, role) == 1;
 
     public Task<UserRow?> FindByHubSubAsync(string sub, CancellationToken ct = default) =>
         db.FirstAsync($"select {Columns} from users where hub_sub = $1", Read, ct, sub);

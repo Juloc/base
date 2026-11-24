@@ -67,8 +67,7 @@ public sealed class PeopleService(UserStore users, SessionStore sessions, Invite
         {
             if (!roles.Knows(role)) return Field("role", "people.role", "This role does not exist.");
             if (person.HubSub is not null) return ByHub;
-            if (person.State == PersonState.Active && person.Role == Base.Accounts.Roles.Admin && role != Base.Accounts.Roles.Admin && await users.CountActiveAdminsAsync(ct) <= 1) return LastAdmin;
-            await users.SetRolesAsync(person.Id, [role!], ct);
+            if (!await users.TrySetRoleAsync(person.Id, role!, ct)) return LastAdmin;
             // what the role allows changes now: the person signs in again with the new role (the guard reads it from the database, so also open sessions see it at once)
             await AuditAsync(person.Name, "person.role", ip, $"by {actor.UserName}, {person.Role} to {role}");
             return Result.Success;

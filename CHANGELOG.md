@@ -4,6 +4,14 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.3.3
+
+Three safety fixes found in a review of the first app on the base. **Apps with their own `sw.js` should take the new one** (`samples/StartApp/wwwroot/sw.js`), and add the paths of their own static files to its list.
+
+- **Hub sign-in and the last administrator** (AUTH-12): the sign-in through the hub no longer takes the role from the last active administrator; the sign-in works, the history gets the event `hub.role_kept`. All role changes go through `UserStore.TrySetRoleAsync`.
+- **Setup stays closed** (AUTH-09): `AccountService.SetupNeededAsync` counts a person of the hub as an account (`UserStore.AnyConfirmedAsync` is now `AnyCanSignInAsync`, own sign-in confirmed or hub person).
+- **Service worker keeps only the shell** (SEC-08): a list of shell files instead of every GET outside `/api/`; cache name `app-v2`.
+
 ## 0.3.2
 
 Two additions for an app that moves onto the base with a database and clients of its own. Nothing changes for an app that sets neither.
