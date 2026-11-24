@@ -9,7 +9,7 @@ what apps rely on; such changes are marked **Breaking**.
 Two additions for an app that moves onto the base with a database and clients of its own. Nothing changes for an app that sets neither.
 
 - **Name of the migration table** (DATA-04): `BaseAppOptions.MigrationTable` (default `schema_migrations`) and `new Migrator(db, sets, table)`. Only a plain identifier is accepted; a foreign table of the default name stays untouched.
-- **Own doors** (SEC-07): `BaseAppOptions.Doors`, a list of `ApiDoor(prefix, check, maxBodyBytes)`. A path prefix under `/api` that the app protects itself (a bearer key, no cookie, no Origin, paths with ids). The check is required; under a door the base never reads the session cookie and sets no identity. The base's own paths cannot be declared as a door (refused at start).
+- **Own doors** (SEC-07): `BaseAppOptions.Doors`, a list of `ApiDoor(prefix, check, maxBodyBytes)`. A path prefix under `/api` that the app protects itself (a bearer key, no cookie, no Origin, paths with ids). The check is required; under a door the base never reads the session cookie and sets no identity. The base's own paths cannot be declared as a door (refused at start). A door matches without regard to case, as the routes do, so no other spelling of its path falls to the session guard.
 
 ## 0.3.1
 

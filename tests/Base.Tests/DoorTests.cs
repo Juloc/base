@@ -14,7 +14,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Base.Tests;
 
-/// <summary>SEC-06: an own door under /api that the app protects itself (a bearer key, no cookie, no Origin).</summary>
+/// <summary>SEC-07: an own door under /api that the app protects itself (a bearer key, no cookie, no Origin).</summary>
 public class DoorTests
 {
     private const string Key = "Bearer test-key-0001";
@@ -138,6 +138,25 @@ public class DoorTests
         Assert.Equal(HttpStatusCode.OK, both.StatusCode);
         Assert.False((await TestApp.Json(both)).GetProperty("identity").GetBoolean());
         Assert.False(both.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task Another_spelling_of_the_path_is_still_the_door()
+    {
+        // Routing ignores case, so /api/V1/... reaches the same endpoint. The door must cover it too: otherwise a session cookie would open it.
+        await using var db = await TestDb.CreateAsync();
+        await using var app = await StartAsync(db, Options(new ApiDoor("/api/v1", KeyOk, 1024)));
+        var c = Client(app);
+        var cookie = await SignInAsync(c);
+
+        foreach (var url in new[] { "/api/V1/assets/7", "/API/v1/assets/7", "/Api/V1/Assets/7" })
+        {
+            Assert.Equal(HttpStatusCode.Unauthorized, (await c.SendAsync(Door(HttpMethod.Get, url, key: null, cookie: cookie))).StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await c.SendAsync(Req(HttpMethod.Post, url, cookie))).StatusCode);   // with the header and the Origin of a browser
+            var withKey = await c.SendAsync(Door(HttpMethod.Get, url, cookie: cookie));
+            Assert.Equal(HttpStatusCode.OK, withKey.StatusCode);
+            Assert.False((await TestApp.Json(withKey)).GetProperty("identity").GetBoolean());
+        }
     }
 
     [Fact]

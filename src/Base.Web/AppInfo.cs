@@ -57,19 +57,22 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
 /// session cookie and sets no identity; it applies the body limit, calls <paramref name="Check"/> and answers 401 when that says no. The check is required:
 /// a door without one cannot be declared.
 /// </summary>
-/// <param name="Prefix">Starts with <c>/api/</c> and names at least one more segment, e.g. <c>/api/v1</c>. Matches whole segments: <c>/api/v1</c> covers <c>/api/v1/x</c>, not <c>/api/v10</c>.</param>
+/// <param name="Prefix">Starts with <c>/api/</c> and names at least one more segment, e.g. <c>/api/v1</c>. Matches whole segments: <c>/api/v1</c> covers <c>/api/v1/x</c>, not <c>/api/v10</c>. Upper and lower case are the same, as they are for the routes: <c>/api/V1/x</c> is the door too.</param>
 /// <param name="Check">Looks at the request (for example a bearer key) and says whether it may pass. It runs before the body is read by the app.</param>
 /// <param name="MaxBodyBytes">The largest body a request under the door may have.</param>
 public sealed record ApiDoor(string Prefix, Func<HttpContext, ValueTask<bool>> Check, long MaxBodyBytes)
 {
     /// <summary>The first segment under /api that the base itself serves; a door cannot sit on any of them.</summary>
-    public static readonly IReadOnlySet<string> ReservedFirstSegments = new HashSet<string>(StringComparer.Ordinal)
+    public static readonly IReadOnlySet<string> ReservedFirstSegments = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "auth", "setup", "invite", "account", "health", "about", "people", "settings", "instance-settings", "hub-settings",
     };
 
-    /// <summary>True when <paramref name="path"/> is the prefix or lies below it, by whole segments.</summary>
-    public bool Covers(PathString path) => path.StartsWithSegments(Prefix, StringComparison.Ordinal);
+    /// <summary>
+    /// True when <paramref name="path"/> is the prefix or lies below it, by whole segments. Case is ignored on purpose: the routes ignore it, so a path that
+    /// reaches an endpoint of the door in another spelling must be the door as well. Otherwise it would fall to the session guard and a cookie would open it.
+    /// </summary>
+    public bool Covers(PathString path) => path.StartsWithSegments(Prefix, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Stops the start when a door is not allowed.</summary>
     public static void Validate(IReadOnlyList<ApiDoor> doors, IEnumerable<string> otherPaths)
@@ -86,10 +89,10 @@ public sealed record ApiDoor(string Prefix, Func<HttpContext, ValueTask<bool>> C
                 throw new InvalidOperationException($"The door '{prefix}' is not a plain path: segments of letters, digits, dash and underscore, no empty segment, no trailing slash.");
             if (ReservedFirstSegments.Contains(segments[0])) throw new InvalidOperationException($"The door '{prefix}' lies on a path the base itself serves (/api/{segments[0]}).");
             foreach (var other in otherPaths)
-                if (new PathString(other).StartsWithSegments(prefix, StringComparison.Ordinal))
+                if (new PathString(other).StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException($"The door '{prefix}' would cover the path '{other}' that the app or the base declares otherwise.");
             foreach (var earlier in seen)
-                if (new PathString(prefix).StartsWithSegments(earlier, StringComparison.Ordinal) || new PathString(earlier).StartsWithSegments(prefix, StringComparison.Ordinal))
+                if (new PathString(prefix).StartsWithSegments(earlier, StringComparison.OrdinalIgnoreCase) || new PathString(earlier).StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException($"The doors '{earlier}' and '{prefix}' overlap.");
             seen.Add(prefix);
         }
