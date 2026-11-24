@@ -4,6 +4,17 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.2.1
+
+First trial against a real JulOS 0.26.0 (everything local, [docs/plans/HUB-TRIAL.md](docs/plans/HUB-TRIAL.md)): the sign-in flow fits; two things did not and are fixed here.
+
+- **Signing out of the app returns to the app (AUTH-13, AUTH-14).** The ID token of the hub stays on the session as the hint for the hub's sign-out (migration `accounts/003_hub_hint`,
+  `sessions.hub_hint`, deleted with the session); the sign-out address now has `id_token_hint` and `post_logout_redirect_uri` (`/` of the app). The hub then signs out without asking and sends the
+  person back. **Register "address after sign-out" at the hub** (the settings card shows it); without it the hub asks first, as before. The rule no longer says "a token of the hub is kept nowhere".
+- **The button asks the hub afresh** when pressed (it used the ten minute memory and sent people to a dead address when the hub had just gone away); errors say why in words ("nothing answers at that address"), not the name of an exception.
+- `HubIdentity` has an optional `Hint`, `SessionStore.CreateAsync` an optional `hubHint`, `HubSignIn.EndSessionUrlAsync` takes the request and the hint. No other breaking change.
+- Docs: how to run app and hub on one machine in containers (the same address inside and outside: `*.localhost` names as network aliases), what to register at the hub, what the trial found in JulOS (not changed there).
+
 ## 0.2.0
 
 Roles and people, the app describes itself, and signing in through the hub (OpenID Connect). Every app works as before without any of it being switched on.

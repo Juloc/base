@@ -43,4 +43,4 @@ Small decisions made while building, one sentence each with its reason. Newest l
 37. **The name on the button comes from the hub's anonymous `/api/about`, else the host name:** JulOS has no anonymous `/api/about` yet (its own is behind a session), so for now the button carries the host.
 38. **`/api/about` gives `accentHue` (a number), not a colour:** the base knows colours only as one hue (COLOR-01); the hub builds its own tile colour from it. The contract draft's hex colour is left open.
 39. **`/api/about` is the one cacheable answer of the API (five minutes, public):** it is the same for everybody and holds nothing private; the contract asks for it.
-
+40. **The ID token of the hub stays on the session as the sign-out hint (nothing else of it):** JulOS signs out without asking and returns the person to the app only for a valid hint; without it the person is stranded at the hub.
