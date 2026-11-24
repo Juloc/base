@@ -83,8 +83,8 @@ for (const demo of document.querySelectorAll('.cat-demo')) {
 hydrateIcons();
 
 /* ---------- colours, sizes, icons ---------- */
-const COLOURS = ['bg', 'surface', 'surface-2', 'surface-3', 'text', 'text-2', 'line', 'line-strong', 'accent', 'on-accent', 'accent-soft', 'on-accent-soft',
-  'danger', 'on-danger', 'danger-soft', 'on-danger-soft', 'ok', 'ok-soft', 'on-ok-soft', 'warn', 'warn-soft', 'on-warn-soft'];
+const COLOURS = ['bg', 'surface', 'surface-1', 'surface-2', 'surface-3', 'surface-4', 'text', 'text-2', 'line', 'line-strong', 'accent', 'on-accent', 'accent-soft', 'on-accent-soft',
+  'secondary-soft', 'on-secondary-soft', 'tertiary-soft', 'on-tertiary-soft', 'danger', 'on-danger', 'danger-soft', 'on-danger-soft', 'ok', 'ok-soft', 'on-ok-soft', 'warn', 'warn-soft', 'on-warn-soft'];
 document.getElementById('cat-swatches').append(...COLOURS.map((name) => {
   const chip = h('i');
   chip.style.background = `var(--${name})`;
@@ -96,7 +96,7 @@ for (const s of ['s1', 's2', 's3', 's4', 's5', 's6', 's7']) {
   bar.style.width = `var(--${s})`;
   scale.append(h('div', { class: 'scale-row' }, h('code', { class: 'mono', text: '--' + s }), bar));
 }
-for (const r of ['r-s', 'r-m', 'r-l', 'r-full']) {
+for (const r of ['r-xs', 'r-s', 'r-m', 'r-l', 'r-xl', 'r-full']) {
   const box = h('div', { class: 'radius-box' });
   box.style.borderRadius = `var(--${r})`;
   scale.append(h('div', { class: 'scale-row' }, h('code', { class: 'mono', text: '--' + r }), box));

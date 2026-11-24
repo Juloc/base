@@ -26,7 +26,7 @@
     <span class="badge" id="cat-version"></span>
     <span class="grow"></span>
     <div class="cat-tools">
-      <label class="cat-hue">--accent-hue <input type="range" id="cat-hue" min="0" max="359" value="265" aria-label="Accent hue"> <code id="cat-hue-value">265</code></label>
+      <label class="cat-hue">--accent-hue <input type="range" id="cat-hue" min="0" max="359" value="299" aria-label="Accent hue"> <code id="cat-hue-value">299</code></label>
       <div id="cat-scheme"></div>
     </div>
   </header>
@@ -48,6 +48,32 @@ import { t, addMessages } from '/base/i18n.js';
 import { start } from '/base/auth.js';      // setup assistant and sign-in, then your app</pre>
       </section>
 
+      <section class="cat-item" id="look">
+        <h2 class="h1">The look and where it comes from</h2>
+        <p class="muted">The look of the family is that of <strong>JulOS</strong>, its main app: Material 3 Expressive built from one seed colour (<code class="mono">m3.css</code> there). The kit takes its roles, tone steps, radii, type scale and motion and keeps its own token names; the one seed colour is <code class="mono">--accent-hue</code>. The default hue (299) is the hue of the JulOS seed, so an app that sets none looks like JulOS.</p>
+        <div class="cat-demo on-surface" data-nocode>
+          <table class="look-map">
+            <thead><tr><th>Material 3 role (JulOS)</th><th>Kit token</th></tr></thead>
+            <tbody>
+              <tr><td>primary, on-primary</td><td><code class="mono">--accent</code>, <code class="mono">--on-accent</code></td></tr>
+              <tr><td>primary-container, on-primary-container</td><td><code class="mono">--accent-soft</code>, <code class="mono">--on-accent-soft</code></td></tr>
+              <tr><td>secondary-container (chips, selected items, default button)</td><td><code class="mono">--secondary-soft</code>, <code class="mono">--on-secondary-soft</code></td></tr>
+              <tr><td>tertiary-container (the hue turned by 55 degrees)</td><td><code class="mono">--tertiary-soft</code>, <code class="mono">--on-tertiary-soft</code></td></tr>
+              <tr><td>surface, surface-container-lowest / low / container / high / highest</td><td><code class="mono">--bg</code>, <code class="mono">--surface</code>, <code class="mono">--surface-1</code> to <code class="mono">--surface-4</code></td></tr>
+              <tr><td>on-surface, on-surface-variant, outline-variant, outline</td><td><code class="mono">--text</code>, <code class="mono">--text-2</code>, <code class="mono">--line</code>, <code class="mono">--line-strong</code></td></tr>
+              <tr><td>error-container, glass, scrim</td><td><code class="mono">--danger-soft</code>, <code class="mono">--glass</code> / <code class="mono">--glass-strong</code> / <code class="mono">--glass-edge</code>, <code class="mono">--scrim</code></td></tr>
+              <tr><td>shape: tile and card 20, sheet 28, buttons round</td><td><code class="mono">--r-l</code>, <code class="mono">--r-xl</code>, <code class="mono">--r-full</code></td></tr>
+              <tr><td>type scale (Roboto Flex, then the system font) and motion</td><td><code class="mono">--font</code>, <code class="mono">--text-*</code>; <code class="mono">--dur*</code>, <code class="mono">--ease*</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">Where the kit differs on purpose: labels stay above the fields instead of floating inside (FORM-01, no script); a dialog never darkens or blocks the page (DIALOG-01); body text is 16 px; the colours of success and warning are the kit's own. Where a person asks for reduced transparency the glass is the solid surface; in forced colours edges and outlines take over.</p>
+        <div class="cat-pair">
+          <div class="cat-demo" data-nocode><div class="look-gradient"><div class="card"><strong>Glass card</strong><div class="muted small">over the gradient of the page</div></div></div></div>
+          <div class="cat-demo" data-nocode><div class="look-sheet"><h3 class="h2">Sheet</h3><p class="muted">A bottom sheet on a phone, a centred window on a wide screen (radius 28).</p><div class="cluster end"><button class="btn ghost" type="button">Cancel</button><button class="btn primary" type="button">Save</button></div></div></div>
+        </div>
+      </section>
+
       <section class="cat-item" id="colours">
         <h2 class="h1">Colours</h2>
         <p class="muted">Only these tokens; never a colour value in an app (COLOR-01). Each pair that carries text is tested for contrast AA in light and dark, for every hue (COLOR-02). Move the slider above: the whole page follows one variable.</p>
@@ -56,7 +82,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="type">
         <h2 class="h1">Type and spacing</h2>
-        <p class="muted">The system font in six sizes; spacing in steps of 4 px; four radii.</p>
+        <p class="muted">The font stack of JulOS (no web font) in the sizes of the Material 3 scale; spacing in steps of 4 px; six radii.</p>
         <div class="cat-demo">
           <p class="h1">Heading 1 · .h1</p>
           <p class="h2">Heading 2 · .h2</p>
@@ -74,10 +100,10 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         <p class="muted">One primary button per view. The label says what happens ("Delete entry", not "OK"). A finger needs 44 px (MOBILE-01); the height comes from <code class="mono">--control-h</code>.</p>
         <div class="cat-demo">
           <div class="cluster">
-            <button class="btn primary" type="button">Primary</button>
-            <button class="btn" type="button">Default</button>
+            <button class="btn primary" type="button">Filled (primary)</button>
+            <button class="btn" type="button">Tonal (default)</button>
             <button class="btn outline" type="button">Outline</button>
-            <button class="btn ghost" type="button">Ghost</button>
+            <button class="btn ghost" type="button">Text (ghost)</button>
             <button class="btn danger" type="button">Danger</button>
             <button class="btn ghost danger" type="button">Ghost danger</button>
           </div>

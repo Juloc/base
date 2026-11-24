@@ -1,6 +1,6 @@
 /* The app's own styles. The look comes from /base/base.css; here stands only what is special to this app.
  * The colour of the app is this ONE variable (COLOR-01): an angle on the colour wheel, 0 to 360. */
-:root { --accent-hue: 265; }
+:root { --accent-hue: 299; }
 
 /* the round button in front of an entry: ticks it off */
 .tick { display: grid; place-items: center; width: var(--touch); height: var(--touch); margin-left: calc(var(--s2) * -1); flex: none; border: 0; background: none; border-radius: var(--r-full); color: var(--text-2); }

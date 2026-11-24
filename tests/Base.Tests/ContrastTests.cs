@@ -10,20 +10,21 @@ namespace Base.Tests;
 /// </summary>
 public partial class ContrastTests
 {
-    [GeneratedRegex(@"^\s*--([a-z0-9-]+):\s*light-dark\(oklch\(([0-9.]+ [0-9.]+ (?:var\(--accent-hue\)|[0-9.]+))\),\s*oklch\(([0-9.]+ [0-9.]+ (?:var\(--accent-hue\)|[0-9.]+))\)\);", RegexOptions.Multiline)]
+    [GeneratedRegex(@"^\s*--([a-z0-9-]+):\s*light-dark\(oklch\(([0-9.]+ [0-9.]+ (?:var\(--(?:accent|tertiary)-hue\)|[0-9.]+))\),\s*oklch\(([0-9.]+ [0-9.]+ (?:var\(--(?:accent|tertiary)-hue\)|[0-9.]+))\)\);", RegexOptions.Multiline)]
     private static partial Regex Token();
 
     [GeneratedRegex(@"@contrast\s+([a-z0-9-]+)\s+([a-z0-9-]+)\s+([0-9.]+)")]
     private static partial Regex Pair();
 
-    private sealed record Colour(double L, double C, double? H);     // H null: the hue follows --accent-hue
+    private sealed record Colour(double L, double C, double? H, double Turn = 0);     // H null: the hue follows --accent-hue, turned by Turn degrees (the tertiary tone: -55)
 
     private static Colour Parse(string text)
     {
         var p = text.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         Assert.Equal(3, p.Length);
         return new Colour(double.Parse(p[0], CultureInfo.InvariantCulture), double.Parse(p[1], CultureInfo.InvariantCulture),
-            p[2] == "var(--accent-hue)" ? null : double.Parse(p[2], CultureInfo.InvariantCulture));
+            p[2].StartsWith("var(", StringComparison.Ordinal) ? null : double.Parse(p[2], CultureInfo.InvariantCulture),
+            p[2] == "var(--tertiary-hue)" ? -55 : 0);
     }
 
     private static (double R, double G, double B) Linear(double l, double c, double h)
@@ -41,7 +42,7 @@ public partial class ContrastTests
     /// <summary>The relative luminance of a colour as a screen may show it: as it is, clipped to sRGB, or with the chroma lowered until it fits.</summary>
     private static double[] Luminances(Colour colour, double accentHue)
     {
-        var h = colour.H ?? accentHue;
+        var h = ((colour.H ?? accentHue + colour.Turn) % 360 + 360) % 360;
         var raw = Linear(colour.L, colour.C, h);
         var clipped = (Math.Clamp(raw.R, 0, 1), Math.Clamp(raw.G, 0, 1), Math.Clamp(raw.B, 0, 1));
         double lo = 0, hi = colour.C;
@@ -60,7 +61,7 @@ public partial class ContrastTests
         Assert.True(tokens.Count >= 20, "the colour tokens were not found: did the format of tokens.css change?");
         Assert.True(pairs.Length >= 25, "the @contrast lines were not found");
         // every colour that is text or a control stands in at least one pair
-        foreach (var name in new[] { "text", "text-2", "accent", "on-accent", "on-accent-soft", "danger", "on-danger", "on-danger-soft", "ok", "on-ok-soft", "warn", "on-warn-soft", "line-strong" })
+        foreach (var name in new[] { "text", "text-2", "accent", "on-accent", "on-accent-soft", "on-secondary-soft", "on-tertiary-soft", "danger", "on-danger", "on-danger-soft", "ok", "on-ok-soft", "warn", "on-warn-soft", "line-strong" })
             Assert.Contains(pairs, p => p.Fg == name);
 
         var failures = new List<string>();

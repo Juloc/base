@@ -9,3 +9,4 @@ __pycache__/
 TestResults/
 # local data folder of an app started with dotnet run (secret.key lives there)
 data/
+shots/

@@ -88,7 +88,7 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 
 ## COLOR: colours
 
-- **COLOR-01 (MUST)** Colours come from the tokens of the base only. An app sets its own colour with exactly one variable, `--accent-hue`, and writes no colour value of its own. Light and dark both work; the person chooses (system, light, dark). *Why:* the family looks like one family, and a new colour cannot break contrast. *Test:* `RuleFileTests.An_app_sets_its_colour_with_one_variable`
+- **COLOR-01 (MUST)** Colours come from the tokens of the base only. An app sets its own colour with exactly one variable, `--accent-hue`, and writes no colour value of its own. The look follows JulOS (tonal surfaces, glass over a soft gradient, filled and tonal buttons, radii 20 and 28 px; the catalogue shows the mapping). Light and dark both work; the person chooses (system, light, dark). *Why:* the family looks like one family, and a new colour cannot break contrast. *Test:* `RuleFileTests.An_app_sets_its_colour_with_one_variable`
 - **COLOR-02 (MUST)** Every pair of colours that carries text reaches a contrast of 4.5:1, borders of controls 3:1 (WCAG AA), in light and in dark and for every accent hue. *Why:* readable for tired eyes, in sunlight and on a bad screen. *Test:* `ContrastTests.Every_declared_pair_reaches_its_contrast_for_every_hue`
 
 ## MOBILE: phones

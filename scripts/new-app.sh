@@ -5,14 +5,14 @@
 #
 #   name     short technical name: lower case, digits, dash (it names the Compose project, the cookie, the repository)
 #   target   a folder that does not exist yet or is empty
-#   --accent the colour of the app as an angle on the colour wheel (COLOR-01), default 265
+#   --accent the colour of the app as an angle on the colour wheel (COLOR-01), default 299
 #
 # Afterwards: cd <target> && docker compose up -d --build, open http://localhost:8080, read the setup code with docker compose logs app.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 name="${1:-}"; target="${2:-}"; shift $(( $# >= 2 ? 2 : $# ))
-accent=265; title=""
+accent=299; title=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --accent) accent="${2:-}"; shift 2 ;;

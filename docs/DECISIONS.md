@@ -44,3 +44,8 @@ Small decisions made while building, one sentence each with its reason. Newest l
 38. **`/api/about` gives `accentHue` (a number), not a colour:** the base knows colours only as one hue (COLOR-01); the hub builds its own tile colour from it. The contract draft's hex colour is left open.
 39. **`/api/about` is the one cacheable answer of the API (five minutes, public):** it is the same for everybody and holds nothing private; the contract asks for it.
 40. **The ID token of the hub stays on the session as the sign-out hint (nothing else of it):** JulOS signs out without asking and returns the person to the app only for a valid hint; without it the person is stranded at the hub.
+41. **The look is that of JulOS, with the kit's own token names:** one family look for the owner's apps; the names stay so apps do not change, only the values (Material 3 roles and tone steps, as in JulOS's `m3.css`).
+42. **The tertiary tone is the accent hue turned by 55 degrees, held in `--tertiary-hue`:** JulOS does the same; the contrast test turns the hue by the same amount.
+43. **Labels stay above the fields and a dialog never has a scrim:** floating labels need script (FORM-01), and a scrim would block the page behind a window that must not block it (DIALOG-01); filled fields and the sheet shape are taken from JulOS otherwise.
+44. **Glass is made from the solid surfaces and contrast is tested on the solid ones:** the glass is 66 to 86 percent of a tested surface over a faint gradient, so the pairs hold; with reduced transparency it is the surface itself.
+45. **Body text is 16 px and list titles 16 px (JulOS uses 14 px):** the apps are read on wide screens too, and 16 px keeps phone inputs from zooming; secondary text is 14 px.

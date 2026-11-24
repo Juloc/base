@@ -14,7 +14,7 @@ builder.AddBase(new BaseAppOptions("startapp", "Start App", typeof(Program).Asse
 {
     Description = new Localized("A small list of things to remember: the pattern of every app of the family.", "Eine kleine Merkliste: das Muster aller Apps der Familie."),
     Icon = "bookmark",
-    AccentHue = 265,                                  // the same number as --accent-hue in wwwroot/app.css
+    AccentHue = 299,                                  // the same number as --accent-hue in wwwroot/app.css
     Start = "/",
     Roles =
     [

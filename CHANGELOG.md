@@ -4,6 +4,18 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.3.0
+
+**The look follows JulOS.** An app on the base now looks like a sibling of JulOS (Material 3 Expressive from one seed colour). Every app changes its look at its next sync; the markup and the API of `base.js` do not change.
+
+- **Colour:** the Material 3 roles and tone steps of JulOS, derived from `--accent-hue`: tonal surfaces (`--bg`, `--surface`, new `--surface-1` and `--surface-4`), accent = primary, `--accent-soft` = primary container, new `--secondary-soft` and `--tertiary-soft` (with `on-` colours), softer state colours. The default hue is now **299** (the hue of the JulOS seed; was 265). New and changed `@contrast` pairs; `ContrastTests` understands the tertiary hue (`--tertiary-hue`).
+- **Background and glass:** `--page-bg` (the soft gradient of JulOS, CSS only), `--glass`, `--glass-strong`, `--glass-edge`; cards, shell bars, side list and menus are glass. `prefers-reduced-transparency` turns glass solid; `forced-colors` gets outlines.
+- **Shape:** radii 4, 8, 12, 20 (cards), 28 (sheets and dialogs), round (buttons, chips, search). **Breaking (visual):** `--r-s`, `--r-m`, `--r-l` changed value (6, 10, 16 are now 8, 12, 20); `--r-xs` and `--r-xl` are new; `--tabs-h` is 64 px.
+- **Controls:** buttons are tonal by default, filled for `primary`, text for `ghost`, `danger` is tonal red, all round and "forming" when pressed; filled fields with an underline (labels stay above); search fields are glass pills; the switch and segmented choice as in JulOS; badges and notices use the secondary tone (new `.badge.tertiary`, `.notice.accent`, `.notice.tertiary`).
+- **Shell:** bar becomes glass when the page scrolls; bottom bar with the growing pill; side list with round items. Dialog: sheet with a handle on the phone, centred window on wide screens (radius 28).
+- **Type and motion:** the font stack of JulOS, the Material 3 size steps (`--text-s` 14 px, `--text-m` 16 px, `--text-l` 20 px), weights 500 for titles and labels; durations 150, 250 and 400 ms and the JulOS easing curves (`--dur-m`, `--dur-l`, `--ease-out`, `--ease-in`).
+- Catalogue: the section "The look and where it comes from" with the mapping of roles to tokens.
+
 ## 0.2.1
 
 First trial against a real JulOS 0.26.0 (everything local, [docs/plans/HUB-TRIAL.md](docs/plans/HUB-TRIAL.md)): the sign-in flow fits; two things did not and are fixed here.

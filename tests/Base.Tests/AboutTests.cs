@@ -28,7 +28,7 @@ public class AboutTests
         Assert.False(string.IsNullOrWhiteSpace(about.GetProperty("description").GetProperty("en").GetString()));
         Assert.False(string.IsNullOrWhiteSpace(about.GetProperty("description").GetProperty("de").GetString()));
         Assert.Equal("bookmark", about.GetProperty("icon").GetString());
-        Assert.Equal(265, about.GetProperty("accentHue").GetInt32());
+        Assert.Equal(299, about.GetProperty("accentHue").GetInt32());
         Assert.Equal("/", about.GetProperty("start").GetString());
         Assert.Equal(["admin", "member", "viewer"], about.GetProperty("roles").EnumerateArray().Select(x => x.GetProperty("key").GetString()).ToArray());
         Assert.Equal("Administrator", about.GetProperty("roles")[0].GetProperty("name").GetProperty("en").GetString());
