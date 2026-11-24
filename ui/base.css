@@ -266,10 +266,10 @@ a.chip:hover, button.chip:hover { color: var(--text); background: var(--glass-st
 @media (min-width: 900px) { .card { padding: var(--s5); } .card.flush { padding: 0; } .card.flush > .card-head { padding: var(--s5) var(--s5) 0; } }
 
 /* ---------- list: a row is a soft tile with a space between (JulOS); inside a card, or as .list.lines, the rows are lines (long lists, tables) ---------- */
-.list { display: flex; flex-direction: column; gap: var(--s2); }
+.list { display: flex; flex-direction: column; gap: 6px; }
 .row {
-  display: flex; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) var(--s4); color: inherit; text-decoration: none;
-  border: 1px solid var(--glass-edge); border-radius: var(--r-l); background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-1);
+  display: flex; align-items: center; gap: var(--s3); min-height: var(--touch); padding: 6px var(--s3) 6px var(--s4); color: inherit; text-decoration: none;
+  border: 1px solid var(--glass-edge); border-radius: 14px; background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-1);
   width: 100%; text-align: left; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 a.row:hover, button.row:hover, .row.link:hover { border-color: color-mix(in oklab, var(--accent) 45%, var(--glass-edge)); }
@@ -277,13 +277,13 @@ a.row:hover, button.row:hover, .row.link:hover { border-color: color-mix(in okla
 .card .list, .list.lines { gap: 0; }
 .card .list > :first-child > .row, .card .list > .row:first-child, .list.lines > :first-child > .row, .list.lines > .row:first-child { border-top-width: 0; }
 .card .row:hover, .list.lines a.row:hover { background: color-mix(in oklab, var(--text) 8%, transparent); }
-.row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.row-title { font: 600 var(--text-m)/1.4 var(--font); letter-spacing: 0.05px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0; line-height: 1.3; }
+.row-title { font: 600 var(--text-m)/1.35 var(--font); letter-spacing: 0.05px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-sub { font-size: var(--text-s); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row-lead { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: var(--r-full); background: var(--accent-soft); color: var(--on-accent-soft); }
+.row-lead { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: var(--r-full); background: var(--accent-soft); color: var(--on-accent-soft); }
 .row-end { display: flex; align-items: center; gap: var(--s1); flex: none; color: var(--text-2); }
 .row.done .row-title { color: var(--text-2); text-decoration: line-through; }
-@media (min-width: 900px) { .row { padding-inline: var(--s5); } }
+@media (min-width: 900px) { .row { padding-inline: var(--s4); } }
 
 /* tiles: a grid of soft tiles with a symbol in a tinted round ground (the quick actions of JulOS); a button or a link */
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: var(--s2); }
@@ -358,6 +358,8 @@ a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent
 .menu-item:hover, .menu-item:focus-visible { background: color-mix(in oklab, var(--text) 8%, transparent); outline: none; }
 .menu-item.danger { color: var(--danger); }
 .menu-item .icon { color: var(--text-2); }
+.menu-item[aria-checked="true"] { color: var(--accent); font-weight: 650; }
+.menu-item[aria-checked="true"] .icon { color: inherit; }
 .menu-item.danger .icon { color: inherit; }
 .menu-sep { height: 1px; margin: var(--s1) 0; background: var(--line); }
 .menu-label { padding: var(--s2) var(--s3); font: 500 var(--text-xs)/1.3 var(--font); color: var(--text-2); }

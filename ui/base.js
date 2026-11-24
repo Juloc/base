@@ -269,8 +269,8 @@ export function openMenu(anchor, items) {
   const menu = h('div', { class: 'menu', role: 'menu' }, items.map((it) => {
     if (it === '-') return h('div', { class: 'menu-sep', role: 'separator' });
     if (it.heading) return h('div', { class: 'menu-label', text: it.heading });
-    const props = { class: 'menu-item' + (it.danger ? ' danger' : ''), role: 'menuitem', onclick: () => { close(); if (it.run) it.run(); } };
-    const inner = [it.icon ? icon(it.icon) : null, h('span', { class: 'grow', text: it.label })];
+    const props = { class: 'menu-item' + (it.danger ? ' danger' : ''), role: it.checked === undefined ? 'menuitem' : 'menuitemradio', 'aria-checked': it.checked === undefined ? null : String(it.checked), onclick: () => { close(); if (it.run) it.run(); } };
+    const inner = [it.icon ? icon(it.icon) : null, h('span', { class: 'grow', text: it.label }), it.checked ? icon('check') : null];
     return it.href ? h('a', { ...props, href: it.href }, inner) : h('button', { ...props, type: 'button' }, inner);
   }));
   menu.addEventListener('keydown', (e) => {
@@ -488,7 +488,10 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
   const personMenu = (anchor) => openMenu(anchor, [
     { heading: person.name },
     ...menu,
-    { label: theme.isDark() ? t('shell.light') : t('shell.dark'), icon: theme.isDark() ? 'sun' : 'moon', run: () => { const v = theme.set(theme.isDark() ? 'light' : 'dark'); prefs.set('scheme', v).catch(() => {}); } },
+    '-',
+    // the appearance has three steps: the device decides (the default), light, dark
+    ...[['auto', 'settings.schemeAuto', 'monitor'], ['light', 'settings.schemeLight', 'sun'], ['dark', 'settings.schemeDark', 'moon']].map(([v, key, ic]) =>
+      ({ label: t(key), icon: ic, checked: theme.get() === v, run: () => { theme.set(v); prefs.set('scheme', v).catch(() => {}); } })),
     '-',
     { label: t('shell.signOut'), icon: 'logout', run: onSignOut },
   ]);
