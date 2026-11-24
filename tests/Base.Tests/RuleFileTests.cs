@@ -33,7 +33,7 @@ public partial class RuleFileTests
     [Fact]
     public void Only_the_allowed_packages_are_referenced()
     {
-        string[] allowed = ["Npgsql", "Konscious.Security.Cryptography.Argon2"];
+        string[] allowed = ["Npgsql", "Konscious.Security.Cryptography.Argon2", "Microsoft.IdentityModel.JsonWebTokens"];
         var used = Files(["src", "samples"], "*.csproj").SelectMany(f => Regex.Matches(File.ReadAllText(f), "<PackageReference Include=\"([^\"]+)\"").Select(m => m.Groups[1].Value)).Distinct().ToArray();
         Assert.Empty(used.Except(allowed));
         Assert.Equal(allowed.Order(), used.Order());
@@ -113,7 +113,7 @@ public partial class RuleFileTests
             foreach (Match m in Regex.Matches(File.ReadAllText(file), @"https?://([A-Za-z0-9.-]+)"))
             {
                 var host = m.Groups[1].Value;
-                if (host is "localhost" or "127.0.0.1" or "www.w3.org" or "aka.ms" or "goo.gl" || host.EndsWith(".example", StringComparison.Ordinal) || host.EndsWith(".test", StringComparison.Ordinal) || host == "example.com") continue;
+                if (host is "localhost" or "127.0.0.1" or "www.w3.org" or "aka.ms" or "goo.gl" or "schemas.openid.net" || host.EndsWith(".example", StringComparison.Ordinal) || host.EndsWith(".test", StringComparison.Ordinal) || host == "example.com") continue;
                 findings.Add($"{Rel(file)}: server name {host}");
             }
         Assert.True(findings.Count == 0, "possibly private (SEC-06):\n" + string.Join("\n", findings.Distinct().Take(30)));

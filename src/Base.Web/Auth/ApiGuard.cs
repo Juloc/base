@@ -19,7 +19,22 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
     public const long MaxSmallBody = 64 * 1024;
     public const long MaxAuthBody = 4096;
 
-    private static readonly string[] BasePublicPaths = ["/api/health", "/api/auth/me", "/api/auth/login", "/api/setup/status", "/api/setup/begin", "/api/setup/finish"];
+    /// <summary>
+    /// The doors that need no session, all of them, in one place (SEC-03). Each protects itself: health and about say nothing private, setup needs the code of the
+    /// server log, an invitation needs its link, the central sign-in needs the state it started and a signed token.
+    /// </summary>
+    public static readonly string[] BasePublicPaths =
+    [
+        "/api/health", "/api/about", "/api/auth/me", "/api/auth/login", "/api/setup/status", "/api/setup/begin", "/api/setup/finish",
+        "/api/invite/check", "/api/invite/begin", "/api/invite/finish",
+        HubPaths.Begin, HubPaths.Callback, HubPaths.BackChannelLogout,
+    ];
+
+    /// <summary>
+    /// Changing requests that are not sent by a page of the app and so cannot carry its header: the central sign-in calls the logout from its server.
+    /// The signed logout token is the protection (checked in the handler), not the header (SEC-04).
+    /// </summary>
+    public static readonly string[] ServerToServerPaths = [HubPaths.BackChannelLogout];
 
     private readonly HashSet<string> _public = new(BasePublicPaths.Concat(options.PublicPaths), StringComparer.Ordinal);
     private readonly HashSet<string> _large = new(options.LargeBodyPaths, StringComparer.Ordinal);
@@ -32,14 +47,14 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
 
         if (!HttpMethods.IsGet(request.Method) && !HttpMethods.IsHead(request.Method))
         {
-            if (request.Headers[Header] != "1" || !SameOrigin(request))
+            if (!ServerToServerPaths.Contains(path) && (request.Headers[Header] != "1" || !SameOrigin(request)))
             {
                 await HttpErrors.WriteAsync(ctx, Error.Forbidden("request.refused", "Request refused."));
                 return;
             }
             if (!_large.Contains(path))
             {
-                var max = request.Path.StartsWithSegments("/api/auth") || request.Path.StartsWithSegments("/api/setup") ? MaxAuthBody : MaxSmallBody;
+                var max = request.Path.StartsWithSegments("/api/auth") || request.Path.StartsWithSegments("/api/setup") || request.Path.StartsWithSegments("/api/invite") ? MaxAuthBody : MaxSmallBody;
                 if (request.ContentLength > max)
                 {
                     await HttpErrors.WriteAsync(ctx, new Error(ErrorKind.TooLarge, "too_large", "The request is too large."));
@@ -55,6 +70,12 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
 
         var identity = await ResolveAsync(ctx, accounts, cookie, rotate: true);
         if (identity is null) { await HttpErrors.WriteAsync(ctx, Error.Unauthorized()); return; }
+        // the role an endpoint declares with RequireRole is checked here, before the handler runs: the one place (SEC-03)
+        if (ctx.GetEndpoint()?.Metadata.GetMetadata<RoleRequirement>() is { } need && !identity.Has(need.Role))
+        {
+            await HttpErrors.WriteAsync(ctx, Error.Forbidden("role.missing", "This needs the role " + need.Role + "."));
+            return;
+        }
         ctx.Items[IdentityKey] = identity;
         await next(ctx);
     }

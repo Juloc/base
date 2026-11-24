@@ -55,6 +55,7 @@ rename_in() { sed -i -e "s/StartApp/$ns/g" -e "s/startapp/$name/g" -e "s|Start A
 grep -rlZ -e 'StartApp' -e 'startapp' -e 'Start App' "$app" | xargs -0 -r sed -i -e "s/StartApp/$ns/g" -e "s/startapp/$name/g" -e "s|Start App|$title|g"
 sed -i 's|\.\.\\\.\.\\src\\Base\.Web\\|..\\..\\base\\src\\Base.Web\\|' "$app/$ns.csproj"
 sed -i "s/--accent-hue: [0-9]*;/--accent-hue: $accent;/" "$app/wwwroot/app.css"
+sed -i "s/AccentHue = [0-9]*,/AccentHue = $accent,/" "$app/Program.cs"
 
 # 3. the files at the root
 sed -e 's|^#   docker build -f .*|#   docker build .|' -e "s|samples/StartApp|src/$ns|g" -e 's|^ARG BASE_DIR=\.$|ARG BASE_DIR=base|' -e "s/StartApp/$ns/g" "$start/Dockerfile" > "$target/Dockerfile"

@@ -103,7 +103,7 @@ public sealed class AccountService(UserStore users, SessionStore sessions, Passw
         if (password is null || password.Length is 0 or > PasswordPolicy.MaxLength) return BadInput;
 
         var user = name is null ? null : await users.FindByNameAsync(name, ct);
-        if (user is { TotpConfirmed: false }) user = null;
+        if (user is { CanSignInLocally: false }) user = null;
         // an unknown name is checked against a dummy hash: the answer takes as long as for a known one
         var (passwordOk, needsRehash) = await hasher.VerifyAsync(password, user?.PasswordHash ?? await hasher.DummyHashAsync());
 

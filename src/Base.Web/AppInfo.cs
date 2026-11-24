@@ -1,4 +1,6 @@
 using System.Reflection;
+using Base.Accounts;
+using Base.Core;
 using Base.Data;
 using Base.Web.Settings;
 
@@ -19,6 +21,21 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
     /// <summary>Paths under /api that answer without a session. Keep this list short; every entry is a door (SEC-03).</summary>
     public IReadOnlyList<string> PublicPaths { get; init; } = [];
 
+    /// <summary>What the app is, in a sentence people read (English required, German expected). The app's name when not given.</summary>
+    public Localized? Description { get; init; }
+
+    /// <summary>The icon of the app: a name from the icon file of the base (<c>ui/icons.js</c>).</summary>
+    public string Icon { get; init; } = "grid";
+
+    /// <summary>The colour of the app as an angle on the colour wheel (0 to 359): the same number as <c>--accent-hue</c> in its stylesheet (COLOR-01).</summary>
+    public int AccentHue { get; init; } = 250;
+
+    /// <summary>Where the app starts, a path on its own address.</summary>
+    public string Start { get; init; } = "/";
+
+    /// <summary>The roles of the app: a small fixed list, one per person, always with "admin" (SEC-03). Default: admin and member.</summary>
+    public IReadOnlyList<AppRole> Roles { get; init; } = AppRoles.Default;
+
     /// <summary>Paths under /api that accept large bodies (uploads); each of them checks its own limit.</summary>
     public IReadOnlyList<string> LargeBodyPaths { get; init; } = [];
 }
@@ -26,6 +43,9 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
 /// <summary>Name and versions of the running app: its own version, the commit it was built from, and the version of the base it was made with.</summary>
 public sealed record AppInfo(string Id, string Name, string Version, string? Commit, string BaseVersion)
 {
+    /// <summary>The version of the contract between an app and the hub that this base speaks (docs/plans/CONTRACT.md). A change that breaks a reader raises it.</summary>
+    public const int ContractVersion = 1;
+
     public static AppInfo From(BaseAppOptions options)
     {
         var (version, commit) = Parse(options.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion);

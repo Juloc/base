@@ -6,7 +6,7 @@ namespace Base.Tests;
 /// <summary>The rulebook itself: numbers are well formed and unique, every test it names exists, and every number cited in the code is a rule.</summary>
 public partial class RulebookTests
 {
-    private static readonly string[] Areas = ["CODE", "DATA", "AUTH", "SEC", "OPS", "SHELL", "FORM", "LIST", "DIALOG", "COLOR", "MOBILE", "A11Y", "I18N", "KIT", "TEST"];
+    private static readonly string[] Areas = ["CODE", "DATA", "AUTH", "SEC", "OPS", "CONTRACT", "SHELL", "FORM", "LIST", "DIALOG", "COLOR", "MOBILE", "A11Y", "I18N", "KIT", "TEST"];
 
     [GeneratedRegex(@"^- \*\*([A-Z0-9]+-\d\d) \((MUST|SHOULD|MAY)\)\*\* (.+)$", RegexOptions.Multiline)]
     private static partial Regex RuleLine();
@@ -21,7 +21,7 @@ public partial class RulebookTests
     public void Rule_numbers_are_unique_well_formed_and_every_rule_says_why()
     {
         var rules = Rules();
-        Assert.InRange(rules.Count, 30, 60);
+        Assert.InRange(rules.Count, 30, 70);
         Assert.Equal(rules.Count, rules.Select(r => r.Id).Distinct().Count());
         Assert.All(rules, r => Assert.Contains(r.Id.Split('-')[0], Areas));
         Assert.All(rules, r => Assert.Contains("*Why:*", r.Text));

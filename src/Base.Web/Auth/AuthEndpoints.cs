@@ -19,22 +19,26 @@ internal static class AuthEndpoints
                 .ToHttp(s => SignIn(ctx, cookie, s)));
 
         // public: the page asks this first to decide between setup, sign-in and the app itself
-        app.MapGet("/api/auth/me", async (HttpContext ctx, AccountService accounts, SessionCookie cookie, AppInfo info) =>
+        app.MapGet("/api/auth/me", async (HttpContext ctx, AccountService accounts, SessionCookie cookie, AppInfo info, AppRoles roles, HubSettingsStore hubSettings) =>
         {
             var identity = await ApiGuard.ResolveAsync(ctx, accounts, cookie, rotate: true);
             var setupNeeded = identity is null && await accounts.SetupNeededAsync(ctx.RequestAborted);
-            return new MeResponse(identity?.UserName, identity?.Roles, setupNeeded, new AppDto(info.Id, info.Name, info.Version, info.Commit, info.BaseVersion));
+            // the button "Sign in with ..." is offered only to somebody who is not signed in, and only while it is switched on
+            var hub = identity is null && !setupNeeded && await hubSettings.GetAsync(ctx.RequestAborted) is { Active: true } cfg ? new HubOffer(cfg.DisplayName) : null;
+            return new MeResponse(identity?.UserName, identity?.Roles, setupNeeded, new AppDto(info.Id, info.Name, info.Version, info.Commit, info.BaseVersion), [.. roles.All], identity?.ViaHub ?? false, hub);
         });
 
         app.MapPost("/api/auth/login", async (LoginRequest body, HttpContext ctx, AccountService accounts, SessionCookie cookie) =>
             (await accounts.LoginAsync(body.User, body.Password, body.Code, ctx.ClientIp(), ctx.Request.Headers.UserAgent, ctx.RequestAborted))
                 .ToHttp(s => SignIn(ctx, cookie, s)));
 
-        app.MapPost("/api/auth/logout", async (HttpContext ctx, AccountService accounts, SessionCookie cookie) =>
+        app.MapPost("/api/auth/logout", async (HttpContext ctx, AccountService accounts, SessionCookie cookie, HubSignIn hub) =>
         {
-            await accounts.LogoutAsync(ctx.Person(), ctx.ClientIp(), ctx.RequestAborted);
+            var who = ctx.Person();
+            await accounts.LogoutAsync(who, ctx.ClientIp(), ctx.RequestAborted);
             cookie.Clear(ctx);
-            return Results.NoContent();
+            // somebody who came through the hub is sent on to the hub's sign-out (it ends its own session and tells the other apps); the others get nothing to follow
+            return who.ViaHub && await hub.EndSessionUrlAsync(ctx.RequestAborted) is { } url ? Results.Ok(new LogoutResponse(url)) : Results.NoContent();
         });
 
         app.MapPost("/api/auth/logout-others", async (HttpContext ctx, AccountService accounts) =>

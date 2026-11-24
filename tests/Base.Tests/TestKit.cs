@@ -67,6 +67,10 @@ internal sealed class TestAccounts
     public LoginLimiter Limiter { get; }
     public SetupCode SetupCode { get; } = new("TEST-CODE-0000");
     public AccountService Service { get; }
+    public InviteStore Invites { get; }
+    public PeopleService People { get; }
+    public HubAccounts Hub { get; }
+    public AppRoles Roles { get; } = new([new(Base.Accounts.Roles.Admin, new Localized("Administrator")), new("member", new Localized("Member")), new("viewer", new Localized("Viewer"))]);
 
     // one hasher for all tests: its warm-up (the dummy hash) is paid once
     private static readonly PasswordHasher Hasher = new();
@@ -78,7 +82,13 @@ internal sealed class TestAccounts
         Audit = new AuditStore(db.Data, Clock);
         Limiter = new LoginLimiter(Clock);
         Service = new AccountService(Users, Sessions, Hasher, Limiter, SetupCode, Audit, new AccountOptions("Test App"), Clock, NullLogger<AccountService>.Instance);
+        Invites = new InviteStore(db.Data, Clock);
+        People = new PeopleService(Users, Sessions, Invites, Hasher, Limiter, Audit, Roles, new AccountOptions("Test App"), Clock, NullLogger<PeopleService>.Instance);
+        Hub = new HubAccounts(Users, Sessions, Audit, Roles, NullLogger<HubAccounts>.Instance);
     }
+
+    /// <summary>The person behind a session token, as the guard sees them.</summary>
+    public async Task<SessionIdentity> WhoAsync(string token) => (await Sessions.ResolveAsync(token, rotate: false))!;
 
     public string Code(string secret, int stepOffset = 0) => Totp.Hotp(Base32.Decode(secret), Clock.GetUtcNow().ToUnixTimeSeconds() / Totp.StepSeconds + stepOffset);
 

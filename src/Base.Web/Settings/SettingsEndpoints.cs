@@ -46,12 +46,14 @@ internal static class SettingsEndpoints
             return Results.NoContent();
         });
 
-        app.MapGet("/api/instance-settings", async (HttpContext ctx, SettingsStore store, SettingRules rules) =>
-            ctx.Require(Roles.Admin) ?? Results.Ok(new SettingsResponse(Known(await store.GetInstanceAsync(ctx.RequestAborted), rules, SettingScope.Instance))));
+        // the settings of the installation: the whole group needs the role admin, which the guard checks before any handler runs (SEC-03)
+        var instance = app.MapGroup("/api/instance-settings").RequireRole(Roles.Admin);
 
-        app.MapPut("/api/instance-settings/{key}", async (string key, SettingRequest body, HttpContext ctx, SettingsStore store, SettingRules rules, ProxyTrust proxies) =>
+        instance.MapGet("", async (HttpContext ctx, SettingsStore store, SettingRules rules) =>
+            new SettingsResponse(Known(await store.GetInstanceAsync(ctx.RequestAborted), rules, SettingScope.Instance)));
+
+        instance.MapPut("/{key}", async (string key, SettingRequest body, HttpContext ctx, SettingsStore store, SettingRules rules, ProxyTrust proxies) =>
         {
-            if (ctx.Require(Roles.Admin) is { } refused) return refused;
             if (rules.Find(SettingScope.Instance, key) is not { } rule) return Unknown.ToHttp();
             if (body.Value is not { } value || rule.Normalize(value) is not { } json) return Bad.ToHttp();
             await store.SetInstanceAsync(key, json, ctx.RequestAborted);
@@ -59,9 +61,8 @@ internal static class SettingsEndpoints
             return Results.NoContent();
         });
 
-        app.MapDelete("/api/instance-settings/{key}", async (string key, HttpContext ctx, SettingsStore store, SettingRules rules, ProxyTrust proxies) =>
+        instance.MapDelete("/{key}", async (string key, HttpContext ctx, SettingsStore store, SettingRules rules, ProxyTrust proxies) =>
         {
-            if (ctx.Require(Roles.Admin) is { } refused) return refused;
             if (rules.Find(SettingScope.Instance, key) is null) return Unknown.ToHttp();
             await store.DeleteInstanceAsync(key, ctx.RequestAborted);
             if (key == ProxyTrust.SettingKey) proxies.Apply(null);

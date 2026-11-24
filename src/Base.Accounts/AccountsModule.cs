@@ -14,7 +14,8 @@ public static class AccountsModule
     /// <param name="issuer">The name of the app, shown by authenticator apps.</param>
     /// <param name="secretKey">The key for encrypted values, see <see cref="SecretBox.ResolveKey"/>.</param>
     /// <param name="fixedSetupCode">Only for tests: a known setup code instead of a random one.</param>
-    public static IServiceCollection AddBaseAccounts(this IServiceCollection services, string issuer, string secretKey, string? fixedSetupCode = null)
+    /// <param name="roles">The roles of the app (default: admin and member).</param>
+    public static IServiceCollection AddBaseAccounts(this IServiceCollection services, string issuer, string secretKey, string? fixedSetupCode = null, IReadOnlyList<AppRole>? roles = null)
     {
         services.AddSingleton(new AccountOptions(issuer));
         services.AddSingleton(new SecretBox(secretKey));
@@ -24,7 +25,11 @@ public static class AccountsModule
         services.AddSingleton<AuditStore>();
         services.AddSingleton<PasswordHasher>();
         services.AddSingleton<LoginLimiter>();
+        services.AddSingleton(new AppRoles(roles ?? AppRoles.Default));
+        services.AddSingleton<InviteStore>();
         services.AddSingleton<AccountService>();
+        services.AddSingleton<PeopleService>();
+        services.AddSingleton<HubAccounts>();
         services.AddHostedService<SessionPurgeWorker>();
         return services;
     }

@@ -31,12 +31,16 @@ public static class BaseApp
 
         var connection = cfg["BASE_DB"] ?? throw new InvalidOperationException("BASE_DB is missing (the connection to PostgreSQL, see docker-compose.yml).");
         var info = AppInfo.From(options);
+        Describe.Check(options);
         services.AddSingleton(options);
         services.AddSingleton(info);
         services.AddSingleton(_ => Database.Create(connection, cfg["BASE_DB_PASSWORD_FILE"]));
         services.AddSingleton(sp => new Migrator(sp.GetRequiredService<NpgsqlDataSource>(), [AccountsModule.Migrations, Migrations, .. options.Migrations]));
         services.AddSingleton(TimeProvider.System);
-        services.AddBaseAccounts(options.Name, SecretBox.ResolveKey(cfg["BASE_SECRET_KEY"], cfg["BASE_DATA"] ?? "data"), cfg["BASE_SETUP_CODE"]);
+        services.AddBaseAccounts(options.Name, SecretBox.ResolveKey(cfg["BASE_SECRET_KEY"], cfg["BASE_DATA"] ?? "data"), cfg["BASE_SETUP_CODE"], options.Roles);
+        services.AddSingleton<HealthState>();
+        services.AddSingleton<RateLimit>();
+        services.AddBaseHub();
         services.AddSingleton(new SettingRules([.. SettingRules.OfTheBase, .. options.Settings]));
         services.AddSingleton<SettingsStore>();
         services.AddSingleton<ProxyTrust>();
@@ -107,7 +111,8 @@ public static class BaseApp
     public static void MapBase(this WebApplication app)
     {
         var info = app.Services.GetRequiredService<AppInfo>();
-        app.MapGet("/api/health", async (NpgsqlDataSource data, CancellationToken ct) =>
+        var options = app.Services.GetRequiredService<BaseAppOptions>();
+        app.MapGet("/api/health", async (NpgsqlDataSource data, HealthState state, TimeProvider clock, CancellationToken ct) =>
         {
             var dbOk = false;
             try
@@ -117,8 +122,12 @@ public static class BaseApp
                 dbOk = await data.ScalarAsync<int>("select 1", timeout.Token) == 1;
             }
             catch (Exception) { /* database not reachable: ok = false */ }
-            return Results.Json(new Health(dbOk, dbOk, info.Id, info.Version, info.BaseVersion), statusCode: dbOk ? 200 : 503);
+            var status = !dbOk ? "down" : state.Degraded ? "degraded" : "ok";
+            return Results.Json(new Health(dbOk, dbOk, info.Id, info.Version, info.BaseVersion, status, AppInfo.ContractVersion, clock.GetUtcNow()), statusCode: dbOk ? 200 : 503);
         });
+        app.MapAbout(info, options);
+        app.MapBasePeople();
+        app.MapBaseHub();
         app.MapBaseAuth();
         app.MapBaseSettings();
     }
