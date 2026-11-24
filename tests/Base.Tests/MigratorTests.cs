@@ -75,4 +75,55 @@ public class MigratorTests
         Assert.All(sets, s => Assert.NotEmpty(s.Scripts));
         Assert.All(sets.SelectMany(s => s.Scripts), m => Assert.Matches("^[a-z]+/[0-9]{3}_[a-z0-9_]+$", m.Id));
     }
+
+    [Fact]
+    public async Task The_table_of_the_migrator_has_a_default_name_and_can_be_set()
+    {
+        await using var db = await TestDb.CreateAsync(migrate: false);
+        var set = Set("demo", ("001_first", "create table t (a int)"));
+        await new Migrator(db.Data, [set]).RunAsync();
+        Assert.Equal(1L, await db.ScalarAsync<long>("select count(*) from schema_migrations"));
+        Assert.Equal("schema_migrations", Migrator.DefaultTable);
+    }
+
+    [Fact]
+    public async Task A_custom_table_works_beside_a_foreign_schema_migrations_that_stays_untouched()
+    {
+        await using var db = await TestDb.CreateAsync(migrate: false);
+        await db.ExecAsync("create table schema_migrations (version bigint primary key, name text)");
+        await db.ExecAsync("insert into schema_migrations values (7, 'foreign')");
+
+        var set = Set("demo", ("001_first", "create table t (a int)"), ("002_more", "alter table t add column b int"));
+        Assert.Equal(["demo/001_first", "demo/002_more"], await new Migrator(db.Data, [set], "base_migrations").RunAsync());
+        Assert.Empty(await new Migrator(db.Data, [set], "base_migrations").RunAsync());
+        Assert.Equal(2L, await db.ScalarAsync<long>("select count(*) from base_migrations"));
+        // a changed script is still caught in the custom table
+        await Assert.ThrowsAsync<InvalidOperationException>(() => new Migrator(db.Data, [Set("demo", ("001_first", "create table t (a bigint)"))], "base_migrations").RunAsync());
+
+        Assert.Equal(1L, await db.ScalarAsync<long>("select count(*) from schema_migrations"));
+        Assert.Equal("foreign", await db.ScalarAsync<string>("select name from schema_migrations where version = 7"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("a b")]
+    [InlineData("a;drop table t")]
+    [InlineData("a-b")]
+    [InlineData("a.b")]
+    [InlineData("\"a\"")]
+    [InlineData("1abc")]
+    [InlineData("ä")]
+    [InlineData("a\n")]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+    public void A_table_name_that_is_not_a_plain_identifier_is_refused(string name)
+    {
+        Assert.Throws<ArgumentException>(() => new Migrator(null!, [], name));
+    }
+
+    [Fact]
+    public void A_plain_table_name_is_accepted()
+    {
+        _ = new Migrator(null!, [], "My_table_2");
+    }
 }

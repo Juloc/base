@@ -52,9 +52,31 @@ public sealed partial record MigrationSet(string Name, IReadOnlyList<Migration> 
 /// A script that was applied is never edited: its checksum is stored, and a different one stops the start. Changes come as a new script.
 /// An advisory lock keeps two instances from migrating at the same time.
 /// </summary>
-public sealed class Migrator(NpgsqlDataSource db, IEnumerable<MigrationSet> sets)
+public sealed partial class Migrator
 {
     private const long LockKey = 0x42415345_4D494752; // "BASEMIGR"
+
+    /// <summary>The default name of the table that remembers the applied scripts.</summary>
+    public const string DefaultTable = "schema_migrations";
+
+    [GeneratedRegex("^[A-Za-z_][A-Za-z0-9_]{0,62}\\z")]
+    private static partial Regex Identifier();
+
+    private readonly NpgsqlDataSource db;
+    private readonly IEnumerable<MigrationSet> sets;
+    private readonly string table;
+
+    /// <param name="table">
+    /// The table that remembers the applied scripts. An app that already owns a table named <c>schema_migrations</c> with other columns picks another name.
+    /// The name goes into SQL text, so only a plain identifier passes: a letter or underscore, then letters, digits and underscores, at most 63 characters.
+    /// </param>
+    public Migrator(NpgsqlDataSource db, IEnumerable<MigrationSet> sets, string table = DefaultTable)
+    {
+        if (!Identifier().IsMatch(table)) throw new ArgumentException($"The migration table '{table}' is not a plain identifier (letters, digits, underscore; not starting with a digit; at most 63 characters).", nameof(table));
+        this.db = db;
+        this.sets = sets;
+        this.table = table;
+    }
 
     public async Task<IReadOnlyList<string>> RunAsync(CancellationToken ct = default)
     {
@@ -63,9 +85,9 @@ public sealed class Migrator(NpgsqlDataSource db, IEnumerable<MigrationSet> sets
         await conn.ExecAsync(null, "select pg_advisory_lock($1)", ct, LockKey);
         try
         {
-            await conn.ExecAsync(null, "create table if not exists schema_migrations (id text primary key, checksum text not null, applied_at timestamptz not null default now())", ct);
+            await conn.ExecAsync(null, $"create table if not exists {table} (id text primary key, checksum text not null, applied_at timestamptz not null default now())", ct);
             var known = new Dictionary<string, string>(StringComparer.Ordinal);
-            await using (var cmd = conn.Cmd(null, "select id, checksum from schema_migrations"))
+            await using (var cmd = conn.Cmd(null, $"select id, checksum from {table}"))
             await using (var r = await cmd.ExecuteReaderAsync(ct))
                 while (await r.ReadAsync(ct)) known[r.GetString(0)] = r.GetString(1);
 
@@ -79,7 +101,7 @@ public sealed class Migrator(NpgsqlDataSource db, IEnumerable<MigrationSet> sets
                 }
                 await using var tx = await conn.BeginTransactionAsync(ct);
                 await using (var run = new NpgsqlCommand(script.Sql, conn, tx)) await run.ExecuteNonQueryAsync(ct);
-                await conn.ExecAsync(tx, "insert into schema_migrations (id, checksum) values ($1, $2)", ct, script.Id, script.Checksum);
+                await conn.ExecAsync(tx, $"insert into {table} (id, checksum) values ($1, $2)", ct, script.Id, script.Checksum);
                 await tx.CommitAsync(ct);
                 applied.Add(script.Id);
             }
