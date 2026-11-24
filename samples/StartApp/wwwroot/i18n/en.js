@@ -2,6 +2,7 @@
 export default {
   'nav.items': 'List',
   'items.title': 'Things to remember',
+  'items.sub': 'A small list for what you do not want to forget.',
   'items.new': 'New entry',
   'items.add': 'Add',
   'items.edit': 'Edit entry',

@@ -305,13 +305,14 @@ export function field({ label, name, type = 'text', value = '', hint, options, r
   if (type === 'textarea') { control = h('textarea', { class: 'textarea', id, name, rows: rows || 4, ...rest }); control.value = value; }
   else if (type === 'select') { control = h('select', { class: 'select', id, name, ...rest }, options.map(([v, l]) => h('option', { value: v, text: l }))); control.value = value; }
   else { control = h('input', { class: 'input', id, name, type, ...rest }); control.value = value; }
+  const shown = type === 'search' ? h('div', { class: 'search' }, icon('search'), control) : control;      // a search field is a pill with its symbol
   const describedBy = [];
   const hintEl = hint ? h('p', { class: 'field-hint', id: id + '-hint', text: hint }) : null;
   if (hintEl) describedBy.push(hintEl.id);
   describedBy.push(id + '-error');
   control.setAttribute('aria-describedby', describedBy.join(' '));
   return h('div', { class: 'field', dataset: { field: name } },
-    h('label', { for: id, text: label }), control, hintEl,
+    h('label', { for: id, text: label }), shown, hintEl,
     h('p', { class: 'field-error', id: id + '-error', hidden: true }));
 }
 
@@ -347,6 +348,31 @@ export function segmented({ name, label, value, options, onchange }) {
     input.checked = v === value;
     return h('label', null, input, h('span', null, ic ? icon(ic) : null, l));
   }));
+}
+
+/**
+ * A group of places in a capsule, for the head of a page or above a list: links, the current one a filled pill inside the capsule.
+ * items: [{ label, href, icon?, current? }]. Choices that are not places are a segmented() (the same look).
+ */
+export function capsule({ label, items }) {
+  return h('nav', { class: 'capsule', 'aria-label': label }, items.map((i) =>
+    h('a', { class: 'capsule-item', href: i.href, 'aria-current': i.current ? 'page' : null }, i.icon ? icon(i.icon) : null, i.label)));
+}
+
+/**
+ * A floating bar of actions above the content, in a glass pill: for something that waits for a decision ("Apply changes").
+ * { text, icon?, actions: [{ label, kind: 'primary' | 'ghost', run }] }. Returns { el, close() }; an action closes the bar unless its run returns false.
+ */
+export function floatBar({ text, icon: name, actions = [] }) {
+  const bar = { el: null, close: () => bar.el.remove() };
+  bar.el = h('div', { class: 'float-bar', role: 'region', 'aria-label': text },
+    name ? icon(name) : null, h('span', { class: 'float-bar-text', text }),
+    actions.map((a) => h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', text: a.label, onclick: async (e) => {
+      try { if (!a.run || await busy(e.currentTarget, a.run(bar)) !== false) bar.close(); }
+      catch (err) { if (!(err instanceof ApiError)) throw err; toast(errorText(err), { kind: 'danger' }); }
+    } })));
+  document.body.append(bar.el);
+  return bar;
 }
 
 /** The values of the named controls of a form (checkboxes as true or false, texts trimmed except passwords). */
@@ -452,11 +478,11 @@ export async function copyText(text) {
  *   person   { name }
  *   menu     extra entries of the person menu, in front of "sign out"
  *   onSignOut
- * Returns { el, show(view, path) }. A view is { title, body, back, actions }: back is the hash to go back to, actions are nodes for the head.
+ * Returns { el, show(view, path) }. A view is { title, sub, body, back, actions }: sub is a second line under the title, back is the hash to go back to,
+ * actions are nodes at the right of the title (the main action first). A nav place with foot: true goes into a second group at the bottom of the side list.
  */
 export function shell({ app, nav, person, menu = [], onSignOut }) {
-  const title = h('h1', { class: 'shell-title' });
-  const actions = h('div', { class: 'shell-actions' });
+  const title = h('div', { class: 'shell-title', 'aria-hidden': 'true' });       // the small title in the bar: it appears when the page has scrolled
   const backSlot = h('div', null);
   const main = h('main', { class: 'shell-main', id: 'main', tabindex: '-1' });
   const personMenu = (anchor) => openMenu(anchor, [
@@ -471,11 +497,15 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
   const sidePerson = h('button', { class: 'person', type: 'button', 'aria-haspopup': 'menu', onclick: (e) => personMenu(e.currentTarget) },
     h('span', { class: 'avatar', text: initial }), h('span', { class: 'person-name', text: person.name }), icon('more'));
   const link = (cls, n, inner) => h('a', { class: cls, href: n.href, dataset: { nav: n.href } }, inner);
+  const navItem = (n) => link('nav-item', n, [icon(n.icon), h('span', { text: n.label })]);
+  const brand = (cls) => h('a', { class: cls, href: nav[0] ? nav[0].href : '#/' }, h('span', { class: 'brand-mark' }, icon(app.icon || 'grid')), h('span', { text: app.name }));
+  const foot = nav.filter((n) => n.foot);
   const side = h('aside', { class: 'shell-side' },
-    h('a', { class: 'brand', href: nav[0] ? nav[0].href : '#/' }, h('span', { class: 'brand-mark' }, icon(app.icon || 'grid')), h('span', { text: app.name })),
-    h('nav', { class: 'nav', 'aria-label': t('shell.nav') }, nav.map((n) => link('nav-item', n, [icon(n.icon), h('span', { text: n.label })]))),
+    brand('brand'),
+    h('nav', { class: 'nav', 'aria-label': t('shell.nav') }, nav.filter((n) => !n.foot).map(navItem)),
+    foot.length ? h('nav', { class: 'nav nav-foot', 'aria-label': t('shell.nav') }, foot.map(navItem)) : null,
     sidePerson);
-  const head = h('header', { class: 'shell-head' }, backSlot, title, actions, headPerson);
+  const head = h('header', { class: 'shell-head' }, backSlot, brand('head-brand'), title, h('span', { class: 'grow' }), headPerson);
   const tabs = h('nav', { class: 'shell-tabs', 'aria-label': t('shell.nav') }, nav.slice(0, 5).map((n) => link('tab', n, [h('span', { class: 'tab-pill' }, icon(n.icon)), h('span', { text: n.label })])));
   const el = h('div', { class: 'shell' },
     h('a', { class: 'skip', href: '#main', text: t('shell.skip'), onclick: (e) => { e.preventDefault(); main.focus(); } }),
@@ -485,11 +515,16 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
   function show(view, path = '') {
     title.textContent = view.title || '';
     document.title = view.title ? `${view.title} · ${app.name}` : app.name;
-    backSlot.replaceChildren(view.back ? h('a', { class: 'btn ghost icon-only', href: view.back, 'aria-label': t('common.back') }, icon('left')) : '');
+    const back = () => h('a', { class: 'btn ghost icon-only', href: view.back, 'aria-label': t('common.back') }, icon('left'));
+    backSlot.replaceChildren(view.back ? back() : '');
     backSlot.hidden = !view.back;
     head.classList.toggle('has-back', !!view.back);
-    actions.replaceChildren(...(view.actions || []));
-    main.replaceChildren(view.body);
+    // the head of the page: the big title, a second line, the main action at the right (the start page of JulOS)
+    const pageHead = h('div', { class: 'page-head' },
+      view.back ? h('span', { class: 'page-back' }, back()) : null,
+      h('div', { class: 'page-head-text' }, h('h1', { class: 'page-title', text: view.title || '' }), view.sub ? h('p', { class: 'page-sub', text: view.sub }) : null),
+      view.actions && view.actions.length ? h('div', { class: 'page-actions' }, view.actions) : null);
+    main.replaceChildren(pageHead, view.body);
     // the place in the menu that contains this page is marked (the longest matching start wins)
     const current = nav.map((n) => n.href.replace(/^#/, '')).filter((p) => path === p || path.startsWith(p.replace(/\/$/, '') + '/') || p === path + '/').sort((a, b) => b.length - a.length)[0];
     for (const a of el.querySelectorAll('[data-nav]')) {

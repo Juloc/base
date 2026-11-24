@@ -22,7 +22,7 @@ function run(me) {
     app: { name: me.app.name, icon: 'bookmark' },
     nav: [
       { label: t('nav.items'), icon: 'list', href: '#/' },
-      { label: t('shell.settings'), icon: 'sliders', href: '#/settings' },
+      { label: t('shell.settings'), icon: 'sliders', href: '#/settings', foot: true },
     ],
     person: { name: me.user },
     menu: [{ label: t('shell.settings'), icon: 'sliders', href: '#/settings' }],
@@ -36,7 +36,7 @@ function run(me) {
   async function listPage() {
     let query = '', next = null;
     const list = h('ul', { class: 'list' });
-    const holder = h('div', { class: 'card flush' }, list);
+    const holder = h('div', null, list);          // tiles, one per entry; an empty list shows the empty state instead
     const more = h('button', { class: 'btn ghost wide', type: 'button', text: t('common.more'), hidden: true, onclick: () => load(false) });
 
     async function load(fresh) {
@@ -79,7 +79,7 @@ function run(me) {
 
     await load(true);
     return {
-      title: t('items.title'),
+      title: t('items.title'), sub: t('items.sub'),
       actions: [h('button', { class: 'btn primary', type: 'button', onclick: () => edit(null) }, icon('plus'), t('items.new'))],
       body: h('div', { class: 'page stack' }, h('div', { class: 'toolbar' }, search, hideDone), holder, more),
     };

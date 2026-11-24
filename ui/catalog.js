@@ -1,6 +1,6 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
-import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, field, passwordField, submit, segmented, theme, ApiError } from './base.js';
+import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, field, passwordField, submit, segmented, theme, ApiError } from './base.js';
 import { GLYPHS } from './icons.js';
 
 /* ---------- the examples that are JavaScript: the source shown is the function itself ---------- */
@@ -38,6 +38,12 @@ const demos = {
       '-',
       { label: 'Sign out', icon: 'logout', danger: true, run: () => toast('Signed out') },
     ]);
+  },
+  floatBar() {
+    floatBar({
+      text: '3 changes waiting', icon: 'info',
+      actions: [{ label: 'Discard', kind: 'ghost' }, { label: 'Apply changes', kind: 'primary', run: () => { toast('Applied', { kind: 'ok' }); } }],
+    });
   },
   form() {
     // stands in for a request: the server answers with the fields that are wrong

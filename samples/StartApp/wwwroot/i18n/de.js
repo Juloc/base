@@ -2,6 +2,7 @@
 export default {
   'nav.items': 'Merkliste',
   'items.title': 'Merkliste',
+  'items.sub': 'Eine kleine Liste für alles, was du nicht vergessen willst.',
   'items.new': 'Neuer Eintrag',
   'items.add': 'Hinzufügen',
   'items.edit': 'Eintrag bearbeiten',

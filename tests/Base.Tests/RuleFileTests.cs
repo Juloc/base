@@ -84,7 +84,7 @@ public partial class RuleFileTests
     public void Nothing_private_is_in_the_repository()
     {
         var files = Directory.EnumerateFiles(Repo.Root, "*", SearchOption.AllDirectories)
-            .Where(f => !Regex.IsMatch(Rel(f), @"(^|/)(\.git|bin|obj|data|node_modules|TestResults)/") && new FileInfo(f).Length < 2_000_000).ToArray();
+            .Where(f => !Regex.IsMatch(Rel(f), @"(^|/)(\.git|bin|obj|data|node_modules|TestResults|shots)/") && new FileInfo(f).Length < 2_000_000).ToArray();
         Assert.DoesNotContain(files, f => Path.GetFileName(f) is ".env" or "secret.key" || Path.GetExtension(f) is ".pem" or ".pfx" or ".key");
         var findings = new List<string>();
         foreach (var file in files)
@@ -318,9 +318,9 @@ public partial class RuleFileTests
     public void Every_part_of_the_look_is_in_the_catalogue()
     {
         var catalogue = Repo.Read("ui", "catalog.html") + Repo.Read("ui", "catalog.js");
-        string[] classes = ["btn", "field", "input", "textarea", "select", "switch", "check", "seg", "card", "list", "row", "table", "badge", "notice", "empty", "spinner", "skeleton"];
+        string[] classes = ["btn", "field", "input", "textarea", "select", "switch", "check", "seg", "card", "list", "row", "table", "badge", "notice", "empty", "spinner", "skeleton", "capsule", "chip", "tile", "tiles", "search"];
         Assert.All(classes, c => Assert.Matches($@"class=""[^""]*\b{c}\b", catalogue));
-        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router("];
+        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule("];
         Assert.All(functions, f => Assert.Contains(f, catalogue));
         Assert.Contains("Object.keys(GLYPHS)", catalogue);                                 // every icon, by itself
         // every colour token is shown

@@ -50,7 +50,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="look">
         <h2 class="h1">The look and where it comes from</h2>
-        <p class="muted">The look of the family is that of <strong>JulOS</strong>, its main app: Material 3 Expressive built from one seed colour (<code class="mono">m3.css</code> there). The kit takes its roles, tone steps, radii, type scale and motion and keeps its own token names; the one seed colour is <code class="mono">--accent-hue</code>. The default hue (299) is the hue of the JulOS seed, so an app that sets none looks like JulOS.</p>
+        <p class="muted">The look of the family is that of <strong>JulOS</strong>, its main app: Material 3 Expressive built from one seed colour (<code class="mono">m3.css</code> there). The kit takes its roles, tone steps, radii, type scale and motion and keeps its own token names; the one seed colour is <code class="mono">--accent-hue</code>. The default hue (299) is the hue of the JulOS seed, so an app that sets none looks like JulOS. Since 0.3.1 the dark face and the capsules, chips and floating bar also take from <strong>Jularr</strong> (blue-black tinted by the hue, fine edges instead of shadows).</p>
         <div class="cat-demo on-surface" data-nocode>
           <table class="look-map">
             <thead><tr><th>Material 3 role (JulOS)</th><th>Kit token</th></tr></thead>
@@ -174,6 +174,56 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         </div>
       </section>
 
+      <section class="cat-item" id="capsules">
+        <h2 class="h1">Capsule and chip</h2>
+        <p class="muted">A capsule holds a group in one round outline, the chosen part is a filled pill inside it (from Jularr). <code class="mono">segmented()</code> makes one for choices; <code class="mono">capsule({ label, items })</code> makes one for places, for example in the head of a page. A chip is a rounded rectangle with a fine edge for categories and filters; it can be a button (<code class="mono">aria-pressed</code>), a link or plain text.</p>
+        <div class="cat-demo">
+          <div class="stack">
+            <nav class="capsule" aria-label="Kinds">
+              <a class="capsule-item" href="#capsules" aria-current="page">Watch</a>
+              <a class="capsule-item" href="#capsules">Read</a>
+              <a class="capsule-item" href="#capsules">Listen</a>
+            </nav>
+            <div class="chips">
+              <button class="chip on" type="button" aria-pressed="true"><span data-icon="check"></span>Action</button>
+              <button class="chip" type="button" aria-pressed="false">Comedy</button>
+              <a class="chip" href="#capsules">Drama</a>
+            </div>
+            <div class="field">
+              <label for="cat-s1">Search</label>
+              <div class="search"><span data-icon="search"></span><input class="input" id="cat-s1" type="search" placeholder="Search the list"></div>
+            </div>
+            <div class="cluster">
+              <button class="btn outline icon-only" type="button" aria-label="Edit"><span data-icon="edit"></span></button>
+              <button class="btn outline icon-only" type="button" aria-label="Settings"><span data-icon="sliders"></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cat-item" id="tiles">
+        <h2 class="h1">Tiles and tile rows</h2>
+        <p class="muted">A list is soft tiles with a space between (<code class="mono">.list</code>, JulOS); the symbol sits in a tinted round ground (<code class="mono">.row-lead</code>). For long lists and tables the rows are lines: inside a card, or <code class="mono">.list.lines</code>. A grid of tiles (<code class="mono">.tiles</code>) is for quick actions.</p>
+        <div class="cat-demo">
+          <div class="stack">
+            <ul class="list">
+              <li><a class="row link" href="#tiles"><span class="row-lead"><span data-icon="file"></span></span><span class="row-main"><span class="row-title">A tile row</span><span class="row-sub">Second line, cut off when it is too long</span></span><span class="row-end"><span data-icon="right"></span></span></a></li>
+              <li><div class="row"><span class="row-lead"><span data-icon="laptop"></span></span><span class="row-main"><span class="row-title">Firefox on Linux</span><span class="row-sub">Active now</span></span><span class="badge accent">This device</span></div></li>
+            </ul>
+            <div class="tiles">
+              <a class="tile" href="#tiles"><span class="tile-lead"><span data-icon="plus"></span></span><span><span class="tile-title">New entry</span><span class="tile-sub">Add to the list</span></span></a>
+              <a class="tile" href="#tiles"><span class="tile-lead"><span data-icon="search"></span></span><span><span class="tile-title">Search</span><span class="tile-sub">Find an entry</span></span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cat-item" id="floatbar">
+        <h2 class="h1">Page head and floating bar</h2>
+        <p class="muted">The head of a page is made by <code class="mono">shell()</code> from the view: <code class="mono">{ title, sub, actions }</code> (big title, a second line, the main action at the right; <code class="mono">back</code> adds the way back). A place of <code class="mono">nav</code> with <code class="mono">foot: true</code> goes into a second group at the bottom of the side list. For what waits for a decision ("Apply changes") a floating bar of glass stays above the content: <code class="mono">floatBar({ text, actions })</code>.</p>
+        <div class="cat-demo" data-run="floatBar"></div>
+      </section>
+
       <section class="cat-item" id="cards">
         <h2 class="h1">Card</h2>
         <p class="muted">Groups what belongs together. <code class="mono">.card.flush</code> has no padding, for a list or a table that runs edge to edge.</p>
@@ -187,7 +237,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="lists">
         <h2 class="h1">List</h2>
-        <p class="muted">Rows of at least 56 px: a lead, a title, one line below, an end. A whole row may be a link. Lists come in pages (LIST-01) and say something useful when empty (LIST-02).</p>
+        <p class="muted">Rows of at least 52 px: a lead, a title, one line below, an end. A whole row may be a link. Lists come in pages (LIST-01) and say something useful when empty (LIST-02).</p>
         <div class="cat-demo">
           <div class="card flush">
             <ul class="list">

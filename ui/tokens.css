@@ -63,25 +63,25 @@
   --tertiary-hue: calc(var(--accent-hue) - 55);
 
   /* ---- surfaces: the tonal containers of Material 3, from the page (bg) over the lowest (surface, cards) to the highest (surface-4, filled fields) ---- */
-  --bg: light-dark(oklch(0.983 0.008 var(--accent-hue)), oklch(0.188 0.012 var(--accent-hue)));
-  --surface: light-dark(oklch(1 0 var(--accent-hue)), oklch(0.164 0.012 var(--accent-hue)));
-  --surface-1: light-dark(oklch(0.966 0.012 var(--accent-hue)), oklch(0.224 0.014 var(--accent-hue)));
-  --surface-2: light-dark(oklch(0.948 0.016 var(--accent-hue)), oklch(0.241 0.016 var(--accent-hue)));
-  --surface-3: light-dark(oklch(0.931 0.018 var(--accent-hue)), oklch(0.284 0.018 var(--accent-hue)));
-  --surface-4: light-dark(oklch(0.914 0.02 var(--accent-hue)), oklch(0.328 0.02 var(--accent-hue)));
-  --text: light-dark(oklch(0.224 0.02 var(--accent-hue)), oklch(0.914 0.01 var(--accent-hue)));
-  --text-2: light-dark(oklch(0.397 0.03 var(--accent-hue)), oklch(0.828 0.03 var(--accent-hue)));
-  --line: light-dark(oklch(0.828 0.03 var(--accent-hue)), oklch(0.397 0.03 var(--accent-hue)));
-  --line-strong: light-dark(oklch(0.569 0.03 var(--accent-hue)), oklch(0.655 0.03 var(--accent-hue)));
+  --bg: light-dark(oklch(0.983 0.008 var(--accent-hue)), oklch(0.165 0.02 var(--accent-hue)));
+  --surface: light-dark(oklch(1 0 var(--accent-hue)), oklch(0.205 0.022 var(--accent-hue)));
+  --surface-1: light-dark(oklch(0.966 0.012 var(--accent-hue)), oklch(0.225 0.024 var(--accent-hue)));
+  --surface-2: light-dark(oklch(0.948 0.016 var(--accent-hue)), oklch(0.245 0.026 var(--accent-hue)));
+  --surface-3: light-dark(oklch(0.931 0.018 var(--accent-hue)), oklch(0.275 0.028 var(--accent-hue)));
+  --surface-4: light-dark(oklch(0.914 0.02 var(--accent-hue)), oklch(0.305 0.03 var(--accent-hue)));
+  --text: light-dark(oklch(0.224 0.02 var(--accent-hue)), oklch(0.94 0.01 var(--accent-hue)));
+  --text-2: light-dark(oklch(0.397 0.03 var(--accent-hue)), oklch(0.78 0.03 var(--accent-hue)));
+  --line: light-dark(oklch(0.828 0.03 var(--accent-hue)), oklch(0.34 0.035 var(--accent-hue)));
+  --line-strong: light-dark(oklch(0.569 0.03 var(--accent-hue)), oklch(0.62 0.03 var(--accent-hue)));
 
   /* ---- the accent of the app: "primary" and its container; the secondary and tertiary containers for chips, selected items, badges ---- */
   --accent: light-dark(oklch(0.483 0.15 var(--accent-hue)), oklch(0.828 0.105 var(--accent-hue)));
   --on-accent: light-dark(oklch(1 0 var(--accent-hue)), oklch(0.31 0.085 var(--accent-hue)));
-  --accent-soft: light-dark(oklch(0.914 0.06 var(--accent-hue)), oklch(0.397 0.12 var(--accent-hue)));
+  --accent-soft: light-dark(oklch(0.914 0.06 var(--accent-hue)), oklch(0.34 0.09 var(--accent-hue)));
   --on-accent-soft: light-dark(oklch(0.224 0.1 var(--accent-hue)), oklch(0.914 0.06 var(--accent-hue)));
-  --secondary-soft: light-dark(oklch(0.914 0.035 var(--accent-hue)), oklch(0.397 0.05 var(--accent-hue)));
+  --secondary-soft: light-dark(oklch(0.914 0.035 var(--accent-hue)), oklch(0.35 0.045 var(--accent-hue)));
   --on-secondary-soft: light-dark(oklch(0.224 0.05 var(--accent-hue)), oklch(0.914 0.035 var(--accent-hue)));
-  --tertiary-soft: light-dark(oklch(0.914 0.055 var(--tertiary-hue)), oklch(0.397 0.08 var(--tertiary-hue)));
+  --tertiary-soft: light-dark(oklch(0.914 0.055 var(--tertiary-hue)), oklch(0.35 0.06 var(--tertiary-hue)));
   --on-tertiary-soft: light-dark(oklch(0.224 0.07 var(--tertiary-hue)), oklch(0.914 0.055 var(--tertiary-hue)));
 
   /* ---- states: the same in every app ---- */
@@ -96,24 +96,25 @@
   --warn-soft: light-dark(oklch(0.95 0.05 85), oklch(0.31 0.05 80));
   --on-warn-soft: light-dark(oklch(0.36 0.08 70), oklch(0.91 0.07 85));
 
-  /* ---- glass: tinted, semi-transparent surfaces with a fine edge, over the soft gradient of the page ---- */
-  --glass: color-mix(in oklab, var(--surface) 66%, transparent);
-  --glass-strong: color-mix(in oklab, var(--surface) 86%, transparent);
-  --glass-edge: color-mix(in oklab, var(--surface) 70%, var(--line) 30%);
-  --blur: blur(16px) saturate(1.3);
+  /* ---- glass: tinted, clearly translucent surfaces with a fine light edge, over the gradient of the page ---- */
+  --glass: color-mix(in oklab, var(--surface) 56%, transparent);
+  --glass-strong: color-mix(in oklab, var(--surface) 84%, transparent);
+  --glass-edge: color-mix(in oklab, var(--text) 13%, transparent);
+  --blur: blur(16px) saturate(1.4);
   --blur-bar: blur(20px) saturate(1.4);
   --scrim: oklch(0 0 0 / 0.32);
   --page-bg:
-    radial-gradient(110% 46% at 8% -4%, color-mix(in oklab, var(--accent-soft) 85%, transparent), transparent 72%),
-    radial-gradient(80% 38% at 104% 14%, color-mix(in oklab, var(--tertiary-soft) 55%, transparent), transparent 72%),
+    radial-gradient(120% 52% at 6% -6%, light-dark(var(--accent-soft), color-mix(in oklab, var(--accent-soft) 60%, transparent)), transparent 74%),
+    radial-gradient(90% 44% at 106% 16%, light-dark(color-mix(in oklab, var(--tertiary-soft) 75%, transparent), color-mix(in oklab, var(--tertiary-soft) 40%, transparent)), transparent 74%),
+    radial-gradient(90% 40% at -8% 104%, light-dark(color-mix(in oklab, var(--secondary-soft) 80%, transparent), color-mix(in oklab, var(--accent-soft) 30%, transparent)), transparent 74%),
     var(--bg);
 
   /* ---- type: the stack of JulOS, no web fonts; the sizes of the Material 3 scale ---- */
   --font: "Roboto Flex", Roboto, "Google Sans", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", "Noto Sans", sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
   --text-xs: 0.75rem;     /* body small, label medium */
-  --text-s: 0.875rem;     /* body medium, label large, title small */
-  --text-m: 1rem;         /* body large, title medium */
+  --text-s: 0.8125rem;    /* body medium, label large, title small: one step more compact than Material 3 */
+  --text-m: 0.9375rem;    /* body large, title medium */
   --text-l: 1.25rem;      /* title large */
   --text-xl: 1.5rem;      /* headline */
   --text-xxl: 2rem;
@@ -143,10 +144,10 @@
   --tabs-h: 64px;
   --content-w: 920px;
 
-  /* ---- elevation (tone before shadow, the shadow is tinted by the accent) and motion ---- */
-  --shadow-1: 0 1px 2px color-mix(in oklab, var(--accent) 22%, transparent), 0 1px 3px color-mix(in oklab, var(--accent) 12%, transparent);
-  --shadow-2: 0 2px 6px color-mix(in oklab, var(--accent) 22%, transparent), 0 6px 14px color-mix(in oklab, var(--accent) 12%, transparent);
-  --shadow-3: 0 8px 22px color-mix(in oklab, var(--accent) 30%, transparent);
+  /* ---- elevation: tone and a fine edge first; the tinted shadow only in light, in dark the edge carries (as in Jularr) ---- */
+  --shadow-1: 0 1px 2px light-dark(color-mix(in oklab, var(--accent) 22%, transparent), transparent), 0 1px 3px light-dark(color-mix(in oklab, var(--accent) 12%, transparent), transparent);
+  --shadow-2: 0 2px 6px light-dark(color-mix(in oklab, var(--accent) 22%, transparent), oklch(0 0 0 / 0.3)), 0 6px 14px light-dark(color-mix(in oklab, var(--accent) 12%, transparent), oklch(0 0 0 / 0.2));
+  --shadow-3: 0 8px 22px light-dark(color-mix(in oklab, var(--accent) 30%, transparent), oklch(0 0 0 / 0.5));
   --dur: 150ms;
   --dur-m: 250ms;
   --dur-l: 400ms;
@@ -161,7 +162,7 @@
 /* where the person asks for less transparency, glass is the solid surface and the page a plain ground */
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --glass: var(--surface); --glass-strong: var(--surface); --glass-edge: var(--line);
+    --glass: var(--surface); --glass-strong: var(--surface);
     --blur: none; --blur-bar: none; --page-bg: var(--bg);
   }
 }

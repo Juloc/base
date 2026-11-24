@@ -4,6 +4,16 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.3.1
+
+**Second round of the look: more JulOS, and a little Jularr.** Same markup and API; one **visible change for every app**: a `.list` outside a card is now tiles with a space between (inside a card, or as `.list.lines`, the rows are lines as before), and an app that put a list in `.card.flush` should drop the card.
+
+- **Pages:** `shell()` builds the head of the page in the page: big title (`view.title`), a second line (new `view.sub`), the main action at the right (`view.actions`), the way back on wide screens; on the phone a small bar with the app name that shows the title once the page has scrolled. A `nav` place with `foot: true` goes into a second group at the bottom of the side list. The selected place is a soft filled pill over the whole width.
+- **Glass and depth:** stronger gradient (three tinted spots), clearly translucent cards with a fine light edge (`--glass-edge` is now the text colour at 13 percent), tiles, rows, empty states and the menu are glass. Dark gets the depth of Jularr: a blue-black from the hue of the app, surfaces a trace lighter than the page, fine edges instead of shadows (shadows are off in dark except for sheets and menus).
+- **New parts:** capsule (`.capsule`, `capsule({ label, items })`, and `segmented()` now looks like it: round outline, the chosen part a filled pill), chip (`.chip`, `.chips`), tiles (`.tiles`, `.tile`, `.tile-lead`), round outlined icon button (`.btn.outline.icon-only`), search pill with symbol (`field({ type: 'search' })` wraps the input in `.search`), floating bar (`floatBar({ text, icon, actions })`). The empty state is a glass tile with a large rounded symbol.
+- **Density:** one step more compact: `--text-s` 13 px, `--text-m` 15 px, rows 52 px, `.stack` gap 12 px; the 44 px of a finger stay. Titles, card titles and section titles are bolder.
+- Default `--accent-soft`, `--secondary-soft`, `--tertiary-soft`, `--line` and the dark surfaces changed values; `--shadow-*` have no tint in dark.
+
 ## 0.3.0
 
 **The look follows JulOS.** An app on the base now looks like a sibling of JulOS (Material 3 Expressive from one seed colour). Every app changes its look at its next sync; the markup and the API of `base.js` do not change.
