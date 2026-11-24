@@ -210,6 +210,7 @@ export default {
   'hub.removeText': 'Adresse, Client-Id und Geheimnis werden gelöscht. Wer sich nur über die Zentrale anmeldet, kommt dann nicht mehr hinein.',
   'hub.enter': 'Das tragen Sie in der Zentrale ein',
   'hub.returnAddress': 'Rückkehr-Adresse',
+  'hub.signedOutAddress': 'Adresse nach der Abmeldung',
   'hub.logoutAddress': 'Adresse für die Abmeldung (Back-Channel)',
   'hub.rolesLine': 'Rollen dieser App: {roles}',
   'account.viaHub': 'Sie sind über die Zentrale angemeldet. Passwort und Authenticator gehören dort hin.',

@@ -34,7 +34,8 @@ public sealed class HubSignIn(HubSettingsStore settings, HubDirectory directory,
         if (!limit.Allow("hub-begin", ctx.ClientIp(), 20, out var wait)) return Error.TooMany(wait);
         var cfg = await settings.GetAsync(ctx.RequestAborted);
         if (!cfg.Active) return Error.Conflict(Off, "Sign-in through the hub is off.");
-        var meta = await directory.DiscoverAsync(cfg.Url!, ctx.RequestAborted);
+        // asked afresh every time (one small request): from memory a hub that went away would send the person to a dead address of the browser; asked, the button says so in words
+        var meta = await directory.DiscoverAsync(cfg.Url!, ctx.RequestAborted, maxAge: TimeSpan.Zero);
         Reach(meta.Ok || meta.Error!.Code != "hub.unreachable");
         if (!meta.Ok) return meta.Error!;
 
@@ -91,7 +92,7 @@ public sealed class HubSignIn(HubSettingsStore settings, HubDirectory directory,
         var id = await tokens.ValidateIdTokenAsync(exchanged.Value, meta.Value, cfg.ClientId!, flow.Nonce, ctx.RequestAborted);
         if (!id.Ok) return Fail("hub.failed", id.Error!.Message, ip);
 
-        var signedIn = await accounts.SignInAsync(new HubIdentity(id.Value.Sub, id.Value.Sid, id.Value.Name, id.Value.Role), ip, ctx.Request.Headers.UserAgent, ctx.RequestAborted);
+        var signedIn = await accounts.SignInAsync(new HubIdentity(id.Value.Sub, id.Value.Sid, id.Value.Name, id.Value.Role, exchanged.Value), ip, ctx.Request.Headers.UserAgent, ctx.RequestAborted);
         if (!signedIn.Ok) return Fail(signedIn.Error!.Code, signedIn.Error.Message, ip);
         cookie.Write(ctx, signedIn.Value.Token);
         return "/";
@@ -134,11 +135,14 @@ public sealed class HubSignIn(HubSettingsStore settings, HubDirectory directory,
     }
 
     /// <summary>The address to send a person to after signing out here, when they came through the hub (the hub then ends its own session and tells the other apps). Null otherwise.</summary>
-    public async Task<string?> EndSessionUrlAsync(CancellationToken ct)
+    public async Task<string?> EndSessionUrlAsync(HttpContext ctx, string? idTokenHint, CancellationToken ct)
     {
         var cfg = await settings.GetAsync(ct);
         if (!cfg.Complete) return null;
         var meta = await directory.DiscoverAsync(cfg.Url!, ct);
-        return meta.Ok && meta.Value.EndSessionEndpoint is { } end ? end + "?client_id=" + Uri.EscapeDataString(cfg.ClientId!) : null;
+        if (!meta.Ok || meta.Value.EndSessionEndpoint is not { } end) return null;
+        var url = end + "?client_id=" + Uri.EscapeDataString(cfg.ClientId!);
+        // with the hint the hub ends its session without asking and sends the person back to this app (it takes the address only with a valid hint, and only if it is registered)
+        return idTokenHint is null ? url : url + "&id_token_hint=" + Uri.EscapeDataString(idTokenHint) + "&post_logout_redirect_uri=" + Uri.EscapeDataString($"{ctx.Request.Scheme}://{ctx.Request.Host}{HubPaths.SignedOut}");
     }
 }

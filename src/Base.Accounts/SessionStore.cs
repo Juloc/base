@@ -40,11 +40,11 @@ public sealed class SessionStore(NpgsqlDataSource db)
 
     private static readonly string Valid = $"s.created_at > now() - interval '{MaxDays} days' and s.last_seen > now() - interval '{IdleDays} days' and u.state = 'active' and (u.totp_confirmed or u.hub_sub is not null)";
 
-    public async Task<string> CreateAsync(Guid userId, string? ip, string? userAgent, CancellationToken ct = default, string? hubSid = null)
+    public async Task<string> CreateAsync(Guid userId, string? ip, string? userAgent, CancellationToken ct = default, string? hubSid = null, string? hubHint = null)
     {
         var token = SessionTokens.New();
-        await db.ExecAsync("insert into sessions (id, hash, user_id, created_at, last_seen, rotated_at, user_agent, ip, hub_sid) values ($1, $2, $3, now(), now(), now(), $4, $5, $6)", ct,
-            Ids.New(), SessionTokens.Hash(token), userId, userAgent is { Length: > 200 } ? userAgent[..200] : userAgent, ip, hubSid);
+        await db.ExecAsync("insert into sessions (id, hash, user_id, created_at, last_seen, rotated_at, user_agent, ip, hub_sid, hub_hint) values ($1, $2, $3, now(), now(), now(), $4, $5, $6, $7)", ct,
+            Ids.New(), SessionTokens.Hash(token), userId, userAgent is { Length: > 200 } ? userAgent[..200] : userAgent, ip, hubSid, hubHint);
         return token;
     }
 
@@ -80,6 +80,10 @@ public sealed class SessionStore(NpgsqlDataSource db)
     private Task<SessionIdentity?> ResolveByPreviousAsync(string previousHash, CancellationToken ct) =>
         db.FirstAsync($"select s.hash, s.user_id, u.name, u.roles, s.id, s.hub_sid from sessions s join users u on u.id = s.user_id where s.prev_hash = $1 and s.prev_until > now() and {Valid}",
             r => new SessionIdentity(r.GetGuid(1), r.GetString(2), r.GetFieldValue<string[]>(3), r.GetString(0), null, r.GetGuid(4), r.TextOrNull(5)), ct, previousHash);
+
+    /// <summary>The ID token of the central sign-in that made this session (the hint for the hub's sign-out), or null.</summary>
+    public Task<string?> HubHintAsync(Guid sessionId, CancellationToken ct = default) =>
+        db.ScalarAsync<string>("select hub_hint from sessions where id = $1", ct, sessionId);
 
     public Task DeleteAsync(string hash, CancellationToken ct = default) => db.ExecAsync("delete from sessions where hash = $1", ct, hash);
 

@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 namespace Base.Accounts;
 
 /// <summary>What the central sign-in vouched for: who (<c>sub</c>, stable), for which of its sessions (<c>sid</c>), the name and the role in this app.</summary>
-public sealed record HubIdentity(string Sub, string Sid, string? Name, string? Role);
+public sealed record HubIdentity(string Sub, string Sid, string? Name, string? Role, string? Hint = null);
 
 /// <summary>
 /// The accounts side of "Sign in through the hub" (AUTH-13): the person of the centre becomes a person here, by <c>sub</c> only (never by name or mail),
-/// the role comes from the centre at every sign-in, and then the app makes its OWN session, exactly as after a password. No token of the centre is kept.
+/// the role comes from the centre at every sign-in, and then the app makes its OWN session, exactly as after a password. Of the centre's token only the ID token stays, as the hint for its sign-out (AUTH-14).
 /// </summary>
 public sealed class HubAccounts(UserStore users, SessionStore sessions, AuditStore audit, AppRoles roles, ILogger<HubAccounts> log)
 {
@@ -38,7 +38,7 @@ public sealed class HubAccounts(UserStore users, SessionStore sessions, AuditSto
             await users.SetRolesAsync(user.Id, [who.Role!], ct);
             await AuditAsync(user.Name, "person.role", ip, $"by the central sign-in, {user.Role} to {who.Role}");
         }
-        var token = await sessions.CreateAsync(user.Id, ip, userAgent, ct, hubSid: who.Sid);
+        var token = await sessions.CreateAsync(user.Id, ip, userAgent, ct, hubSid: who.Sid, hubHint: who.Hint);
         await AuditAsync(user.Name, "hub.login", ip);
         log.LogInformation("Signed in through the central sign-in: {User} from {Ip}", user.Name, ip);
         return new SignedIn(user.Name, [who.Role!], token, 0);

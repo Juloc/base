@@ -73,7 +73,7 @@ public sealed class HubDirectory : IDisposable
     private async Task<string> GetAsync(string url, CancellationToken ct)
     {
         using var response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-        if (!response.IsSuccessStatusCode) throw new HttpRequestException($"The hub answered {(int)response.StatusCode}.");
+        if (!response.IsSuccessStatusCode) throw new HttpRequestException($"The hub answered {(int)response.StatusCode}.", null, response.StatusCode);
         return await ReadAsync(response, ct);
     }
 
@@ -86,9 +86,9 @@ public sealed class HubDirectory : IDisposable
     }
 
     /// <summary>The description of the hub at <paramref name="url"/> (already normalised, see <see cref="HubUrl"/>).</summary>
-    public async Task<Result<HubMetadata>> DiscoverAsync(string url, CancellationToken ct = default)
+    public async Task<Result<HubMetadata>> DiscoverAsync(string url, CancellationToken ct = default, TimeSpan? maxAge = null)
     {
-        if (_meta is { } m && m.Url == url && _clock.GetUtcNow() - m.At < Keep) return m.Meta;
+        if (_meta is { } m && m.Url == url && _clock.GetUtcNow() - m.At < (maxAge ?? Keep)) return m.Meta;
         try
         {
             using var doc = JsonDocument.Parse(await GetAsync(url + "/.well-known/openid-configuration", ct));
@@ -110,7 +110,19 @@ public sealed class HubDirectory : IDisposable
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException) { return Unreachable(e); }
     }
 
-    internal static Error Unreachable(Exception e) => Error.Conflict("hub.unreachable", "The hub cannot be reached: " + e.GetType().Name);
+    internal static Error Unreachable(Exception e) => Error.Conflict("hub.unreachable", "The hub cannot be reached (" + Reason(e) + ").");
+
+    /// <summary>A few plain words for why a call failed (shown in the settings next to "check connection"), never the name of an exception type.</summary>
+    private static string Reason(Exception e) => e switch
+    {
+        TaskCanceledException => "no answer in time",
+        HttpRequestException { HttpRequestError: HttpRequestError.NameResolutionError } => "the name is not known",
+        HttpRequestException { HttpRequestError: HttpRequestError.ConnectionError } => "nothing answers at that address",
+        HttpRequestException { HttpRequestError: HttpRequestError.SecureConnectionError } => "the secure connection failed",
+        HttpRequestException { StatusCode: { } code } => $"it answered {(int)code}",
+        JsonException => "the answer is not a description of a hub",
+        _ => "no valid answer",
+    };
 
     /// <summary>The signing keys of the hub. <paramref name="refresh"/> asks again, but never more often than once a minute.</summary>
     public async Task<Result<SecurityKey[]>> KeysAsync(HubMetadata meta, bool refresh, CancellationToken ct = default)

@@ -209,6 +209,7 @@ export default {
   'hub.removeText': 'Address, client id and secret are deleted. People who sign in only through the centre cannot get in afterwards.',
   'hub.enter': 'What to enter at the centre',
   'hub.returnAddress': 'Return address',
+  'hub.signedOutAddress': 'Address after sign-out',
   'hub.logoutAddress': 'Back-channel logout address',
   'hub.rolesLine': 'Roles of this app: {roles}',
   'account.viaHub': 'You are signed in through the central sign-in. Password and authenticator are managed there.',

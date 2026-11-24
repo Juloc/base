@@ -88,9 +88,13 @@ internal sealed class TestHub : IAsyncDisposable
             if (!_grants.Remove(posted.GetValueOrDefault("code", ""), out var g)) return Results.Json(new { error = "invalid_grant" }, statusCode: 400);
             var challenge = B64(SHA256.HashData(Encoding.ASCII.GetBytes(posted.GetValueOrDefault("code_verifier", ""))));
             if (challenge != g.Challenge || posted.GetValueOrDefault("redirect_uri") != g.RedirectUri) return Results.Json(new { error = "invalid_grant" }, statusCode: 400);
-            return Results.Json(new { id_token = Sign(g.Claims, g.SignWith ?? Key, g.Alg, "JWT"), access_token = "unused", token_type = "Bearer", expires_in = 300 });
+            LastIdToken = Sign(g.Claims, g.SignWith ?? Key, g.Alg, "JWT");
+            return Results.Json(new { id_token = LastIdToken, access_token = "unused", token_type = "Bearer", expires_in = 300 });
         });
     }
+
+    /// <summary>The ID token the hub gave out last.</summary>
+    public string? LastIdToken { get; private set; }
 
     private string Sign(Dictionary<string, object> claims, ECDsa key, string? alg, string typ)
     {

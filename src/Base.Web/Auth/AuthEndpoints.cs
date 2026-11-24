@@ -35,10 +35,11 @@ internal static class AuthEndpoints
         app.MapPost("/api/auth/logout", async (HttpContext ctx, AccountService accounts, SessionCookie cookie, HubSignIn hub) =>
         {
             var who = ctx.Person();
+            var hint = await accounts.HubHintAsync(who, ctx.RequestAborted);
             await accounts.LogoutAsync(who, ctx.ClientIp(), ctx.RequestAborted);
             cookie.Clear(ctx);
             // somebody who came through the hub is sent on to the hub's sign-out (it ends its own session and tells the other apps); the others get nothing to follow
-            return who.ViaHub && await hub.EndSessionUrlAsync(ctx.RequestAborted) is { } url ? Results.Ok(new LogoutResponse(url)) : Results.NoContent();
+            return who.ViaHub && await hub.EndSessionUrlAsync(ctx, hint, ctx.RequestAborted) is { } url ? Results.Ok(new LogoutResponse(url)) : Results.NoContent();
         });
 
         app.MapPost("/api/auth/logout-others", async (HttpContext ctx, AccountService accounts) =>

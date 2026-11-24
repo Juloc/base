@@ -107,7 +107,9 @@ public class HubSignInTests
         Assert.Equal("sid-1", await w.Db.ScalarAsync<string>("select s.hub_sid from sessions s join users u on u.id = s.user_id where u.name = 'anna'"));
         Assert.Equal("sub-anna", await w.Db.ScalarAsync<string>("select hub_sub from users where name = 'anna'"));
         Assert.Equal(0, await w.CountAsync("select count(*) from hub_flows"));
+        // of the hub's tokens only the ID token stays, on the session, as the hint for its sign-out; no access token, no secret of a person
         Assert.Equal(0, await w.CountAsync("select count(*) from information_schema.columns where table_schema = current_schema() and column_name ilike '%token%' and table_name not in ('invites','hub_logout_tokens')"));
+        Assert.Equal(w.Hub.LastIdToken, await w.Db.ScalarAsync<string>("select hub_hint from sessions where hub_sid = 'sid-1'"));
         // the session cookie is the app's own: random, and only its hash is in the table
         Assert.DoesNotContain(session!.Split('=')[1], await w.Db.ScalarAsync<string>("select string_agg(hash, ',') from sessions") ?? "");
         // the hub saw what a strict client sends: the verifier of PKCE, the code once
@@ -284,6 +286,13 @@ public class HubSignInTests
         var callback = w.Hub.Authorize((await TestApp.Json(begin)).GetProperty("url").GetString()!, "sub-anna", "member");
         await w.Hub.StopAsync();
 
+        // the button asks the hub itself, so a hub that went away is said in words and the person is not sent to a dead address
+        var again = await w.Http.SendAsync(w.App.Req(HttpMethod.Post, "/api/auth/hub/begin"));
+        Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
+        var reason = await TestApp.Json(again);
+        Assert.Equal("hub.unreachable", reason.GetProperty("error").GetString());
+        Assert.DoesNotContain("Exception", reason.GetProperty("message").GetString());
+
         var (location, session) = await w.CallbackAsync(callback, cookie);
         Assert.Equal("/?hub_error=hub.unreachable", location);
         Assert.Null(session);
@@ -390,7 +399,13 @@ public class HubSignInTests
         var (_, session) = await w.SignInAsync();
         var r = await w.Http.SendAsync(w.App.Req(HttpMethod.Post, "/api/auth/logout", session));
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
-        Assert.Equal(w.Hub.Url + "/oidc/end-session?client_id=" + TestHub.ClientId, (await TestApp.Json(r)).GetProperty("hubLogoutUrl").GetString());
+        // with the ID token as the hint and the app's own address to come back to: the hub then signs out without asking and returns the person here
+        var url = new Uri((await TestApp.Json(r)).GetProperty("hubLogoutUrl").GetString()!);
+        var q = System.Web.HttpUtility.ParseQueryString(url.Query);
+        Assert.Equal(w.Hub.Url + "/oidc/end-session", url.GetLeftPart(UriPartial.Path));
+        Assert.Equal(TestHub.ClientId, q["client_id"]);
+        Assert.Equal(w.Hub.LastIdToken, q["id_token_hint"]);
+        Assert.Equal(w.Http.BaseAddress!.GetLeftPart(UriPartial.Authority) + "/", q["post_logout_redirect_uri"]);
         Assert.Null(await w.UserOf(session!));
         // a person of the local form signs out as before
         var local = await w.Http.SendAsync(w.App.Req(HttpMethod.Post, "/api/auth/logout", w.Admin));

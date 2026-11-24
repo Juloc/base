@@ -60,6 +60,7 @@ export function hubCard(me) {
     h('div', { class: 'line' }, h('code', { class: 'secret grow', text: value }), h('button', { class: 'btn ghost icon-only', type: 'button', 'aria-label': t('common.copy'), onclick: () => copyText(value) }, icon('copy'))));
   const enter = h('div', { class: 'stack s' }, h('h3', { class: 'h3', text: t('hub.enter') }),
     line(t('hub.returnAddress'), location.origin + '/api/auth/hub/callback'),
+    line(t('hub.signedOutAddress'), location.origin + '/'),
     line(t('hub.logoutAddress'), location.origin + '/api/auth/hub/backchannel-logout'),
     h('p', { class: 'field-hint', text: t('hub.rolesLine', { roles: me.appRoles.map((r) => r.key + ' (' + roleName(me, r.key) + ')').join(', ') }) }));
 

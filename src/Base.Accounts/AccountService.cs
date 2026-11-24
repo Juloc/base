@@ -229,6 +229,9 @@ public sealed class AccountService(UserStore users, SessionStore sessions, Passw
 
     // ---- Sessions (the list of devices) ----
 
+    /// <summary>What the hub needs to end its own session without asking (the ID token it gave this session), or null.</summary>
+    public Task<string?> HubHintAsync(SessionIdentity who, CancellationToken ct = default) => who.ViaHub ? sessions.HubHintAsync(who.Id, ct) : Task.FromResult<string?>(null);
+
     public Task<SessionIdentity?> ResolveSessionAsync(string token, bool rotate, CancellationToken ct = default) => sessions.ResolveAsync(token, rotate, ct);
 
     public async Task LogoutAsync(SessionIdentity who, string ip, CancellationToken ct = default)
