@@ -326,7 +326,16 @@ public partial class RuleFileTests
         // every colour token is shown
         var tokens = Regex.Matches(Repo.Read("ui", "tokens.css"), @"^\s*--([a-z0-9-]+):\s*light-dark\(", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToArray();
         Assert.All(tokens, t => Assert.Contains($"'{t}'", catalogue));
-        // and the service worker of the start app never keeps answers of the API
-        Assert.Contains("url.pathname.startsWith('/api/')", Repo.Read("samples", "StartApp", "wwwroot", "sw.js"));
+    }
+
+    [Fact]
+    public void The_service_worker_keeps_only_the_shell()
+    {
+        var sw = Repo.Read("samples", "StartApp", "wwwroot", "sw.js");
+        Assert.Contains("const SHELL", sw);
+        Assert.Contains("!isShell(url.pathname)", sw);              // everything that is not on the list passes through untouched
+        Assert.DoesNotContain("startsWith('/api/')", sw);           // the old rule "everything but /api" kept pages that need a session
+        Assert.DoesNotContain("'app-v1'", sw);                      // the cache was renamed when the list came
     }
 }
+
