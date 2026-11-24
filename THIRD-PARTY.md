@@ -6,6 +6,7 @@ What runs in an app besides our own code and Microsoft's .NET and ASP.NET Core (
 |---|---|---|
 | Npgsql | the PostgreSQL driver | PostgreSQL License |
 | Konscious.Security.Cryptography.Argon2 | the password hash (Argon2id) | MIT |
+| Microsoft.IdentityModel.JsonWebTokens (with Microsoft.IdentityModel.Tokens, Logging, Abstractions) | checks the signed tokens of the hub (sign-in through the hub) | MIT |
 
 In the browser there is no third-party code at all: no framework, no library, no font, nothing from another server.
 

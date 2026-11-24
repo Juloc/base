@@ -250,6 +250,34 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         <div class="cat-demo on-surface" data-run="form" data-inline></div>
       </section>
 
+      <section class="cat-item" id="people">
+        <h2 class="h1">People and the central sign-in</h2>
+        <p class="muted">For the settings page of the role admin: <code>peopleCard(me)</code> of <code>people.js</code> (the list, an invitation link per new person, change the role, block, delete) and <code>hubCard(me)</code> of <code>hub.js</code> (address, client id, secret, on or off, check the connection). <code>roleName(me, key)</code> gives the name of a role as the app named it. The sign-in page of <code>auth.js</code> shows the button of the centre below its own form, and the invitation page (<code>#invite=...</code>) takes a new person through password and authenticator.</p>
+        <div class="cat-demo">
+          <div class="card flush">
+            <ul class="list">
+              <li><div class="row">
+                <span class="avatar">a</span>
+                <span class="row-main"><span class="row-title">anna <span class="badge ok">Active</span></span><span class="row-sub">Member · last active 5 minutes ago</span></span>
+                <button class="btn ghost icon-only" type="button" aria-label="Actions for anna"><span data-icon="more"></span></button>
+              </div></li>
+              <li><div class="row">
+                <span class="avatar">b</span>
+                <span class="row-main"><span class="row-title">ben <span class="badge accent">Invited</span></span><span class="row-sub">Viewer · Link valid until tomorrow, 9:41 AM</span></span>
+                <button class="btn ghost icon-only" type="button" aria-label="Actions for ben"><span data-icon="more"></span></button>
+              </div></li>
+              <li><div class="row">
+                <span class="avatar">c</span>
+                <span class="row-main"><span class="row-title">cleo <span class="badge danger">Blocked</span> <span class="badge">Central sign-in</span></span><span class="row-sub">Member · never signed in</span></span>
+                <button class="btn ghost icon-only" type="button" aria-label="Actions for cleo"><span data-icon="more"></span></button>
+              </div></li>
+            </ul>
+          </div>
+          <div class="auth-or" role="separator">or</div>
+          <button class="btn outline wide" type="button">Sign in with the centre</button>
+        </div>
+      </section>
+
       <section class="cat-item" id="states">
         <h2 class="h1">Empty and loading</h2>
         <p class="muted">An empty list says what belongs here and offers the first step (LIST-02). While something loads: a spinner for a moment, grey lines for a page.</p>

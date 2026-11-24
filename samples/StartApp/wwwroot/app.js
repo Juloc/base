@@ -6,6 +6,8 @@ import { addMessages, t, fmtAgo, fmtDate } from '/base/i18n.js';
 import { h, icon, api, shell, router, openDialog, confirmDialog, toast, field, switchField, formValues, showErrors, clearErrors, emptyState, badge, prefs, errorText, ApiError } from '/base/base.js';
 import { start } from '/base/auth.js';
 import { appearanceCard, securityCard, devicesCard, historyCard, installationCard, aboutCard } from '/base/account.js';
+import { peopleCard } from '/base/people.js';
+import { hubCard } from '/base/hub.js';
 import de from '/i18n/de.js';
 import en from '/i18n/en.js';
 
@@ -24,7 +26,8 @@ function run(me) {
     ],
     person: { name: me.user },
     menu: [{ label: t('shell.settings'), icon: 'sliders', href: '#/settings' }],
-    onSignOut: async () => { await api('POST', '/api/auth/logout'); location.reload(); },
+    // somebody who came through the central sign-in is sent on to its sign-out, which ends its own session and tells the other apps
+    onSignOut: async () => { const r = await api('POST', '/api/auth/logout'); if (r && r.hubLogoutUrl) location.assign(r.hubLogoutUrl); else location.reload(); },
   });
   document.body.append(frame.el);
   const pages = router({ '/': listPage, '/items/:id': itemPage, '/settings': () => settingsPage(me) }, frame);
@@ -138,6 +141,7 @@ function run(me) {
     return {
       title: t('settings.title'),
       body: h('div', { class: 'page narrow stack l' }, appearanceCard(), own, securityCard(me), devicesCard(), historyCard(),
+        me.roles.includes('admin') ? peopleCard(me) : null, me.roles.includes('admin') ? hubCard(me) : null,
         me.roles.includes('admin') ? installationCard() : null, aboutCard(me)),
     };
   }

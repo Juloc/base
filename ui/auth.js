@@ -3,9 +3,10 @@
  *   start({ icon, onSignedIn })   asks the server who is there and shows the assistant, the sign-in, or hands over to the app.
  * The server decides everything; this file only draws (AUTH-08: the sign-in never says which part was wrong).
  * ===================================================================== */
-import { t, LANG_CHOICES, getPref, setPref } from './i18n.js';
+import { t, hasKey, LANG_CHOICES, getPref, setPref } from './i18n.js';
 import { h, icon, svg, api, field, passwordField, submit, notice, theme, prefs, markSignedIn, copyText, errorText, ApiError, toast } from './base.js';
 import { qrSvg } from './qr.js';
+import { roleName } from './people.js';
 
 /**
  * Starts the app. onSignedIn(me) is called with { user, roles, app: { id, name, version, base } } once somebody is signed in.
@@ -28,7 +29,11 @@ export async function start({ icon: appIcon = 'grid', onSignedIn }) {
   };
   if (me.user) { markSignedIn(); try { if (await prefs.load()) { location.reload(); return; } } catch { /* the settings can wait */ } onSignedIn(me); return; }
   const page = (card) => document.body.replaceChildren(frame(me.app, appIcon, card));
-  if (me.setupNeeded) setup(me.app, page, enter); else signIn(me.app, page, enter);
+  // an invitation link carries its token in the fragment (#invite=...), so it never reaches a server log
+  const invited = /^#invite=([A-Za-z0-9_-]{20,100})$/.exec(location.hash);
+  if (invited && !me.setupNeeded) invite(me, invited[1], page, enter);
+  else if (me.setupNeeded) setup(me.app, page, enter);
+  else signIn(me, page, enter);
 }
 
 /** The page around a form: the mark and name of the app on top, language and light or dark below. */
@@ -44,7 +49,12 @@ function frame(app, appIcon, card) {
     h('div', { class: 'auth-foot' }, lang, dark));
 }
 
-function signIn(app, page, enter) {
+function signIn(me, page, enter) {
+  // the central sign-in sends the browser back to "/?hub_error=<code>" when it did not work: the code has a text, nothing else is shown
+  const params = new URLSearchParams(location.search);
+  const hubError = params.get('hub_error');
+  if (hubError) history.replaceState(null, '', location.pathname + location.hash);
+  const problem = hubError && hasKey('err.' + hubError) ? notice(t('err.' + hubError), 'danger') : null;
   const form = submit(h('form', { class: 'card form' },
     h('h1', { class: 'h1', text: t('auth.title') }),
     field({ label: t('auth.user'), name: 'user', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', required: true }),
@@ -56,8 +66,67 @@ function signIn(app, page, enter) {
     await enter();
     if (r.recoveryLeft <= 3) toast(t('auth.recoveryLow', { n: r.recoveryLeft }), { kind: 'danger' });
   });
+  if (problem) form.querySelector('h1').after(problem);
+  if (me.hub) {
+    const go = h('button', { class: 'btn outline wide', type: 'button', text: t('auth.hub', { name: me.hub.name }) });
+    go.addEventListener('click', async () => {
+      go.disabled = true;
+      try { const r = await api('POST', '/api/auth/hub/begin'); go.textContent = t('auth.hubWait', { name: me.hub.name }); location.assign(r.url); }
+      catch (e) { go.disabled = false; form.querySelector('h1').after(notice(errorText(e), 'danger')); }
+    });
+    form.append(h('div', { class: 'auth-or', role: 'separator', text: t('auth.or') }), go);
+  }
   page(form);
   form.querySelector('input').focus();
+}
+
+/** The person invited by an admin: choose a password, set up the authenticator, keep the recovery codes. The link works once. */
+function invite(me, token, page, enter) {
+  const steps = (n) => h('div', { class: 'steps', role: 'img', 'aria-label': t('setup.step', { n, of: 3 }) }, [1, 2, 3].map((i) => h('i', { class: i <= n ? 'on' : '' })));
+  let begun = null;
+  api('POST', '/api/invite/check', { token }).then((who) => one(who), (e) => {
+    page(h('div', { class: 'card form' }, notice(errorText(e), 'danger'), h('a', { class: 'btn outline wide', href: '/', text: t('auth.signIn') })));
+  });
+
+  function one(who) {
+    const form = submit(h('form', { class: 'card form' }, steps(1),
+      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('invite.title') }),
+        h('p', { class: 'muted', text: t('invite.intro', { user: who.user, app: me.app.name, role: roleName(me, who.role) }) })),
+      passwordField({ label: t('auth.password'), name: 'password', hint: t('invite.passwordHint'), autocomplete: 'new-password', required: true }),
+      h('button', { class: 'btn primary wide', type: 'submit', text: t('common.next') })),
+    async (v) => { begun = await api('POST', '/api/invite/begin', { token, password: v.password }); two(who); });
+    page(form);
+    form.querySelector('input').focus();
+  }
+
+  function two(who) {
+    const form = submit(h('form', { class: 'card form' }, steps(2),
+      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.totpTitle') }), h('p', { class: 'muted', text: t('setup.totpIntro') })),
+      authenticator(begun.uri, begun.secret),
+      field({ label: t('setup.totpCode'), name: 'totp', class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', required: true }),
+      h('div', { class: 'form-actions' },
+        h('button', { class: 'btn ghost', type: 'button', text: t('common.back'), onclick: () => one(who) }),
+        h('button', { class: 'btn primary', type: 'submit', text: t('common.next') }))),
+    async (v) => {
+      try { await api('POST', '/api/invite/finish', { token, totp: v.totp }); }
+      catch (e) { if (e instanceof ApiError && e.code === 'totp.wrong') e.fields = { totp: 'totp.wrong' }; throw e; }
+      history.replaceState(null, '', location.pathname);          // the link is used up: it does not stay in the address bar
+      three();
+    });
+    page(form);
+    form.querySelector('input').focus();
+  }
+
+  function three() {
+    const ok = h('input', { type: 'checkbox' });
+    const go = h('button', { class: 'btn primary wide', type: 'button', text: t('setup.finish'), disabled: true, onclick: enter });
+    ok.addEventListener('change', () => { go.disabled = !ok.checked; });
+    page(h('div', { class: 'card form' }, steps(3),
+      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.recoveryTitle') }), h('p', { class: 'muted', text: t('setup.recoveryIntro') })),
+      recoveryCodes(begun.recovery),
+      h('label', { class: 'check' }, ok, h('span', { text: t('setup.recoverySaved') })),
+      go));
+  }
 }
 
 /** The setup assistant: 1 the first account (with the code from the server log), 2 the authenticator, 3 the recovery codes. */

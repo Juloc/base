@@ -7,6 +7,8 @@ What an app gets:
 
 - **One container plus PostgreSQL**, a Compose file without variables, a setup assistant at the first start, settings in the app.
 - **A safe sign-in:** password (Argon2id) with an authenticator app, recovery codes, sessions that survive an update, a list of devices, lockout, a history of the account.
+- **People and roles:** a small list of roles the app names, one per person; the admin invites people by a link that works once, changes roles, blocks, deletes.
+- **The app describes itself:** `/api/about` and `/api/health` (contract version 1) for a hub; optional **sign-in through the hub** (OpenID Connect) next to the own form: [docs/SIGN-IN-WITH-HUB.md](docs/SIGN-IN-WITH-HUB.md).
 - **One look:** colours (light and dark, one accent variable per app), the shell with menu and person menu, every control, one icon file; phone first, no build step.
 - **German and English**, numbered SQL migrations, `/api/health` with versions.
 - **A rulebook** with numbered rules and the tests that check them: [docs/RULES.md](docs/RULES.md).
@@ -68,5 +70,5 @@ starts the start app on `http://localhost:8080`. While working on the look, run 
 
 ## What is not here yet
 
-Passkeys, managing further people and their roles, sign-in through a hub (OpenID Connect), mail, push, background jobs, backup and restore,
-a test project for the made app. They come when an app needs them (see the changelog).
+Passkeys, the keyed calls between hub and app (stages 2 and 3 of the contract), a test of the sign-in against the real JulOS, mail, push, background jobs,
+backup and restore, a test project for the made app. They come when an app needs them (see the changelog).

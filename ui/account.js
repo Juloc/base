@@ -5,6 +5,7 @@
 import { t, tp, LANG_CHOICES, getPref, setPref, fmtAgo, fmtDate } from './i18n.js';
 import { h, icon, api, field, passwordField, submit, formValues, showErrors, clearErrors, segmented, openDialog, confirmDialog, toast, theme, prefs, badge, skeleton, notice, errorText, ApiError } from './base.js';
 import { authenticator, recoveryCodes } from './auth.js';
+import { roleName } from './people.js';
 
 const card = (title, ...body) => h('section', { class: 'card stack' }, h('h2', { class: 'card-title', text: title }), ...body);
 const flushCard = (title, action, body) => h('section', { class: 'card flush' }, h('div', { class: 'card-head' }, h('h2', { class: 'card-title', text: title }), action), body);
@@ -35,9 +36,11 @@ export function securityCard(me) {
     h('button', { class: 'btn outline', type: 'button', text: label, onclick: run })));
   return flushCard(t('account.security'), null, h('ul', { class: 'list' },
     h('li', null, h('div', { class: 'row' }, h('span', { class: 'avatar', text: me.user.slice(0, 1) }),
-      h('div', { class: 'row-main' }, h('span', { class: 'row-title', text: me.user }), h('span', { class: 'row-sub', text: me.roles.length ? me.roles.map((r) => t('role.' + r) || r).join(', ') : t('role.none') })))),
-    row('lock', t('account.password'), t('account.passwordSub'), t('common.change'), changePassword),
-    row('shield', t('account.totp'), left, t('account.totpReplace'), replaceAuthenticator)));
+      h('div', { class: 'row-main' }, h('span', { class: 'row-title', text: me.user }), h('span', { class: 'row-sub', text: me.roles.length ? me.roles.map((r) => roleName(me, r)).join(', ') : t('role.none') })))),
+    // a person who signed in through the central sign-in has no password or authenticator here
+    ...(me.viaHub ? [h('li', null, h('div', { class: 'row' }, notice(t('account.viaHub'))))] : [
+      row('lock', t('account.password'), t('account.passwordSub'), t('common.change'), changePassword),
+      row('shield', t('account.totp'), left, t('account.totpReplace'), replaceAuthenticator)])));
 }
 
 function changePassword() {

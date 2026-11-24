@@ -4,7 +4,7 @@ The shared base of the app family: every new app is made from this repository. S
 
 1. **The rulebook is [docs/RULES.md](docs/RULES.md).** Rules have numbers (`AUTH-03`); cite them in comments and reviews. A change that touches a rule changes the rule, its test and the code in one commit.
 2. **Into the base goes only what two apps need** (CODE-07). Build a thing in a real app first, then move it here. Later steps (passkeys, a hub sign-in, the AI client) are not built ahead.
-3. **Own code, few packages** (CODE-02, CODE-03): Npgsql and Argon2, nothing else without changing the rule. Never write cryptography, password hashing, WebAuthn or TLS.
+3. **Own code, few packages** (CODE-02, CODE-03): Npgsql, Argon2 and Microsoft's token library, nothing else without changing the rule. Never write cryptography, password hashing, WebAuthn or TLS.
 4. **No build step in the browser** (CODE-06), **plain SQL with numbered migrations** (DATA-01, DATA-02), **settings in the app** (OPS-03), **a Compose file without variables** (OPS-02).
 5. **Nothing private in the repository or its history** (SEC-06): no domain names, real addresses, host names, keys, tokens, passwords or personal paths; examples use `192.0.2.x` and `example.com`. Look at `git diff` before every push.
 6. **Never type a real password.** Test accounts use throwaway values on localhost only.
@@ -19,13 +19,13 @@ The shared base of the app family: every new app is made from this repository. S
 |---|---|
 | `src/Base.Core` | `Result`, `Error`, `Validator`, `Ids`, `PageRequest`/`Page`/`Cursor`, `ManualTime`. No dependency. |
 | `src/Base.Data` | `Db` (SQL helpers, transactions), `Migrator` and `MigrationSet`, `Database` (data source, wait and migrate). |
-| `src/Base.Accounts` | `AccountService` (setup, sign-in, account), `UserStore`, `SessionStore`, `AuditStore`, `PasswordHasher`, `Totp`, `RecoveryCodes`, `SecretBox`, `LoginLimiter`, `SetupCode`; `Migrations/`. |
-| `src/Base.Web` | `BaseApp` (the four calls of an app: `AddBase`, `StartBaseAsync`, `UseBase`, `MapBase`), `SecurityHeaders`, `Auth/` (guard, cookie, endpoints), `Settings/` (rules, store, endpoints), `ProxyTrust`, `UiFiles` (serves `ui/` under `/base/`). |
-| `ui/` | The look, no build: `tokens.css`, `base.css`, `base.js`, `icons.js`, `i18n.js` + `i18n/`, `auth.js` (setup, sign-in), `account.js` (settings cards), `qr.js`, `catalog.html` (the living catalogue). |
-| `samples/StartApp` | The start project: a small real app (a list with detail, form, settings), its Dockerfile and Compose file. `new-app.sh` copies it. |
+| `src/Base.Accounts` | `AccountService` (setup, sign-in, account), `PeopleService` (invitations, roles, block, delete), `HubAccounts` (the person and the session after a sign-in through the hub), `AppRoles`, `UserStore`, `SessionStore`, `InviteStore`, `AuditStore`, `PasswordHasher`, `Totp`, `RecoveryCodes`, `SecretBox`, `LoginLimiter`, `SetupCode`; `Migrations/`. |
+| `src/Base.Web` | `BaseApp` (the four calls of an app: `AddBase`, `StartBaseAsync`, `UseBase`, `MapBase`), `SecurityHeaders`, `Auth/` (guard, `RequireRole`, cookie, endpoints), `People/` (admin endpoints, invitation steps), `Hub/` (sign-in through the hub: flow, tokens, directory, settings), `About.cs` and `HealthState` (the contract), `Settings/` (rules, store, endpoints), `ProxyTrust`, `UiFiles` (serves `ui/` under `/base/`). |
+| `ui/` | The look, no build: `tokens.css`, `base.css`, `base.js`, `icons.js`, `i18n.js` + `i18n/`, `auth.js` (setup, sign-in, invitation), `account.js` (settings cards), `people.js` and `hub.js` (admin cards), `qr.js`, `catalog.html` (the living catalogue). |
+| `samples/StartApp` | The start project: a small real app (a list with detail, form, settings, people, central sign-in), its Dockerfile and Compose file. `new-app.sh` copies it. |
 | `scripts/` | `new-app.sh` (make an app), `sync-base.sh` (renew an app's copy), `check-app.sh` (drift and file rules), `test.sh` (tests with a throwaway PostgreSQL). |
 | `templates/` | `CLAUDE.app.md` (the rule file of every app) and `app/` (the other files `new-app.sh` writes). |
-| `tests/Base.Tests` | Security and logic tests; `RuleFileTests`, `ContrastTests`, `RulebookTests` check rules from the files. |
+| `tests/Base.Tests` | Security and logic tests; `HubSignInTests` (with `TestHub`, a small hub that signs with a test key) and `PeopleTests`; `RuleFileTests`, `ContrastTests`, `RulebookTests` check rules from the files. |
 | `docs/` | `RULES.md`, `DECISIONS.md`; `plans/` holds drafts of later steps (not agreed, not built). |
 
 How an app uses the base: [README.md](README.md). The agreed design: `docs/BASE.md` in the JulOS repository.

@@ -77,6 +77,13 @@ while IFS= read -r -d '' de; do
   if [ ! -f "$en" ]; then bad I18N-01 "${de#"$app/"} has no en.js next to it"
   elif ! diff <(keys "$de") <(keys "$en") >/dev/null; then bad I18N-01 "${de#"$app/"} and en.js do not have the same keys"; fi
 done < <(find "$app/src" -path '*/wwwroot/i18n/de.js' -not -path '*/bin/*' -not -path '*/obj/*' -print0 2>/dev/null)
+while IFS= read -r -d '' prog; do
+  css="$(dirname "$prog")/wwwroot/app.css"
+  [ -f "$css" ] || continue
+  hue_code="$(grep -oE 'AccentHue = [0-9]+' "$prog" | grep -oE '[0-9]+' | head -1 || true)"
+  hue_css="$(grep -oE -e '--accent-hue: [0-9]+' "$css" | grep -oE '[0-9]+' | head -1 || true)"
+  [ -n "$hue_code" ] && [ "$hue_code" = "$hue_css" ] || bad CONTRACT-02 "${prog#"$app/"}: AccentHue ($hue_code) is not the --accent-hue of app.css ($hue_css)"
+done < <(find "$app/src" -maxdepth 2 -name Program.cs -not -path '*/bin/*' -not -path '*/obj/*' -print0 2>/dev/null)
 if [ -f "$app/CLAUDE.md" ]; then
   grep -q "base version: \*\*$app_version\*\*" "$app/CLAUDE.md" || bad CODE-07 "CLAUDE.md does not name the base version $app_version of the copy"
 else bad CODE-07 "CLAUDE.md is missing"; fi
