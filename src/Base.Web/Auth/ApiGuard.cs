@@ -68,6 +68,8 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
         // An own door (SEC-07): the app protects it with its check. Neither the header, nor the Origin, nor the session cookie play a part here, and no identity is set.
         if (_doors.FirstOrDefault(d => d.Covers(request.Path)) is { } door) { await PassDoorAsync(ctx, door); return; }
 
+        SessionIdentity? identity = null;
+        var resolved = false;
         if (!HttpMethods.IsGet(request.Method) && !HttpMethods.IsHead(request.Method))
         {
             if (!ServerToServerPaths.Contains(path) && (request.Headers[Header] != "1" || !SameOrigin(request)))
@@ -78,6 +80,15 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
             if (!_large.Contains(path))
             {
                 var max = request.Path.StartsWithSegments("/api/auth") || request.Path.StartsWithSegments("/api/setup") || request.Path.StartsWithSegments("/api/invite") ? MaxAuthBody : MaxSmallBody;
+                // A limit the endpoint declares itself (SEC-04) counts only behind a session: who may call is decided first, so an anonymous caller never gets the larger limit.
+                // Routing has run before the guard, so the matched endpoint is known here; a path without a match keeps the default.
+                if (!_public.Contains(path) && ctx.GetEndpoint()?.Metadata.GetMetadata<BodyLimit>() is { } declared)
+                {
+                    identity = await ResolveAsync(ctx, accounts, cookie, rotate: true);
+                    if (identity is null) { await HttpErrors.WriteAsync(ctx, Error.Unauthorized()); return; }
+                    resolved = true;
+                    max = declared.Bytes;
+                }
                 if (request.ContentLength > max)
                 {
                     await HttpErrors.WriteAsync(ctx, new Error(ErrorKind.TooLarge, "too_large", "The request is too large."));
@@ -91,7 +102,7 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
 
         if (_public.Contains(path)) { await next(ctx); return; }
 
-        var identity = await ResolveAsync(ctx, accounts, cookie, rotate: true);
+        if (!resolved) identity = await ResolveAsync(ctx, accounts, cookie, rotate: true);
         if (identity is null) { await HttpErrors.WriteAsync(ctx, Error.Unauthorized()); return; }
         // the role an endpoint declares with RequireRole is checked here, before the handler runs: the one place (SEC-03)
         if (ctx.GetEndpoint()?.Metadata.GetMetadata<RoleRequirement>() is { } need && !identity.Has(need.Role))

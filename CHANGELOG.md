@@ -4,6 +4,10 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.3.4
+
+- **A body limit the endpoint declares** (SEC-04): `.WithMaxBody(bytes)` on an endpoint or a group, for uploads under paths with ids. Applied by the guard behind a session only (declared length and while reading); more than 0 and at most 1 GiB, else the start is refused. `LargeBodyPaths` and endpoints without the declaration behave as before.
+
 ## 0.3.3
 
 Three safety fixes found in a review of the first app on the base. **Apps with their own `sw.js` should take the new one** (`samples/StartApp/wwwroot/sw.js`), and add the paths of their own static files to its list.

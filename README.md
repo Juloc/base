@@ -72,6 +72,8 @@ starts the start app on `http://localhost:8080`. While working on the look, run 
 
 An app that serves a device or another app (a bearer key, no cookie, no `Origin`, paths with ids such as `/api/v1/assets/{id}`) declares a door in `BaseAppOptions.Doors`: `new ApiDoor("/api/v1", ctx => CheckKey(ctx), maxBodyBytes: 1 << 20)`. The check is required. Under a door the base asks for no `X-Base` header, never reads the session cookie and sets no identity; it only limits the body and answers 401 when the check says no. Everything else of `UseBase` stays. The base's own paths cannot be a door (SEC-07).
 
+An endpoint that takes a large body under a path with an id (an upload) declares it where it is mapped: `app.MapPut("/api/sites/{id}/files/{**path}", Upload).WithMaxBody(50 << 20)`. It counts only behind a session (SEC-04); `LargeBodyPaths` stays for exact paths.
+
 An app that already owns a table called `schema_migrations` sets `MigrationTable` to another name (DATA-04).
 
 ## What is not here yet
