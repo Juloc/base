@@ -68,6 +68,12 @@ starts the start app on `http://localhost:8080`. While working on the look, run 
 - Decisions with their reasons: [docs/DECISIONS.md](docs/DECISIONS.md). Third-party code: [THIRD-PARTY.md](THIRD-PARTY.md).
 - The contract between an app and the hub (draft; stage 1 is built): [docs/CONTRACT.md](docs/CONTRACT.md). The first trial against a real hub: [docs/HUB-TRIAL.md](docs/HUB-TRIAL.md). The agreed design is `docs/BASE.md` in the JulOS repository.
 
+## A token interface next to the session
+
+An app that serves a device or another app (a bearer key, no cookie, no `Origin`, paths with ids such as `/api/v1/assets/{id}`) declares a door in `BaseAppOptions.Doors`: `new ApiDoor("/api/v1", ctx => CheckKey(ctx), maxBodyBytes: 1 << 20)`. The check is required. Under a door the base asks for no `X-Base` header, never reads the session cookie and sets no identity; it only limits the body and answers 401 when the check says no. Everything else of `UseBase` stays. The base's own paths cannot be a door (SEC-07).
+
+An app that already owns a table called `schema_migrations` sets `MigrationTable` to another name (DATA-04).
+
 ## What is not here yet
 
 Passkeys, the keyed calls between hub and app (stages 2 and 3 of the contract), a test of the sign-in against the real JulOS, mail, push, background jobs,

@@ -15,6 +15,18 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
     /// <summary>The app's own numbered SQL scripts; they run after those of the base.</summary>
     public IReadOnlyList<MigrationSet> Migrations { get; init; } = [];
 
+    /// <summary>
+    /// The table that remembers the applied scripts. Only an app that already owns a table named <c>schema_migrations</c> with other columns sets this
+    /// (a plain identifier: letters, digits, underscore). Apps made by <c>new-app.sh</c> keep the default.
+    /// </summary>
+    public string MigrationTable { get; init; } = Migrator.DefaultTable;
+
+    /// <summary>
+    /// Own doors: path prefixes under /api that the app protects itself, for a device or another app with a key instead of a person with a session (SEC-07).
+    /// Empty for most apps.
+    /// </summary>
+    public IReadOnlyList<ApiDoor> Doors { get; init; } = [];
+
     /// <summary>The app's own settings (the base brings language, light or dark and the trusted proxies).</summary>
     public IReadOnlyList<SettingRule> Settings { get; init; } = [];
 
@@ -38,6 +50,50 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
 
     /// <summary>Paths under /api that accept large bodies (uploads); each of them checks its own limit.</summary>
     public IReadOnlyList<string> LargeBodyPaths { get; init; } = [];
+}
+
+/// <summary>
+/// A path prefix under /api with its own protection (SEC-07). For a request under it the guard asks for no <c>X-Base</c> header and no Origin, never reads the
+/// session cookie and sets no identity; it applies the body limit, calls <paramref name="Check"/> and answers 401 when that says no. The check is required:
+/// a door without one cannot be declared.
+/// </summary>
+/// <param name="Prefix">Starts with <c>/api/</c> and names at least one more segment, e.g. <c>/api/v1</c>. Matches whole segments: <c>/api/v1</c> covers <c>/api/v1/x</c>, not <c>/api/v10</c>.</param>
+/// <param name="Check">Looks at the request (for example a bearer key) and says whether it may pass. It runs before the body is read by the app.</param>
+/// <param name="MaxBodyBytes">The largest body a request under the door may have.</param>
+public sealed record ApiDoor(string Prefix, Func<HttpContext, ValueTask<bool>> Check, long MaxBodyBytes)
+{
+    /// <summary>The first segment under /api that the base itself serves; a door cannot sit on any of them.</summary>
+    public static readonly IReadOnlySet<string> ReservedFirstSegments = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "auth", "setup", "invite", "account", "health", "about", "people", "settings", "instance-settings", "hub-settings",
+    };
+
+    /// <summary>True when <paramref name="path"/> is the prefix or lies below it, by whole segments.</summary>
+    public bool Covers(PathString path) => path.StartsWithSegments(Prefix, StringComparison.Ordinal);
+
+    /// <summary>Stops the start when a door is not allowed.</summary>
+    public static void Validate(IReadOnlyList<ApiDoor> doors, IEnumerable<string> otherPaths)
+    {
+        var seen = new List<string>();
+        foreach (var d in doors)
+        {
+            if (d.Check is null) throw new InvalidOperationException($"The door '{d.Prefix}' has no check; a door without a check cannot be declared.");
+            if (d.MaxBodyBytes < 0) throw new InvalidOperationException($"The door '{d.Prefix}' has a negative body limit.");
+            var prefix = d.Prefix ?? "";
+            if (!prefix.StartsWith("/api/", StringComparison.Ordinal)) throw new InvalidOperationException($"The door '{prefix}' must start with /api/ and name at least one more segment.");
+            var segments = prefix[5..].Split('/');
+            if (segments.Any(s => s.Length == 0 || !s.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_')))
+                throw new InvalidOperationException($"The door '{prefix}' is not a plain path: segments of letters, digits, dash and underscore, no empty segment, no trailing slash.");
+            if (ReservedFirstSegments.Contains(segments[0])) throw new InvalidOperationException($"The door '{prefix}' lies on a path the base itself serves (/api/{segments[0]}).");
+            foreach (var other in otherPaths)
+                if (new PathString(other).StartsWithSegments(prefix, StringComparison.Ordinal))
+                    throw new InvalidOperationException($"The door '{prefix}' would cover the path '{other}' that the app or the base declares otherwise.");
+            foreach (var earlier in seen)
+                if (new PathString(prefix).StartsWithSegments(earlier, StringComparison.Ordinal) || new PathString(earlier).StartsWithSegments(prefix, StringComparison.Ordinal))
+                    throw new InvalidOperationException($"The doors '{earlier}' and '{prefix}' overlap.");
+            seen.Add(prefix);
+        }
+    }
 }
 
 /// <summary>Name and versions of the running app: its own version, the commit it was built from, and the version of the base it was made with.</summary>

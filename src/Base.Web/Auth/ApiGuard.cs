@@ -39,11 +39,34 @@ internal sealed class ApiGuard(RequestDelegate next, AccountService accounts, Se
     private readonly HashSet<string> _public = new(BasePublicPaths.Concat(options.PublicPaths), StringComparer.Ordinal);
     private readonly HashSet<string> _large = new(options.LargeBodyPaths, StringComparer.Ordinal);
 
+    private readonly ApiDoor[] _doors = [.. options.Doors];
+
+    private async Task PassDoorAsync(HttpContext ctx, ApiDoor door)
+    {
+        var request = ctx.Request;
+        if (request.ContentLength > door.MaxBodyBytes)
+        {
+            await HttpErrors.WriteAsync(ctx, new Error(ErrorKind.TooLarge, "too_large", "The request is too large."));
+            return;
+        }
+        if (ctx.Features.Get<IHttpMaxRequestBodySizeFeature>() is { IsReadOnly: false } limit) limit.MaxRequestBodySize = door.MaxBodyBytes;
+        request.Body = new LimitedBody(request.Body, door.MaxBodyBytes);
+        bool pass;
+        try { pass = await door.Check(ctx); }
+        catch (Exception e) when (e is not OperationCanceledException and not BadHttpRequestException) { pass = false; }   // a check that fails never lets anybody in
+        if (!pass) { await HttpErrors.WriteAsync(ctx, Error.Unauthorized()); return; }
+        ctx.Items.Remove(IdentityKey);
+        await next(ctx);
+    }
+
     public async Task InvokeAsync(HttpContext ctx)
     {
         var request = ctx.Request;
         if (!request.Path.StartsWithSegments("/api")) { await next(ctx); return; }
         var path = request.Path.Value ?? "";
+
+        // An own door (SEC-07): the app protects it with its check. Neither the header, nor the Origin, nor the session cookie play a part here, and no identity is set.
+        if (_doors.FirstOrDefault(d => d.Covers(request.Path)) is { } door) { await PassDoorAsync(ctx, door); return; }
 
         if (!HttpMethods.IsGet(request.Method) && !HttpMethods.IsHead(request.Method))
         {

@@ -32,10 +32,11 @@ public static class BaseApp
         var connection = cfg["BASE_DB"] ?? throw new InvalidOperationException("BASE_DB is missing (the connection to PostgreSQL, see docker-compose.yml).");
         var info = AppInfo.From(options);
         Describe.Check(options);
+        ApiDoor.Validate(options.Doors, [.. ApiGuard.BasePublicPaths, .. options.PublicPaths, .. options.LargeBodyPaths]);
         services.AddSingleton(options);
         services.AddSingleton(info);
         services.AddSingleton(_ => Database.Create(connection, cfg["BASE_DB_PASSWORD_FILE"]));
-        services.AddSingleton(sp => new Migrator(sp.GetRequiredService<NpgsqlDataSource>(), [AccountsModule.Migrations, Migrations, .. options.Migrations]));
+        services.AddSingleton(sp => new Migrator(sp.GetRequiredService<NpgsqlDataSource>(), [AccountsModule.Migrations, Migrations, .. options.Migrations], options.MigrationTable));
         services.AddSingleton(TimeProvider.System);
         services.AddBaseAccounts(options.Name, SecretBox.ResolveKey(cfg["BASE_SECRET_KEY"], cfg["BASE_DATA"] ?? "data"), cfg["BASE_SETUP_CODE"], options.Roles);
         services.AddSingleton<HealthState>();

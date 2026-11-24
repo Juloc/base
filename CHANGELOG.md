@@ -4,6 +4,13 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.3.2
+
+Two additions for an app that moves onto the base with a database and clients of its own. Nothing changes for an app that sets neither.
+
+- **Name of the migration table** (DATA-04): `BaseAppOptions.MigrationTable` (default `schema_migrations`) and `new Migrator(db, sets, table)`. Only a plain identifier is accepted; a foreign table of the default name stays untouched.
+- **Own doors** (SEC-07): `BaseAppOptions.Doors`, a list of `ApiDoor(prefix, check, maxBodyBytes)`. A path prefix under `/api` that the app protects itself (a bearer key, no cookie, no Origin, paths with ids). The check is required; under a door the base never reads the session cookie and sets no identity. The base's own paths cannot be declared as a door (refused at start).
+
 ## 0.3.1
 
 **The repository is public now, under the MIT licence** ([LICENSE](LICENSE)). The contract with the hub and the first trial against a real hub moved to [docs/CONTRACT.md](docs/CONTRACT.md) and [docs/HUB-TRIAL.md](docs/HUB-TRIAL.md); the other drafts left the repository.
