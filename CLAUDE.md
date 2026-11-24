@@ -26,6 +26,6 @@ The shared base of the app family: every new app is made from this repository. S
 | `scripts/` | `new-app.sh` (make an app), `sync-base.sh` (renew an app's copy), `check-app.sh` (drift and file rules), `test.sh` (tests with a throwaway PostgreSQL). |
 | `templates/` | `CLAUDE.app.md` (the rule file of every app) and `app/` (the other files `new-app.sh` writes). |
 | `tests/Base.Tests` | Security and logic tests; `HubSignInTests` (with `TestHub`, a small hub that signs with a test key) and `PeopleTests`; `RuleFileTests`, `ContrastTests`, `RulebookTests` check rules from the files. |
-| `docs/` | `RULES.md`, `DECISIONS.md`; `plans/` holds drafts of later steps (not agreed, not built). |
+| `docs/` | `RULES.md`, `DECISIONS.md`, `SIGN-IN-WITH-HUB.md`; `CONTRACT.md` is the draft of the contract with the hub (stage 1 is built), `HUB-TRIAL.md` the first trial against a real hub. |
 
 How an app uses the base: [README.md](README.md). The agreed design: `docs/BASE.md` in the JulOS repository.

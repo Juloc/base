@@ -43,7 +43,7 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
 /// <summary>Name and versions of the running app: its own version, the commit it was built from, and the version of the base it was made with.</summary>
 public sealed record AppInfo(string Id, string Name, string Version, string? Commit, string BaseVersion)
 {
-    /// <summary>The version of the contract between an app and the hub that this base speaks (docs/plans/CONTRACT.md). A change that breaks a reader raises it.</summary>
+    /// <summary>The version of the contract between an app and the hub that this base speaks (docs/CONTRACT.md). A change that breaks a reader raises it.</summary>
     public const int ContractVersion = 1;
 
     public static AppInfo From(BaseAppOptions options)

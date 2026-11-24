@@ -42,7 +42,7 @@ Everything takes effect at once, without a restart. Nothing of this is in an env
 Browser, app and hub must all use the same address for each of them (the hub's address is the issuer in every token; the app's address is compared exactly). `localhost` is wrong inside a container. Use names under
 `.localhost` (both sides accept them as "this machine"), put them as **network aliases** on one shared Docker network, and let each service listen on the **same port inside as outside**:
 `http://julos.localhost:18390` and `http://startapp.localhost:18391`. In the hub, tick "App on the local network" for the app (its alias resolves to the Docker network). The whole run, step by step,
-with what worked and what did not: [plans/HUB-TRIAL.md](plans/HUB-TRIAL.md).
+with what worked and what did not: [HUB-TRIAL.md](HUB-TRIAL.md).
 
 ## Things to know
 

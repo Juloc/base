@@ -1,7 +1,7 @@
 # base
 
 The shared base of the app family: every new app is built on it, so they all sign in, look, start and are configured the same way.
-It is a private repository of source code that is **copied** into an app by a script; there is no package server.
+It is a repository of source code that is **copied** into an app by a script; there is no package server. Licence: [MIT](LICENSE).
 
 What an app gets:
 
@@ -66,7 +66,7 @@ starts the start app on `http://localhost:8080`. While working on the look, run 
 
 - The parts: [CLAUDE.md](CLAUDE.md) has the map of the code and the working rules.
 - Decisions with their reasons: [docs/DECISIONS.md](docs/DECISIONS.md). Third-party code: [THIRD-PARTY.md](THIRD-PARTY.md).
-- Drafts of the next steps (passkeys, the hub, the first real app): [docs/plans/](docs/plans/). The agreed design is `docs/BASE.md` in the JulOS repository.
+- The contract between an app and the hub (draft; stage 1 is built): [docs/CONTRACT.md](docs/CONTRACT.md). The first trial against a real hub: [docs/HUB-TRIAL.md](docs/HUB-TRIAL.md). The agreed design is `docs/BASE.md` in the JulOS repository.
 
 ## What is not here yet
 

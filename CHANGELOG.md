@@ -6,6 +6,8 @@ what apps rely on; such changes are marked **Breaking**.
 
 ## 0.3.1
 
+**The repository is public now, under the MIT licence** ([LICENSE](LICENSE)). The contract with the hub and the first trial against a real hub moved to [docs/CONTRACT.md](docs/CONTRACT.md) and [docs/HUB-TRIAL.md](docs/HUB-TRIAL.md); the other drafts left the repository.
+
 **Second round of the look: more JulOS, and a little Jularr.** Same markup and API; one **visible change for every app**: a `.list` outside a card is now tiles with a space between (inside a card, or as `.list.lines`, the rows are lines as before), and an app that put a list in `.card.flush` should drop the card.
 
 - **Pages:** `shell()` builds the head of the page in the page: big title (`view.title`), a second line (new `view.sub`), the main action at the right (`view.actions`), the way back on wide screens; on the phone a small bar with the app name that shows the title once the page has scrolled. A `nav` place with `foot: true` goes into a second group at the bottom of the side list. The selected place is a soft filled pill over the whole width.
@@ -29,7 +31,7 @@ what apps rely on; such changes are marked **Breaking**.
 
 ## 0.2.1
 
-First trial against a real JulOS 0.26.0 (everything local, [docs/plans/HUB-TRIAL.md](docs/plans/HUB-TRIAL.md)): the sign-in flow fits; two things did not and are fixed here.
+First trial against a real JulOS 0.26.0 (everything local, [docs/HUB-TRIAL.md](docs/HUB-TRIAL.md)): the sign-in flow fits; two things did not and are fixed here.
 
 - **Signing out of the app returns to the app (AUTH-13, AUTH-14).** The ID token of the hub stays on the session as the hint for the hub's sign-out (migration `accounts/003_hub_hint`,
   `sessions.hub_hint`, deleted with the session); the sign-out address now has `id_token_hint` and `post_logout_redirect_uri` (`/` of the app). The hub then signs out without asking and sends the
