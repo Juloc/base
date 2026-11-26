@@ -13,7 +13,7 @@ const flushCard = (title, action, body) => h('section', { class: 'card flush' },
 /** Light or dark and the language. Both are kept on the server, so they follow the person to every device. */
 export function appearanceCard() {
   const lang = field({ label: t('settings.language'), name: 'lang', type: 'select', value: getPref(), options: LANG_CHOICES });
-  lang.querySelector('select').addEventListener('change', async (e) => {
+  lang.querySelector('input[name=lang]').addEventListener('change', async (e) => {
     setPref(e.target.value);
     try { await prefs.set('lang', e.target.value); } catch { /* kept locally */ }
     location.reload();

@@ -4,7 +4,7 @@
  * The server decides everything; this file only draws (AUTH-08: the sign-in never says which part was wrong).
  * ===================================================================== */
 import { t, hasKey, LANG_CHOICES, getPref, setPref } from './i18n.js';
-import { h, icon, svg, api, field, passwordField, submit, notice, theme, prefs, markSignedIn, copyText, errorText, ApiError, toast } from './base.js';
+import { h, icon, svg, api, field, dropdown, passwordField, submit, notice, theme, prefs, markSignedIn, copyText, errorText, ApiError, toast } from './base.js';
 import { qrSvg } from './qr.js';
 import { roleName } from './people.js';
 
@@ -38,9 +38,7 @@ export async function start({ icon: appIcon = 'grid', onSignedIn }) {
 
 /** The page around a form: the mark and name of the app on top, language and light or dark below. */
 function frame(app, appIcon, card) {
-  const lang = h('select', { class: 'select', 'aria-label': t('settings.language'), onchange: (e) => { setPref(e.target.value); location.reload(); } },
-    LANG_CHOICES.map(([v, l]) => h('option', { value: v, text: l })));
-  lang.value = getPref();
+  const lang = dropdown({ name: 'lang', label: t('settings.language'), value: getPref(), options: LANG_CHOICES, onchange: (v) => { setPref(v); location.reload(); } });
   const dark = h('button', { class: 'btn ghost icon-only', type: 'button', 'aria-label': t('shell.dark'), onclick: () => { theme.set(theme.isDark() ? 'light' : 'dark'); dark.replaceChildren(icon(theme.isDark() ? 'sun' : 'moon')); } }, icon(theme.isDark() ? 'sun' : 'moon'));
   return h('main', { class: 'auth' },
     h('div', { class: 'auth-card' },

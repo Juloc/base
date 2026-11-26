@@ -1,6 +1,6 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
-import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, field, passwordField, submit, segmented, theme, ApiError } from './base.js';
+import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, ApiError } from './base.js';
 import { GLYPHS } from './icons.js';
 
 /* ---------- the examples that are JavaScript: the source shown is the function itself ---------- */
@@ -16,14 +16,31 @@ const demos = {
   },
   dialog() {
     openDialog({
-      title: 'New entry',
+      title: 'Edit entry',
       body: h('form', { class: 'form' },
-        field({ label: 'Title', name: 'title' }),
-        field({ label: 'Note', name: 'note', type: 'textarea' })),
+        field({ label: 'Title', name: 'title', value: 'Buy milk', placeholder: 'What is it about?' }),
+        field({ label: 'List', name: 'list', type: 'select', value: 'home', options: [['home', 'Home'], ['work', 'Work'], ['later', 'Later']] }),
+        field({ label: 'Note', name: 'note', type: 'textarea', placeholder: 'Anything to remember' })),
       actions: [
+        { label: 'Delete', kind: 'danger', side: 'start', run: () => { toast('Entry deleted'); } },
         { label: 'Cancel', kind: 'ghost' },
-        { label: 'Add', kind: 'primary', run: () => { toast('Entry created', { kind: 'ok' }); } },
+        { label: 'Save', kind: 'primary', run: () => { toast('Entry saved', { kind: 'ok' }); } },
       ],
+    });
+  },
+  dialogColumns() {
+    openDialog({
+      title: 'New route',
+      size: 'l',
+      body: h('div', { class: 'dialog-cols' },
+        h('div', { class: 'dialog-col' },
+          field({ label: 'Name', name: 'name', placeholder: 'app.example.com' }),
+          field({ label: 'Target', name: 'target', placeholder: '192.0.2.10:8080', hint: 'Host and port.' }),
+          switchField({ label: 'Active', hint: 'A route that is off is kept but not served.', name: 'active', checked: true })),
+        h('div', { class: 'dialog-col' },
+          choiceTiles({ name: 'mode', label: 'Mode', value: 'proxy', options: [['proxy', 'Forward', 'Pass the request on.'], ['static', 'Files', 'Serve a folder.']] }),
+          field({ label: 'Certificate', name: 'cert', type: 'select', value: 'auto', options: [['auto', 'Automatic'], ['own', 'Own certificate'], ['none', 'None']] }))),
+      actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Add route', kind: 'primary', run: () => { toast('Route added', { kind: 'ok' }); } }],
     });
   },
   async ask() {
@@ -44,6 +61,41 @@ const demos = {
       text: '3 changes waiting', icon: 'info',
       actions: [{ label: 'Discard', kind: 'ghost' }, { label: 'Apply changes', kind: 'primary', run: () => { toast('Applied', { kind: 'ok' }); } }],
     });
+  },
+  actionBar() {
+    let n = 2;
+    const bar = actionBar({
+      actions: [{ label: 'Apply (2)', kind: 'primary', icon: 'check', run: () => { toast('Applied', { kind: 'ok' }); } }, { label: 'More', icon: 'plus', run: () => { n++; bar.update({ actions: [{ label: `Apply (${n})`, kind: 'primary', icon: 'check' }] }); return false; } }],
+    });
+  },
+  selectionBar() {
+    const bar = selectionBar({
+      count: 3,
+      actions: [{ label: 'Delete', icon: 'trash', kind: 'danger', run: () => { toast('Deleted'); bar.close(); } }, { label: 'More', icon: 'plus', run: () => bar.update({ count: 4 }) }],
+      onClear: () => toast('Selection cleared'),
+    });
+  },
+  dropdown() {
+    return h('div', { class: 'stack' },
+      field({ label: 'Language', name: 'lang', type: 'select', value: 'en', options: [['de', 'Deutsch'], ['en', 'English'], ['system', 'System']] }),
+      h('div', { class: 'field' }, h('span', { class: 'field-label', text: 'Alone, with a hidden label' }),
+        dropdown({ name: 'unit', label: 'Unit', value: '', placeholder: 'Choose a unit', options: [['s', 'Seconds'], ['m', 'Minutes'], ['h', 'Hours', 'longest']] })));
+  },
+  dropdownSearch() {
+    const hosts = ['example.com', 'www.example.com', 'api.example.com', 'blog.example.org', 'cdn.example.net', 'mail.example.com', 'files.example.org', 'git.example.com', 'wiki.example.net', 'status.example.com', 'vpn.example.org', 'docs.example.com'];
+    return field({ label: 'Host', name: 'host', type: 'select', value: 'example.com', options: hosts.map((x, i) => [x, x, String(100 - i * 7)]), onchange: (v) => toast(v) });
+  },
+  choiceTiles() {
+    return choiceTiles({ name: 'when', label: 'When', value: 'now', options: [['now', 'Right away', 'The change goes live at once.'], ['later', 'At night', 'Applied at 03:00.'], ['ask', 'Ask me', 'You confirm each change.']], onchange: (v) => toast(v) });
+  },
+  navBadge() {
+    const places = [['home', 'Overview'], ['list', 'Routes'], ['globe', 'Domains'], ['shield', 'Protection'], ['activity', 'Traffic'], ['database', 'Logs'], ['sliders', 'Settings']];
+    const pill = h('nav', { class: 'shell-tabs', 'aria-label': 'Places' }, h('div', { class: 'tabs-scroll more-right' },
+      places.map(([ic, label], i) => h('a', { class: 'tab', href: '#/demo-' + i, dataset: { nav: '#/demo-' + i }, 'aria-current': i === 0 ? 'page' : null },
+        h('span', { class: 'tab-pill' }, icon(ic)), h('span', { text: label })))));
+    navBadge('/demo-1', true);
+    navBadge('/demo-3', 3);
+    return pill;
   },
   form() {
     // stands in for a request: the server answers with the fields that are wrong
@@ -89,7 +141,7 @@ for (const demo of document.querySelectorAll('.cat-demo')) {
 hydrateIcons();
 
 /* ---------- colours, sizes, icons ---------- */
-const COLOURS = ['bg', 'surface', 'surface-1', 'surface-2', 'surface-3', 'surface-4', 'text', 'text-2', 'line', 'line-strong', 'hair', 'accent-from-hue', 'accent', 'on-accent', 'accent-ink', 'accent-soft', 'on-accent-soft',
+const COLOURS = ['bg', 'surface', 'surface-1', 'surface-2', 'surface-3', 'surface-4', 'text', 'text-2', 'line', 'line-strong', 'hair', 'edge', 'seg-track', 'seg-on', 'accent-from-hue', 'accent', 'on-accent', 'accent-ink', 'accent-soft', 'on-accent-soft',
   'secondary-soft', 'on-secondary-soft', 'tertiary-soft', 'on-tertiary-soft', 'danger', 'on-danger', 'danger-soft', 'on-danger-soft', 'ok', 'ok-soft', 'on-ok-soft', 'warn', 'warn-soft', 'on-warn-soft'];
 document.getElementById('cat-swatches').append(...COLOURS.map((name) => {
   const chip = h('i');

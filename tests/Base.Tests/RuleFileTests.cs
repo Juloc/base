@@ -195,6 +195,38 @@ public partial class RuleFileTests
         None(Scripts(), @"(?<![\w.])(alert|confirm|prompt)\(|window\.(alert|confirm|prompt)\(|\.showModal\(", "a dialog that blocks the page (DIALOG-01)");
 
     [Fact]
+    public void Dialogs_are_solid_and_close_when_the_page_changes()
+    {
+        var styles = Repo.Read("ui", "base.css");
+        var script = Repo.Read("ui", "base.js");
+        Assert.Matches(@"\.dialog\s*\{[^}]*background:\s*var\(--surface\)", styles);           // solid, never see-through
+        Assert.DoesNotMatch(@"\.dialog\s*\{[^}]*(backdrop-filter|--glass)", styles);
+        Assert.Matches(@"addEventListener\('hashchange',\s*\(\)\s*=>\s*\{\s*closeDialogs\(\)", script);   // the router closes dialogs when the page changes
+        Assert.Contains("side === 'start'", script);                                           // delete and deactivate bottom left
+        Assert.Matches(@"\.dialog-foot\s*\{", styles);                                          // the buttons stand outside the scrolling body
+    }
+
+    [Fact]
+    public void Selects_are_our_own_dropdown()
+    {
+        None(Scripts(), @"h\('select'", "a native select (use dropdown(), KIT-02)");
+        var script = Repo.Read("ui", "base.js");
+        foreach (var word in new[] { "role: 'combobox'", "role: 'listbox'", "role: 'option'", "aria-activedescendant", "'Escape'", "'Home'", "'ArrowDown'" })
+            Assert.Contains(word, script);
+    }
+
+    [Fact]
+    public void The_phone_menu_is_a_pill_of_all_places()
+    {
+        var styles = Repo.Read("ui", "base.css");
+        var script = Repo.Read("ui", "base.js");
+        Assert.Matches(@"\.shell-tabs\s*\{[^}]*background:\s*var\(--surface\)", styles);   // solid white pill, not glass
+        Assert.Matches(@"\.tab\s*\{[^}]*flex:\s*1 0 68px", styles);
+        Assert.DoesNotContain("nav.slice(0, 5)", script);                                      // every place, not the first five
+        Assert.Contains("export function navBadge(", script);
+    }
+
+    [Fact]
     public void An_app_sets_its_colour_with_one_variable()
     {
         const string literal = @"#[0-9a-fA-F]{3,8}\b|\b(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch|hwb)\(";
@@ -341,7 +373,7 @@ public partial class RuleFileTests
         var catalogue = Repo.Read("ui", "catalog.html") + Repo.Read("ui", "catalog.js");
         string[] classes = ["btn", "field", "input", "textarea", "select", "switch", "check", "seg", "card", "list", "row", "table", "badge", "notice", "empty", "spinner", "skeleton", "capsule", "chip", "tile", "tiles", "search"];
         Assert.All(classes, c => Assert.Matches($@"class=""[^""]*\b{c}\b", catalogue));
-        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule("];
+        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule(", "dropdown(", "choiceTiles(", "actionBar(", "selectionBar(", "navBadge(", "closeDialogs("];
         Assert.All(functions, f => Assert.Contains(f, catalogue));
         Assert.Contains("Object.keys(GLYPHS)", catalogue);                                 // every icon, by itself
         // every colour token is shown

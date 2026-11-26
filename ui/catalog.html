@@ -145,7 +145,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="fields">
         <h2 class="h1">Field</h2>
-        <p class="muted">Every control has a visible label (FORM-01). A hint below explains, the error replaces guessing (FORM-02). In JavaScript: <code class="mono">field({ label, name, hint })</code>, <code class="mono">passwordField()</code>.</p>
+        <p class="muted">Every control has a visible label (FORM-01), short and above the field; what the field wants goes into its placeholder, a hint below explains more, the error replaces guessing (FORM-02). The input is 48 px high with a faint edge, a soft shadow and a soft ring in the ink of the accent when focused. In JavaScript: <code class="mono">field({ label, name, placeholder, hint })</code>, <code class="mono">passwordField()</code>.</p>
         <div class="cat-demo on-surface">
           <div class="form">
             <div class="field">
@@ -167,10 +167,6 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
               <textarea class="textarea" id="cat-f4" rows="3">Line breaks are kept.</textarea>
             </div>
             <div class="field">
-              <label for="cat-f5">Language</label>
-              <select class="select" id="cat-f5"><option>Deutsch</option><option>English</option><option>System</option></select>
-            </div>
-            <div class="field">
               <label for="cat-f6">One-time code</label>
               <input class="input code" id="cat-f6" type="text" inputmode="numeric" value="123 456">
             </div>
@@ -178,9 +174,24 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         </div>
       </section>
 
+      <section class="cat-item" id="dropdown">
+        <h2 class="h1">Dropdown</h2>
+        <p class="muted">Our own instead of the browser's select: <code class="mono">field({ type: 'select', options })</code> or <code class="mono">dropdown()</code> alone. The list is styled, the chosen entry tinted with a check. With <code class="mono">search</code> (on by default above ten entries) a field at the top filters as one types. Keyboard: Enter, Space and the arrows open; arrows, Home, End and PageUp/PageDown move; Enter chooses; Escape closes; typing jumps to a match. Screen readers get a combobox with a listbox and <code class="mono">aria-activedescendant</code>. On a phone the list is a sheet from below, on a wide screen it hangs at the button and fits the window; it closes on a click outside and when the page changes. A form reads the value as before (<code class="mono">formValues</code>): a hidden input with the name carries it and fires <code class="mono">change</code>.</p>
+        <div class="cat-demo on-surface" data-run="dropdown" data-inline></div>
+        <div class="cat-demo on-surface" data-run="dropdownSearch" data-inline></div>
+        <p class="muted">The browser's own select remains for markup written by hand (the class <code class="mono">select</code>, the same look); prefer <code class="mono">dropdown()</code>.</p>
+        <div class="cat-demo on-surface">
+          <div class="field">
+            <label for="cat-f5">Native select</label>
+            <select class="select" id="cat-f5"><option>Deutsch</option><option>English</option><option>System</option></select>
+          </div>
+        </div>
+      </section>
+
       <section class="cat-item" id="choices">
-        <h2 class="h1">Switch, checkbox, segmented choice</h2>
-        <p class="muted">A switch applies at once; a checkbox waits for "Save". Two to four options side by side: the segmented choice.</p>
+        <h2 class="h1">Switch, checkbox, segmented choice, choice tiles</h2>
+        <p class="muted">A switch (46 × 28, a white knob, the accent when on) applies at once; a checkbox (in the ink of the accent) waits for "Save". Two to four short options side by side: the segmented choice, the chosen part white on a light track. Two to four options that each need a sentence: <code class="mono">choiceTiles()</code>, the chosen tile tinted with an ink border (radio buttons inside, so the arrow keys work).</p>
+        <div class="cat-demo on-surface" data-run="choiceTiles" data-inline></div>
         <div class="cat-demo on-surface">
           <div class="stack">
             <label class="switch reverse">
@@ -243,8 +254,11 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
       </section>
 
       <section class="cat-item" id="floatbar">
-        <h2 class="h1">Page head and floating bar</h2>
-        <p class="muted">The head of a page is made by <code class="mono">shell()</code> from the view: <code class="mono">{ title, sub, actions }</code> (big title, a second line, the main action at the right; <code class="mono">back</code> adds the way back). A place of <code class="mono">nav</code> with <code class="mono">foot: true</code> goes into a second group at the bottom of the side list. For what waits for a decision ("Apply changes") a floating bar of glass stays above the content: <code class="mono">floatBar({ text, actions })</code>.</p>
+        <h2 class="h1">Page head and bars</h2>
+        <p class="muted">The head of a page is made by <code class="mono">shell()</code> from the view: <code class="mono">{ title, sub, actions }</code> (big title, a second line, the main action at the right; <code class="mono">back</code> adds the way back). A place of <code class="mono">nav</code> with <code class="mono">foot: true</code> goes into a second group at the bottom of the side list.</p>
+        <p class="muted">For what waits for a decision ("Apply changes (3)") the action bar: a white card centred above the menu on a phone, at the bottom of the content on a wide screen, one or two buttons, <code class="mono">update()</code> changes its words in place. <code class="mono">floatBar()</code> is the old name of the same bar. While rows are selected the dark selection bar takes its place: "3 selected", the actions that work on them and a button to clear the selection.</p>
+        <div class="cat-demo" data-run="actionBar"></div>
+        <div class="cat-demo" data-run="selectionBar"></div>
         <div class="cat-demo" data-run="floatBar"></div>
       </section>
 
@@ -333,8 +347,9 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="dialogs">
         <h2 class="h1">Dialog</h2>
-        <p class="muted">A window that does not block the page: it can be moved by its title, the page behind stays usable; on a phone it is a sheet from below (DIALOG-01). Escape closes it and the focus returns (DIALOG-01). Before something that cannot be undone, ask, and name the action on the button (DIALOG-01).</p>
+        <p class="muted">Big and centred on a wide screen (720 px; <code class="mono">size: 'l'</code> up to 940 px, <code class="mono">size: 's'</code> 480 px for a question), a sheet from below on a phone with its buttons fixed at the bottom. Solid, never see-through, a faint scrim behind. It does not block the page and can be moved by its title (DIALOG-01); Escape closes it and the focus returns. <strong>It closes when the page changes</strong> (the router calls <code class="mono">closeDialogs()</code>). Buttons: cancel and the main action bottom right, delete and deactivate bottom left with <code class="mono">side: 'start'</code>. Two columns: a <code class="mono">.dialog-cols</code> with a <code class="mono">.dialog-col</code> in each column. Before something that cannot be undone, ask, and name the action on the button (DIALOG-01).</p>
         <div class="cat-demo" data-run="dialog"></div>
+        <div class="cat-demo" data-run="dialogColumns"></div>
         <div class="cat-demo" data-run="ask"></div>
       </section>
 
@@ -399,10 +414,10 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="shell">
         <h2 class="h1">Shell</h2>
-        <p class="muted">The frame of every app (SHELL-01): on a phone a head and a bar of up to five places at the bottom, thought of first (MOBILE-02); on a wide screen the menu on the left. The person menu (settings, light or dark, sign out) is the same everywhere (SHELL-01). <a href="/">Open the app</a> to see it live.</p>
+        <p class="muted">The frame of every app (SHELL-01): on a phone a head and a floating white pill at the bottom that holds all places and is swiped sideways (the current one is scrolled to the middle, the edges fade), thought of first (MOBILE-02); on a wide screen the menu on the left. A dot or a count on a place: <code class="mono">navBadge(path, value)</code>. The person menu (settings, light or dark, sign out) is the same everywhere (SHELL-01). <a href="/">Open the app</a> to see it live.</p>
         <div class="cat-demo" data-nocode>
           <div class="shell-sketch">
-            <div class="sketch sketch-phone"><div class="sk-head">head · title · person</div><div class="sk-main">page</div><div class="sk-tabs">places</div></div>
+            <div class="sketch sketch-phone"><div class="sk-head">head · title · person</div><div class="sk-main">page</div><div class="sk-tabs">menu pill: all places, swipe</div></div>
             <div class="sketch sketch-wide"><div class="sk-side">menu<br>person</div><div class="sk-col"><div class="sk-head">title · actions</div><div class="sk-main">page</div></div></div>
           </div>
         </div>
@@ -415,6 +430,12 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 document.body.append(frame.el);
 router({ '/': listPage, '/notes/:id': notePage, '/settings': settingsPage }, frame);
 // a page returns { title, body, back, actions }</pre>
+      </section>
+
+      <section class="cat-item" id="navbadge">
+        <h2 class="h1">Dot and count on a menu place</h2>
+        <p class="muted"><code class="mono">navBadge('/routes', true)</code> puts an accent dot on a place (something new there), <code class="mono">navBadge('/routes', 3)</code> or <code class="mono">navBadge('/routes', '!')</code> a raspberry count or mark (it needs a look); <code class="mono">false</code> or <code class="mono">0</code> takes it away. It reaches the side menu and the pill. Below, a pill with seven places as the shell makes it.</p>
+        <div class="cat-demo" data-run="navBadge" data-inline></div>
       </section>
 
       <section class="cat-item" id="icons">

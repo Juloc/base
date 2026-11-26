@@ -5,9 +5,11 @@
  *   api, ApiError, errorText talk to the own server (adds the header the guard asks for, turns error codes into text)
  *   theme, prefs            light or dark, and the person's settings on the server
  *   toast                   a short message that goes away by itself
- *   openDialog, confirmDialog  a window that does not block the page; a sheet on a phone (DIALOG-01)
+ *   openDialog, confirmDialog, closeDialogs  a big window that does not block the page; a sheet on a phone; closes when the page changes (DIALOG-01)
  *   openMenu                a small menu at a button
  *   field, passwordField, submit, showErrors   forms with errors at the fields (FORM-01, FORM-02)
+ *   dropdown, switchField, segmented, choiceTiles   the choosing controls of the family
+ *   actionBar, selectionBar, floatBar   the bars above the content; navBadge  a dot or a count on a place of the menu
  *   emptyState, loading, skeleton, notice, badge
  *   shell, router           the frame of the app (menu, head, person menu) and the pages inside it
  * The catalogue (/base/catalog.html) shows each of them with the code.
@@ -170,18 +172,29 @@ export function toast(text, { kind = 'info', action, timeout } = {}) {
 /* ---------- dialog ---------- */
 
 const FOCUSABLE = 'input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+const openDialogs = new Set();
+const openLists = new Set();         // the open lists of dropdowns: they close with the page, too
+
+/** Closes every open dialog and dropdown list. The router does it when the page changes; an app may call it before it navigates by other means. */
+export function closeDialogs() {
+  for (const d of [...openDialogs]) d.close();
+  for (const close of [...openLists]) close();
+}
 
 /**
- * Opens a dialog: a window on a wide screen (it can be moved by its title and does not block the page behind it), a sheet from below on a phone.
+ * Opens a dialog: big and centred on a wide screen (it can be moved by its title and does not block the page behind it), a sheet from below on a phone.
+ * Solid, with a faint scrim; it closes by itself when the page changes (the router calls closeDialogs()).
  *  title    the heading
- *  body     a node, or a function (dialog) => node
- *  actions  buttons at the bottom: { label, kind: 'primary' | 'danger' | 'ghost', run(dialog) }. run may be async; while it runs the button is busy.
- *           The dialog closes after run unless it returns false or throws. An action without run just closes.
+ *  body     a node, or a function (dialog) => node. Two columns: a .dialog-cols with a .dialog-col in each column.
+ *  actions  buttons at the bottom, fixed there on a phone: { label, kind: 'primary' | 'danger' | 'ghost', side: 'start' | 'end', run(dialog) }.
+ *           side 'start' puts the button bottom left (delete, deactivate), the others stand bottom right (cancel, then the main action).
+ *           run may be async; while it runs the button is busy. The dialog closes after run unless it returns false or throws. An action without run just closes.
+ *  size     's' (480 px: a question), 'm' (720 px, the default), 'l' (940 px, tables and two columns); wide: true is 'l'
  *  onClose  called once when it is closed, however that happened
  * Escape and the close button close it; the focus goes into the dialog and back to where it was (DIALOG-01).
  * Returns { el, body, close() }.
  */
-export function openDialog({ title, body, actions = [], onClose, wide = false }) {
+export function openDialog({ title, body, actions = [], onClose, wide = false, size }) {
   const opener = document.activeElement;
   const titleId = nextId('dlg');
   const dialog = { el: null, body: null, close };
@@ -189,7 +202,7 @@ export function openDialog({ title, body, actions = [], onClose, wide = false })
   const head = h('div', { class: 'dialog-head' },
     h('h2', { class: 'dialog-title', id: titleId, text: title }),
     h('button', { class: 'btn ghost icon-only', type: 'button', 'aria-label': t('common.close'), onclick: () => close() }, icon('x')));
-  const foot = actions.length ? h('div', { class: 'dialog-foot' }, actions.map((a) => {
+  const button = (a) => {
     const btn = h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', text: a.label });
     btn.addEventListener('click', async () => {
       if (!a.run) { close(); return; }
@@ -197,8 +210,13 @@ export function openDialog({ title, body, actions = [], onClose, wide = false })
       catch (e) { if (!(e instanceof ApiError)) throw e; toast(errorText(e), { kind: 'danger' }); }
     });
     return btn;
-  })) : null;
-  const el = h('dialog', { class: 'dialog' + (wide ? ' wide' : ''), 'aria-labelledby': titleId }, head, bodyEl, foot);
+  };
+  const foot = actions.length ? h('div', { class: 'dialog-foot' },
+    actions.some((a) => a.side === 'start') ? h('div', { class: 'dialog-foot-start' }, actions.filter((a) => a.side === 'start').map(button)) : null,
+    h('div', { class: 'dialog-foot-end' }, actions.filter((a) => a.side !== 'start').map(button))) : null;
+  const sizeClass = { s: ' size-s', l: ' size-l' }[size || (wide ? 'l' : 'm')] || '';
+  const el = h('dialog', { class: 'dialog' + sizeClass, 'aria-labelledby': titleId }, head, bodyEl, foot);
+  const scrim = h('div', { class: 'dialog-scrim' });
   dialog.el = el; dialog.body = bodyEl;
   bodyEl.append(typeof body === 'function' ? body(dialog) : body);
 
@@ -206,13 +224,15 @@ export function openDialog({ title, body, actions = [], onClose, wide = false })
   function close() {
     if (closed) return;
     closed = true;
-    el.close(); el.remove();
+    openDialogs.delete(dialog);
+    el.close(); el.remove(); scrim.remove();
     if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus();
     if (onClose) onClose();
   }
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
   makeMovable(el, head);
-  document.body.append(el);
+  openDialogs.add(dialog);
+  document.body.append(scrim, el);
   el.show();                                   // show(), not showModal(): the page behind stays usable
   // into the first field; a dialog without fields starts on its first button (the harmless one), not on the close button
   const first = bodyEl.querySelector(FOCUSABLE) || (foot && foot.querySelector(FOCUSABLE)) || el.querySelector(FOCUSABLE);
@@ -243,7 +263,7 @@ export function confirmDialog({ title, text, confirmLabel, danger = false }) {
   return new Promise((resolve) => {
     let answer = false;
     openDialog({
-      title,
+      title, size: 's',
       body: h('p', { class: 'muted', text }),
       actions: [
         { label: t('common.cancel'), kind: 'ghost' },
@@ -297,23 +317,189 @@ export function openMenu(anchor, items) {
 
 /**
  * A field: label, control, hint, and a place for the error (FORM-01: every control has a visible label).
- * type: any input type, or 'textarea', or 'select' (with options: [[value, label], ...]). Other props go to the control (required, maxlength, autocomplete, inputmode ...).
+ * type: any input type, or 'textarea', or 'select' (a dropdown() of our own; options: [[value, label], ...], and search, placeholder, onchange, disabled go to it).
+ * Other props go to the control (required, maxlength, autocomplete, inputmode ...). Explain in the placeholder, keep the label short.
  */
 export function field({ label, name, type = 'text', value = '', hint, options, rows, ...rest }) {
   const id = nextId('f');
-  let control;
+  let control, shown;
   if (type === 'textarea') { control = h('textarea', { class: 'textarea', id, name, rows: rows || 4, ...rest }); control.value = value; }
-  else if (type === 'select') { control = h('select', { class: 'select', id, name, ...rest }, options.map(([v, l]) => h('option', { value: v, text: l }))); control.value = value; }
+  else if (type === 'select') {
+    const { search, placeholder, onchange, disabled } = rest;
+    shown = dropdown({ id, name, value, options, labelledBy: id + '-label', search, placeholder, onchange, disabled });
+    control = shown.button;
+  }
   else { control = h('input', { class: 'input', id, name, type, ...rest }); control.value = value; }
-  const shown = type === 'search' ? h('div', { class: 'search' }, icon('search'), control) : control;      // a search field is a pill with its symbol
+  if (!shown) shown = type === 'search' ? h('div', { class: 'search' }, icon('search'), control) : control;      // a search field is a pill with its symbol
   const describedBy = [];
   const hintEl = hint ? h('p', { class: 'field-hint', id: id + '-hint', text: hint }) : null;
   if (hintEl) describedBy.push(hintEl.id);
   describedBy.push(id + '-error');
   control.setAttribute('aria-describedby', describedBy.join(' '));
   return h('div', { class: 'field', dataset: { field: name } },
-    h('label', { for: id, text: label }), shown, hintEl,
+    h('label', { for: id, id: id + '-label', text: label }), shown, hintEl,
     h('p', { class: 'field-error', id: id + '-error', hidden: true }));
+}
+
+/**
+ * A dropdown of our own instead of the browser's select: a button with the value and a chevron, a styled list, optional search, the whole keyboard.
+ *  name, value, options [[value, label, hint?], ...], placeholder (shown while no option matches the value)
+ *  search      a search field at the top of the list that filters as one types (default: on for more than 10 options)
+ *  label       the accessible name when there is no visible label (field() gives labelledBy: the id of its label)
+ *  onchange    called with the new value; the hidden input also fires "change", so a form reads it as before (formValues)
+ * Keys: Enter, Space, arrows open; arrows, Home, End, PageUp, PageDown move; Enter chooses; Escape closes; typing jumps to a match (in the search field it filters).
+ * On a phone the list is a sheet from below, on a wide screen it hangs at the button and fits the window. Closes on a click outside and when the page changes.
+ * Returns the element; .value reads and sets the value, .button is the combobox button, .input the hidden input, .setOptions(list) replaces the options.
+ */
+export function dropdown({ name, value = '', options, id = nextId('dd'), label, labelledBy, placeholder, search, onchange, disabled = false }) {
+  const listId = id + '-list', valueId = id + '-value';
+  const useSearch = search === undefined ? options.length > 10 : !!search;
+  let current = String(value), items = [], active = -1, ui = null, typed = '', typedAt = 0;
+  const hidden = h('input', { type: 'hidden', name, value: current });
+  const valueEl = h('span', { class: 'dd-value', id: valueId });
+  const nameEl = !labelledBy && label ? h('span', { class: 'sr-only', id: id + '-name', text: label }) : null;
+  const button = h('button', {
+    class: 'dd-button', type: 'button', id, role: 'combobox', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', 'aria-controls': listId,
+    'aria-labelledby': (labelledBy || (nameEl ? nameEl.id : valueId)) + (labelledBy || nameEl ? ' ' + valueId : ''), disabled,
+  }, valueEl, icon('down'));
+  const dd = h('div', { class: 'dd' }, button, hidden, nameEl);
+  const fold = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  function paint() {
+    const hit = options.find(([v]) => String(v) === current);
+    valueEl.textContent = hit ? hit[1] : (placeholder === undefined ? t('form.choose') : placeholder);
+    valueEl.classList.toggle('none', !hit);
+  }
+  function setValue(v, fire) {
+    current = String(v); hidden.value = current; paint();
+    if (fire) { hidden.dispatchEvent(new Event('input', { bubbles: true })); hidden.dispatchEvent(new Event('change', { bubbles: true })); if (onchange) onchange(current); }
+  }
+  const visible = () => items.filter((i) => !i.el.hidden);
+  function setActive(item, scroll = true) {
+    active = item ? items.indexOf(item) : -1;
+    for (const i of items) i.el.classList.toggle('active', i === item);
+    const focusEl = ui.search || button;
+    if (item) { focusEl.setAttribute('aria-activedescendant', item.el.id); if (scroll) item.el.scrollIntoView({ block: 'nearest' }); }
+    else focusEl.removeAttribute('aria-activedescendant');
+  }
+  function filter() {
+    const q = ui.search ? fold(ui.search.value.trim()) : '';
+    for (const i of items) i.el.hidden = !!q && !fold(i.label).includes(q);
+    const shown = visible();
+    ui.none.hidden = shown.length > 0;
+    setActive(shown.find((i) => i.value === current && !q) || shown[0] || null);
+  }
+  function place() {
+    if (!ui) return;
+    const list = ui.list;
+    if (!matchMedia('(min-width: 600px)').matches) {                  // the sheet: the CSS places it; keep it above the keyboard
+      const vv = window.visualViewport;
+      list.style.maxHeight = vv ? Math.round(vv.height * 0.72) + 'px' : '';
+      list.style.bottom = vv ? Math.max(0, innerHeight - vv.height - vv.offsetTop) + 'px' : '';
+      return;
+    }
+    const r = button.getBoundingClientRect(), gap = 6, margin = 8;
+    const width = Math.min(Math.max(r.width, useSearch ? 280 : 200), innerWidth - margin * 2);
+    list.style.width = width + 'px';
+    list.style.left = Math.max(margin, Math.min(r.left, innerWidth - width - margin)) + 'px';
+    list.style.maxHeight = ''; list.style.top = '0'; list.style.bottom = '';
+    const natural = Math.min(list.offsetHeight, 360), below = innerHeight - r.bottom - gap - margin, above = r.top - gap - margin;
+    if (natural <= below || below >= above) { list.style.top = r.bottom + gap + 'px'; list.style.maxHeight = Math.max(120, Math.min(360, below)) + 'px'; }
+    else { list.style.top = 'auto'; list.style.bottom = innerHeight - r.top + gap + 'px'; list.style.maxHeight = Math.max(120, Math.min(360, above)) + 'px'; }
+  }
+  function choose(item) { if (!item) return; const changed = item.value !== current; close(true); if (changed) setValue(item.value, true); }
+  function close(refocus) {
+    if (!ui) return;
+    const { list, scrim, off } = ui;
+    ui = null; active = -1; typed = '';
+    list.remove(); if (scrim) scrim.remove(); off();
+    openLists.delete(closeNow);
+    dd.classList.remove('open'); button.setAttribute('aria-expanded', 'false'); button.removeAttribute('aria-activedescendant');
+    if (refocus) button.focus();
+  }
+  const closeNow = () => close(false);
+  function move(delta) {
+    const shown = visible();
+    if (!shown.length) return;
+    const at = shown.indexOf(items[active]);
+    setActive(shown[at < 0 ? (delta > 0 ? 0 : shown.length - 1) : Math.min(shown.length - 1, Math.max(0, at + delta))]);
+  }
+  function jump(text) {                                    // type-ahead: the next entry that starts with what was typed
+    const now = Date.now();
+    typed = now - typedAt > 700 ? text : typed + text; typedAt = now;
+    const shown = visible(), from = Math.max(0, shown.indexOf(items[active]));
+    const order = [...shown.slice(from + (typed.length === 1 ? 1 : 0)), ...shown.slice(0, from + (typed.length === 1 ? 1 : 0))];
+    setActive(order.find((i) => fold(i.label).startsWith(fold(typed))) || items[active] || null);
+  }
+  function onKey(e) {
+    const isOpen = !!ui, printable = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (!isOpen) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' ', 'Home', 'End'].includes(e.key) || printable) { e.preventDefault(); show(printable && e.key !== ' ' ? e.key : ''); }
+      return;
+    }
+    switch (e.key) {
+      case 'ArrowDown': e.preventDefault(); move(1); break;
+      case 'ArrowUp': e.preventDefault(); move(-1); break;
+      case 'PageDown': e.preventDefault(); move(8); break;
+      case 'PageUp': e.preventDefault(); move(-8); break;
+      case 'Home': case 'End':
+        if (ui.search && !e.ctrlKey) break;                  // in the search field they move the caret; with Ctrl they move in the list
+        e.preventDefault(); { const shown = visible(); setActive(e.key === 'Home' ? shown[0] : shown[shown.length - 1]); } break;
+      case 'Enter': e.preventDefault(); choose(items[active]); break;
+      case 'Escape': e.preventDefault(); e.stopPropagation(); close(true); break;
+      case 'Tab': close(false); break;
+      case ' ': if (!ui.search) { e.preventDefault(); choose(items[active]); } break;
+      default: if (printable && !ui.search) { e.preventDefault(); jump(e.key); }
+    }
+  }
+  function show(first = '') {
+    if (ui || button.disabled) return;
+    const phone = !matchMedia('(min-width: 600px)').matches;
+    const searchEl = useSearch ? h('input', { type: 'text', role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'true', 'aria-controls': listId, 'aria-label': t('form.search'), placeholder: t('form.search'), autocomplete: 'off', spellcheck: 'false' }) : null;
+    items = options.map(([v, l, hint], n) => {
+      const sel = String(v) === current;
+      const el = h('div', { class: 'dd-option', role: 'option', id: `${id}-o${n}`, 'aria-selected': String(sel) },
+        h('span', { class: 'dd-label', text: l }), hint ? h('span', { class: 'dd-hint', text: hint }) : null, sel ? icon('check') : null);
+      return { value: String(v), label: String(l), el };
+    });
+    const none = h('div', { class: 'dd-none', text: t('form.nothingFound'), hidden: true });
+    const optionsEl = h('div', { class: 'dd-options', role: 'listbox', id: listId, 'aria-labelledby': labelledBy || (nameEl ? nameEl.id : valueId) }, items.map((i) => i.el), none);
+    const list = h('div', { class: 'dd-list' }, phone ? h('div', { class: 'dd-title', text: label || (labelledBy && document.getElementById(labelledBy)?.textContent) || '' }) : null,
+      searchEl ? h('div', { class: 'dd-search' }, icon('search'), searchEl) : null, optionsEl);
+    const scrim = phone ? h('div', { class: 'dd-scrim' }) : null;
+    // the focus stays where it is (the button, or the search field); the mouse must not take it away
+    list.addEventListener('mousedown', (e) => { if (!e.target.closest('.dd-search')) e.preventDefault(); });
+    optionsEl.addEventListener('click', (e) => { const el = e.target.closest('.dd-option'); choose(items.find((i) => i.el === el)); });
+    optionsEl.addEventListener('pointermove', (e) => { const el = e.target.closest('.dd-option'), item = items.find((i) => i.el === el); if (item && item !== items[active]) setActive(item, false); });
+    const outside = (e) => { if (!list.contains(e.target) && !button.contains(e.target)) close(false); };
+    const reposition = (e) => { if (!e || !list.contains(e.target)) place(); };
+    document.addEventListener('pointerdown', outside, true);
+    addEventListener('resize', reposition); addEventListener('scroll', reposition, true);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', reposition);
+    const off = () => {
+      document.removeEventListener('pointerdown', outside, true);
+      removeEventListener('resize', reposition); removeEventListener('scroll', reposition, true);
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', reposition);
+    };
+    ui = { list, scrim, search: searchEl, none, off };
+    if (searchEl) { searchEl.addEventListener('keydown', onKey); searchEl.addEventListener('input', filter); }
+    openLists.add(closeNow);
+    document.body.append(...(scrim ? [scrim] : []), list);
+    dd.classList.add('open'); button.setAttribute('aria-expanded', 'true');
+    place();
+    if (searchEl) { searchEl.focus(); if (first) { searchEl.value = first; } }
+    filter();
+    if (first && !searchEl) jump(first);
+  }
+  button.addEventListener('keydown', onKey);
+  button.addEventListener('click', () => (ui ? close(true) : show()));
+  Object.defineProperties(dd, {
+    value: { get: () => current, set: (v) => setValue(v, false) },
+    button: { value: button }, input: { value: hidden },
+  });
+  dd.setOptions = (list) => { options = list; paint(); };
+  paint();
+  return dd;
 }
 
 /** A password field with a button to show what was typed. */
@@ -351,6 +537,18 @@ export function segmented({ name, label, value, options, onchange }) {
 }
 
 /**
+ * Two to four tiles with a title and a line, one chosen (a bigger choice than a segmented(): each option needs a sentence).
+ * options: [[value, title, line], ...]. Radio buttons inside a radiogroup, so the arrow keys and screen readers work. onchange(value).
+ */
+export function choiceTiles({ name, label, value, options, onchange }) {
+  return h('div', { class: 'choices', role: 'radiogroup', 'aria-label': label }, options.map(([v, title, line]) => {
+    const input = h('input', { type: 'radio', name, value: v, onchange: () => onchange && onchange(v) });
+    input.checked = v === value;
+    return h('label', { class: 'choice' }, input, h('span', { class: 'choice-title', text: title }), line ? h('span', { class: 'choice-line', text: line }) : null);
+  }));
+}
+
+/**
  * A group of places in a capsule, for the head of a page or above a list: links, the current one a filled pill inside the capsule.
  * items: [{ label, href, icon?, current? }]. Choices that are not places are a segmented() (the same look).
  */
@@ -360,17 +558,43 @@ export function capsule({ label, items }) {
 }
 
 /**
- * A floating bar of actions above the content, in a glass pill: for something that waits for a decision ("Apply changes").
- * { text, icon?, actions: [{ label, kind: 'primary' | 'ghost', run }] }. Returns { el, close() }; an action closes the bar unless its run returns false.
+ * The bar of actions above the content (0.4): a white card, centred above the menu on a phone and at the bottom of the content on a wide screen.
+ * For something that waits for a decision ("Apply changes (3)"): one or two buttons, and optionally a text and a symbol.
+ * { text?, icon?, actions: [{ label, icon?, kind: 'primary' | 'ghost' | 'danger', run(bar) }] }. An action closes the bar unless its run returns false.
+ * Returns { el, close(), update({ text, icon, actions }) }: update changes the words in place ("Apply changes (4)").
  */
-export function floatBar({ text, icon: name, actions = [] }) {
-  const bar = { el: null, close: () => bar.el.remove() };
-  bar.el = h('div', { class: 'float-bar', role: 'region', 'aria-label': text },
-    name ? icon(name) : null, h('span', { class: 'float-bar-text', text }),
-    actions.map((a) => h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', text: a.label, onclick: async (e) => {
-      try { if (!a.run || await busy(e.currentTarget, a.run(bar)) !== false) bar.close(); }
+export function actionBar(options) {
+  const bar = { el: h('div', { class: 'action-bar float-bar', role: 'region' }), close: () => bar.el.remove(), update: render };
+  function render({ text, icon: name, actions = [] }) {
+    bar.el.setAttribute('aria-label', text || t('bar.actions'));
+    bar.el.replaceChildren(...[name ? icon(name) : null, text ? h('span', { class: 'action-bar-text', text }) : null].filter(Boolean),
+      ...actions.map((a) => h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', onclick: async (e) => {
+        try { if (!a.run || await busy(e.currentTarget, a.run(bar)) !== false) bar.close(); }
+        catch (err) { if (!(err instanceof ApiError)) throw err; toast(errorText(err), { kind: 'danger' }); }
+      } }, a.icon ? icon(a.icon) : null, a.label)));
+  }
+  render(options);
+  document.body.append(bar.el);
+  return bar;
+}
+
+/** The old name of actionBar(): the same bar. */
+export const floatBar = actionBar;
+
+/**
+ * The dark bar while rows are selected: "3 selected", the actions that work on them, and a button that clears the selection. It takes the place of the action bar.
+ * { count, actions: [{ label, icon?, kind: 'danger'?, run(bar) }], onClear }. Returns { el, close(), update({ count }) }; the app keeps the selection and closes the bar when it is empty.
+ */
+export function selectionBar({ count = 0, actions = [], onClear }) {
+  const text = h('span', { class: 'selection-bar-text', 'aria-live': 'polite' });
+  const bar = { el: null, close: () => bar.el.remove(), update: ({ count: n }) => { text.textContent = t('bar.selected', { n }); } };
+  bar.el = h('div', { class: 'selection-bar', role: 'region', 'aria-label': t('bar.selected', { n: '' }).trim() }, text,
+    ...actions.map((a) => h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', onclick: async (e) => {
+      try { await busy(e.currentTarget, a.run && a.run(bar)); }
       catch (err) { if (!(err instanceof ApiError)) throw err; toast(errorText(err), { kind: 'danger' }); }
-    } })));
+    } }, a.icon ? icon(a.icon) : null, a.label)),
+    h('button', { class: 'btn icon-only', type: 'button', 'aria-label': t('bar.clear'), onclick: () => { bar.close(); if (onClear) onClear(); } }, icon('x')));
+  bar.update({ count });
   document.body.append(bar.el);
   return bar;
 }
@@ -391,7 +615,7 @@ export function clearErrors(form) {
   for (const f of form.querySelectorAll('.field.invalid')) {
     f.classList.remove('invalid');
     const p = f.querySelector('.field-error'); p.hidden = true; p.replaceChildren();
-    const c = f.querySelector('.input, .select, .textarea'); if (c) c.removeAttribute('aria-invalid');
+    const c = f.querySelector('.input, .select, .textarea, .dd-button'); if (c) c.removeAttribute('aria-invalid');
   }
   const summary = form.querySelector('.form-error');
   if (summary) summary.remove();
@@ -410,7 +634,7 @@ export function showErrors(form, e) {
     const text = hasKey('field.' + code) ? t('field.' + code) : hasKey('err.' + code) ? t('err.' + code) : t('field.invalid');
     f.classList.add('invalid');
     const p = f.querySelector('.field-error'); p.replaceChildren(icon('alert'), h('span', { text })); p.hidden = false;
-    const c = f.querySelector('.input, .select, .textarea');
+    const c = f.querySelector('.input, .select, .textarea, .dd-button');
     if (c) { c.setAttribute('aria-invalid', 'true'); first = first || c; }
     shown++;
   }
@@ -470,8 +694,32 @@ export async function copyText(text) {
 
 /* ---------- shell ---------- */
 
+const badges = new Map();      // path -> value, so a badge set before the shell exists is applied when it is made
+function applyBadges(root) {
+  for (const a of root.querySelectorAll('[data-nav]')) {
+    a.querySelector('.nav-badge')?.remove();
+    const value = badges.get(a.dataset.nav);
+    if (!value) continue;
+    const dot = value === true;
+    const el = h('span', { class: 'nav-badge ' + (dot ? 'dot' : 'count') },
+      dot ? null : h('span', { 'aria-hidden': 'true', text: value === '!' ? '!' : Number(value) > 99 ? '99+' : String(value) }),
+      h('span', { class: 'sr-only', text: dot ? t('shell.badgeNew') : (value === '!' ? '' : value + ' ') + t('shell.badgeAttention') }));
+    (a.querySelector('.tab-pill') || a).append(el);
+  }
+}
 /**
- * The frame of the app (SHELL-01): on a phone a head on top and a bar of up to five places at the bottom; on a wide screen the menu on the left.
+ * A dot or a count on a place of the menu, for something that happened on another page (0.4).
+ * value: true is an accent dot (something new), a number or '!' a raspberry count or mark (needs a look), false, 0 or null takes it away.
+ * path is the route of the place, with or without the hash ('/items').
+ */
+export function navBadge(path, value) {
+  const key = '#' + String(path).replace(/^#/, '');
+  if (value) badges.set(key, value); else badges.delete(key);
+  applyBadges(document);
+}
+
+/**
+ * The frame of the app (SHELL-01): on a phone a head on top and a floating pill at the bottom that holds all places and is swiped sideways; on a wide screen the menu on the left.
  * The person menu (settings, light or dark, sign out) is the same in every app.
  *   app      { name, icon }
  *   nav      [{ label, icon, href }]   href is a hash route such as '#/items'
@@ -509,11 +757,28 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
     foot.length ? h('nav', { class: 'nav nav-foot', 'aria-label': t('shell.nav') }, foot.map(navItem)) : null,
     sidePerson);
   const head = h('header', { class: 'shell-head' }, backSlot, brand('head-brand'), title, h('span', { class: 'grow' }), headPerson);
-  const tabs = h('nav', { class: 'shell-tabs', 'aria-label': t('shell.nav') }, nav.slice(0, 5).map((n) => link('tab', n, [h('span', { class: 'tab-pill' }, icon(n.icon)), h('span', { text: n.label })])));
+  // the menu pill of a phone holds every place; you swipe it sideways, the current place stands in the middle, the edges fade where more is hidden
+  const tabsScroll = h('div', { class: 'tabs-scroll' }, nav.map((n) => link('tab', n, [h('span', { class: 'tab-pill' }, icon(n.icon)), h('span', { text: n.label })])));
+  const tabs = h('nav', { class: 'shell-tabs', 'aria-label': t('shell.nav') }, tabsScroll);
+  const fades = () => {
+    tabsScroll.classList.toggle('more-left', tabsScroll.scrollLeft > 4);
+    tabsScroll.classList.toggle('more-right', tabsScroll.scrollLeft < tabsScroll.scrollWidth - tabsScroll.clientWidth - 4);
+  };
+  const centre = () => {
+    const cur = tabsScroll.querySelector('[aria-current]');
+    if (cur) {
+      const box = cur.getBoundingClientRect(), at = tabsScroll.getBoundingClientRect();
+      tabsScroll.scrollTo({ left: tabsScroll.scrollLeft + box.left - at.left - (at.width - box.width) / 2, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
+    fades();
+  };
+  tabsScroll.addEventListener('scroll', fades, { passive: true });
+  addEventListener('resize', fades);
   const el = h('div', { class: 'shell' },
     h('a', { class: 'skip', href: '#main', text: t('shell.skip'), onclick: (e) => { e.preventDefault(); main.focus(); } }),
     side, h('div', { class: 'shell-body' }, head, main), tabs);
   addEventListener('scroll', () => head.classList.toggle('scrolled', scrollY > 4), { passive: true });
+  applyBadges(el);
 
   function show(view, path = '') {
     title.textContent = view.title || '';
@@ -533,6 +798,7 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
     for (const a of el.querySelectorAll('[data-nav]')) {
       if (a.dataset.nav === '#' + current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     }
+    requestAnimationFrame(centre);       // after the page is in the document and the pill has its width
   }
   return { el, main, show };
 }
@@ -575,7 +841,8 @@ export function router(routes, frame, { fallback = '/' } = {}) {
       }, path);
     }
   }
-  addEventListener('hashchange', render);
+  // a dialog or an open list belongs to the page it was opened on: when the page changes, it goes (a refresh of the same page keeps it)
+  addEventListener('hashchange', () => { closeDialogs(); render(); });
   render();
   return { go: (path) => { if (location.hash === '#' + path) render(); else location.hash = path; }, refresh: render };
 }

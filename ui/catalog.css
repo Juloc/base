@@ -46,3 +46,4 @@
 .look-sheet { position: relative; max-width: 360px; padding: var(--s5); border-radius: var(--r-xl) var(--r-xl) 0 0; background: var(--surface-2); box-shadow: var(--shadow-3); }
 .look-sheet::before { content: ""; position: absolute; left: 50%; top: 8px; width: 32px; height: 4px; margin-left: -16px; border-radius: 2px; background: var(--line-strong); opacity: 0.6; }
 .look-gradient { height: 120px; border-radius: var(--r-l); background: var(--page-bg); border: 1px solid var(--line); display: grid; place-items: center; }
+.cat-demo .shell-tabs { position: static; margin-inline: 0; }
