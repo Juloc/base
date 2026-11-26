@@ -32,8 +32,8 @@ public class AboutTests
         Assert.Equal("/", about.GetProperty("start").GetString());
         Assert.Equal(["admin", "member", "viewer"], about.GetProperty("roles").EnumerateArray().Select(x => x.GetProperty("key").GetString()).ToArray());
         Assert.Equal("Administrator", about.GetProperty("roles")[0].GetProperty("name").GetProperty("en").GetString());
-        Assert.Matches(@"^\d+\.\d+\.\d+$", about.GetProperty("version").GetString()!);
-        Assert.Matches(@"^\d+\.\d+\.\d+$", about.GetProperty("base").GetString()!);
+        Assert.Matches(@"^\d+\.\d+\.\d+(-[a-z]+\.\d+)?$", about.GetProperty("version").GetString()!);
+        Assert.Matches(@"^\d+\.\d+\.\d+(-[a-z]+\.\d+)?$", about.GetProperty("base").GetString()!);
         // no address of any kind, no secret, no database, no person
         Assert.DoesNotContain("http", text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("localhost", text, StringComparison.OrdinalIgnoreCase);

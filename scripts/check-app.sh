@@ -80,6 +80,7 @@ done < <(find "$app/src" -path '*/wwwroot/i18n/de.js' -not -path '*/bin/*' -not 
 while IFS= read -r -d '' prog; do
   css="$(dirname "$prog")/wwwroot/app.css"
   [ -f "$css" ] || continue
+  grep -qE -e '--accent-color:' "$css" && continue      # a colour, not a hue: AccentHue is its approximate hue and is not compared (COLOR-01)
   hue_code="$(grep -oE 'AccentHue = [0-9]+' "$prog" | grep -oE '[0-9]+' | head -1 || true)"
   hue_css="$(grep -oE -e '--accent-hue: [0-9]+' "$css" | grep -oE '[0-9]+' | head -1 || true)"
   [ -n "$hue_code" ] && [ "$hue_code" = "$hue_css" ] || bad CONTRACT-02 "${prog#"$app/"}: AccentHue ($hue_code) is not the --accent-hue of app.css ($hue_css)"

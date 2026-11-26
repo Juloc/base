@@ -4,6 +4,17 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.0-alpha.1 (towards 0.4.0, in progress: step 1 of `docs/DESIGN-0.4.md`)
+
+- **Breaking, look: the accent is a colour.** An app may set `--accent-color` (any CSS colour, e.g. `#00e5ff`) instead of `--accent-hue`; all tokens derive from it (COLOR-01). `--accent-hue` still works and gives the look of 0.3 in its colours. New tokens `--accent-ink` (dark ink of the hue for links, icons, lines), `--hair`, `--r-btn`, `--r-row`; `--tertiary-hue` is gone. `--accent` is now the colour itself in light and dark and **no longer text**: an app that used `color: var(--accent)` should use `--accent-ink`. `--on-accent` is black or white by luminance.
+- **Breaking, look: raspberry for faults, soft amber for warnings** (`--danger*`, `--warn*` change their values; `--warn` is no longer a text colour).
+- **Breaking, look: the soft style.** `.btn.primary`, the current menu entry, the current tab, the chosen segment and capsule, the chosen chip use `--accent-soft` with `--on-accent-soft` instead of the bright fill. Bright accent stays for switches that are on, the brand mark and charts. Focus rings and links use `--accent-ink`.
+- **Breaking, look: buttons.** Bold text on `.btn`, `.seg`, `.capsule-item`, `.chip`; radius 14 px (also icon-only); no change of shape on press (`.btn:active`, `.tile:active` lose their radius change).
+- **New: row button** `.btn.mini` (named so because `.row` is the list row) (34 px, radius 11, tonal), `.btn.mini.strong`, `.btn.mini.quiet`, `.btn.mini.danger`, `.btn.mini.icon-only`; the target stays 44 px.
+- **Hair lines** (`--hair`, 7 % of the text) between rows of cards, lists, tables and menus instead of `--line`.
+- **No selectable chrome:** menu, tabs, buttons, chips, badges, card heads, table heads, bars cannot be selected as text.
+- COLOR-01 and COLOR-02 changed (the rule text, `RuleFileTests.An_app_sets_its_colour_with_one_variable`, `ContrastTests`, which now evaluates the formulas of `tokens.css` for every hue and 14 colours). `check-app.sh` does not compare `AccentHue` with the CSS when an app sets `--accent-color`. Needs browsers with relative colour syntax (Chrome 119, Safari 16.4, Firefox 128).
+
 ## 0.3.5
 
 - **CODE-02 allows `DuckDB.NET.Data`** (with its native library) for logs and statistics an app keeps in bulk; nothing else changes, the base itself does not use it. `RuleFileTests.Only_the_allowed_packages_are_referenced` now checks that an app uses only allowed packages and the base exactly its own three.
