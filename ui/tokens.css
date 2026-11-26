@@ -58,6 +58,9 @@
  * @contrast line-strong surface-4 3
  * @contrast accent-ink surface-3 3
  * @contrast accent-ink secondary-soft 3
+ * @contrast text seg-on 4.5
+ * @contrast text-2 seg-track 4.5
+ * @contrast text seg-track 4.5
  * ===================================================================== */
 /* the default hue is that of JulOS (its seed colour #9a67ea): an app that sets none looks like JulOS */
 :root {
@@ -79,6 +82,10 @@
   --line: light-dark(oklch(from var(--accent-base) 0.828 0.03 h), oklch(from var(--accent-base) 0.34 0.035 h));
   --line-strong: light-dark(oklch(from var(--accent-base) 0.569 0.03 h), oklch(from var(--accent-base) 0.62 0.03 h));
   --hair: color-mix(in oklab, var(--text) 7%, transparent);     /* the fine line between rows of a card, a list or a table */
+  --edge: color-mix(in oklab, var(--text) 10%, transparent);    /* the faint edge of a field, a dropdown and a bar (0.4, decision 66) */
+  --seg-track: var(--surface-2);    /* the track of a segmented choice */
+  --seg-on: light-dark(var(--surface), var(--surface-4));         /* its chosen part: white on the light track, lighter than the track in dark */
+  --knob: oklch(1 0 0);                                          /* the knob of a switch is white in both schemes */
 
   /* ---- the accent of the app. --accent is the colour itself: switches that are on, rings of charts, brand mark; its text --on-accent is dark when the colour is light.
    * --accent-ink is the dark ink of the same hue for lines, icons and links (a light colour does not read on a light page).
@@ -152,12 +159,16 @@
   --control-h: var(--touch);     /* height of buttons and fields; smaller only with a mouse on a wide screen (below) */
   --side-w: 256px;
   --head-h: 56px;
-  --tabs-h: 64px;
+  --tabs-h: 64px;                /* the menu pill on a phone */
+  --input-h: 48px;               /* fields and dropdowns (0.4): taller than a button, and the same on a wide screen */
   --content-w: 920px;
 
   /* ---- elevation: tone and a fine edge first; the tinted shadow only in light, in dark the edge carries (as in Jularr) ---- */
   --shadow-1: 0 1px 2px light-dark(color-mix(in oklab, var(--accent-ink) 22%, transparent), transparent), 0 1px 3px light-dark(color-mix(in oklab, var(--accent-ink) 12%, transparent), transparent);
   --shadow-2: 0 2px 6px light-dark(color-mix(in oklab, var(--accent-ink) 22%, transparent), oklch(0 0 0 / 0.3)), 0 6px 14px light-dark(color-mix(in oklab, var(--accent-ink) 12%, transparent), oklch(0 0 0 / 0.2));
+  --shadow-field: 0 1px 2px color-mix(in oklab, var(--text) 6%, transparent), 0 2px 8px -4px color-mix(in oklab, var(--text) 10%, transparent);       /* fields, the chosen part of a segmented choice */
+  --shadow-float: 0 10px 30px -10px color-mix(in oklab, var(--text) 32%, transparent), 0 0 0 1px color-mix(in oklab, var(--text) 5%, transparent);     /* what floats: the menu pill, the bars, the open list of a dropdown */
+  --ring: 0 0 0 4px color-mix(in oklab, var(--accent-ink) 24%, transparent);     /* the soft focus ring of a field */
   --shadow-3: 0 8px 22px light-dark(color-mix(in oklab, var(--accent-ink) 30%, transparent), oklch(0 0 0 / 0.5));
   --dur: 150ms;
   --dur-m: 250ms;
