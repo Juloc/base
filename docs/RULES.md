@@ -73,7 +73,7 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 
 ## SHELL: the frame of an app
 
-- **SHELL-01 (MUST)** Every app uses the shell of the base (`shell()`): on a phone a head and a bar of at most five places at the bottom, on a wide screen the menu on the left; a page has one title (in the head and in the tab) and deep pages a way back. The person menu (settings, light or dark, sign out) is the same everywhere. *Why:* whoever knows one app of the family finds their way in all of them.
+- **SHELL-01 (MUST)** Every app uses the shell of the base (`shell()`): on a phone a head and a floating pill at the bottom that holds every place and is swiped sideways, on a wide screen the menu on the left; a page has one title (in the head and in the tab) and deep pages a way back. The person menu (settings, light or dark, sign out) is the same everywhere. *Why:* whoever knows one app of the family finds their way in all of them.
 
 ## FORM: forms
 
@@ -87,12 +87,12 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 
 ## DIALOG: dialogs
 
-- **DIALOG-01 (MUST)** A dialog is opened with `openDialog()`: a window that does not block the page on a wide screen, a sheet from below on a phone; it takes the focus, gives it back, and Escape closes it. No `alert`, `confirm`, `prompt` or modal dialog. Before something that cannot be undone the app asks (`confirmDialog()`), and the button names the action. *Why:* a dialog must never trap a person or hide what they need to look up. *Test:* `RuleFileTests.No_blocking_dialogs`
+- **DIALOG-01 (MUST)** A dialog is opened with `openDialog()`: big and centred on a wide screen (up to about 940 px), a sheet from below on a phone with its buttons fixed at the bottom; solid, never see-through; it does not block the page, it closes by itself when the page changes, it takes the focus, gives it back, and Escape closes it. Delete and deactivate stand bottom left (`side: 'start'`), cancel and the main action bottom right. No `alert`, `confirm`, `prompt` or modal dialog. Before something that cannot be undone the app asks (`confirmDialog()`), and the button names the action. *Why:* a dialog must never trap a person or hide what they need to look up, and one that stays after the page changed shows something that no longer belongs. *Test:* `RuleFileTests.No_blocking_dialogs`, `RuleFileTests.Dialogs_are_solid_and_close_when_the_page_changes`
 
 ## COLOR: colours
 
 - **COLOR-01 (MUST)** Colours come from the tokens of the base only. An app sets its own colour with exactly one variable, `--accent-color` (any CSS colour, the accent itself) or `--accent-hue` (only an angle), and writes no other colour value; the tokens derive from it (fill, text on it, ink, soft surfaces) and the contrast test checks the derived pairs for every hue and for a set of hard colours. The look follows JulOS (tonal surfaces, glass over a soft gradient, filled and tonal buttons, radii 20 and 28 px; the catalogue shows the mapping). Light and dark both work; the person chooses (system, light, dark). *Why:* the family looks like one family, and a new colour cannot break contrast. *Test:* `RuleFileTests.An_app_sets_its_colour_with_one_variable`, `ContrastTests`
-- **COLOR-02 (MUST)** Every pair of colours that carries text reaches a contrast of 4.5:1, borders of controls 3:1 (WCAG AA), in light and in dark, for every accent hue and for a set of hard accent colours (very light, very dark, in the middle). *Why:* readable for tired eyes, in sunlight and on a bad screen. *Test:* `ContrastTests.Every_declared_pair_reaches_its_contrast_for_every_accent`
+- **COLOR-02 (MUST)** Every pair of colours that carries text reaches a contrast of 4.5:1, borders of controls 3:1 (WCAG AA; a field, a dropdown, a toggle and a segmented choice have their own surface and shadow and a faint edge instead, decision 66, and their focus ring and the chosen state reach 3:1), in light and in dark, for every accent hue and for a set of hard accent colours (very light, very dark, in the middle). *Why:* readable for tired eyes, in sunlight and on a bad screen. *Test:* `ContrastTests.Every_declared_pair_reaches_its_contrast_for_every_accent`
 
 ## MOBILE: phones
 
