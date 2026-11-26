@@ -36,6 +36,17 @@ with their code are at `/base/catalog.html` of every running app.
 
 `--accent` is the colour of the app as an angle on the colour wheel (0 to 359); `--title "..."` the name people see.
 
+## Installable: manifest, icons, offline (0.4)
+
+An app is a PWA without writing a file: the base serves `/manifest.webmanifest`, the icons and `/sw.js`, all made from the one `BaseAppOptions` of `Program.cs`.
+
+- **Manifest:** name, short name (the name, or its first word when it is longer than 12 characters), the description (German when given), start path, `standalone`, the page colour of the app as theme and splash colour (from the accent).
+- **Icons:** `/icon.svg` and `/icon-maskable.svg` draw the app's `Icon` (a name from `ui/icons.js`) on its accent colour; PNGs for 192, 512, maskable 512 and the `apple-touch-icon` (180) are drawn by the base itself from the same shapes (no image library). The colour is `AccentColor = "#rrggbb"` when the app names a colour (the same as `--accent-color`, `check-app.sh` compares), else its `AccentHue`.
+- **Offline shell:** `/sw.js` keeps only the static shell (SEC-08): the page, `app.css`, `app.js`, `/base/`, `/i18n/`, the manifest and the icons; an app with more static files adds them with `ShellPaths = ["/fonts/", "/logo.png"]` (a folder ends with a slash). Never a page or an answer that needs a session. The cache is named after the app, its version and the version of the base, and old caches go when the new worker takes over.
+- **In the page:** `index.html` names the manifest, the icon and `<link rel="apple-touch-icon" href="/apple-touch-icon.png">`; `app.js` calls `pwa()` once. It registers the worker, shows a quiet "Offline" line when there is no connection (the shell still loads, data says so in words) and "Neue Version · Neu laden" when a new worker waits.
+- **An app's own file wins:** a `manifest.webmanifest`, `icon.svg`, PNG or `sw.js` in its `wwwroot` is served instead of the base's (static files come first), so an app with its own artwork keeps it. An old `sw.js` that calls `skipWaiting()` keeps working, but gets no "new version" offer.
+- Not checked by a browser in the base's tests: installing itself (it needs a real device or Chrome's tools); `PwaTests` check what is served, the icons' pixels and the worker's text.
+
 ## Keep an app up to date
 
 ```bash

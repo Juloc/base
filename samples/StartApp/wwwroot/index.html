@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <title>Start App</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Start App">
+  <!-- the manifest, the icons and the service worker are made by the base from BaseAppOptions (Program.cs); a file of the same name here would win -->
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <script src="/base/boot.js"></script>
   <link rel="stylesheet" href="/base/base.css">
   <link rel="stylesheet" href="/app.css">

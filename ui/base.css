@@ -499,19 +499,52 @@ a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent
 .qr { width: 196px; max-width: 100%; margin-inline: auto; padding: var(--s2); border-radius: var(--r-m); background: #fff; }
 .qr svg { width: 100%; height: auto; }
 
-/* ---------- sign-in and setup: one calm card in the middle ---------- */
-.auth { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s4); padding: var(--s5) var(--s4); }
-.auth-card { width: 100%; max-width: 420px; }
-.auth-head { display: flex; flex-direction: column; align-items: center; gap: var(--s3); margin-bottom: var(--s5); text-align: center; }
-.auth-head .brand-mark { width: 48px; height: 48px; border-radius: 16px; }
+/* ---------- the door (0.4): sign-in, setup, invitation and the pages around them are one white card in the middle (ui/gate.js) ---------- */
+.auth { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+.auth-card {
+  width: min(420px, 100%); display: flex; flex-direction: column; gap: 22px; padding: 32px; border-radius: 28px; background: var(--surface);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--text) 5%, transparent), 0 24px 60px -24px color-mix(in oklab, var(--text) 25%, transparent);
+}
+@media (max-width: 599px) { .auth { padding: 16px; } .auth-card { padding: 24px 20px; } }     /* a phone: the card fills the width with a 16 px margin */
+.auth-head { display: flex; flex-direction: column; gap: 14px; }
+.auth-head .brand-mark { width: 52px; height: 52px; border-radius: 16px; }
 .auth-head .brand-mark .icon { width: 26px; height: 26px; }
-.auth-foot { display: flex; align-items: center; gap: var(--s2); color: var(--text-2); font-size: var(--text-s); }
-.auth-foot .dd { width: 150px; }
-.auth-or { display: flex; align-items: center; gap: var(--s3); color: var(--text-2); font-size: var(--text-s); }
-.auth-or::before, .auth-or::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
-.steps { display: flex; gap: 6px; justify-content: center; }
-.steps i { width: 28px; height: 4px; border-radius: 2px; background: var(--surface-3); }
-.steps i.on { background: var(--accent); }
+.auth-title { font: 700 var(--text-xl)/1.2 var(--font); letter-spacing: -0.3px; }
+.auth-line { margin-top: 6px; color: var(--text-2); font-size: var(--text-s); }
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.auth-card .btn.wide { height: 50px; font-size: var(--text-m); }
+.btn.neutral { background: var(--surface-2); color: var(--text); }
+.btn.neutral:hover { background: var(--surface-3); }
+.auth-aside { display: flex; justify-content: flex-end; margin-block: -8px; }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--text-2); font-size: var(--text-xs); }
+.auth-or::before, .auth-or::after { content: ''; flex: 1; border-top: 1px solid var(--hair); }
+.auth-target { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--accent-soft); color: var(--on-accent-soft); }
+.auth-target .icon { width: 20px; height: 20px; flex: none; }
+.auth-target b { display: block; font: 700 var(--text-m)/1.2 var(--font-mono); }
+.auth-target span { font-size: var(--text-xs); opacity: 0.8; }
+.auth-foot { display: flex; justify-content: space-between; align-items: center; margin-bottom: -10px; }
+.quiet { display: inline-flex; align-items: center; gap: 6px; min-height: var(--touch); padding: 0 10px; margin-inline: -10px; border: 0; border-radius: var(--r-btn); background: none; color: var(--text-2); font: 600 var(--text-xs)/1 var(--font); }
+.quiet:hover { color: var(--text); }
+.quiet .icon { width: 14px; height: 14px; }
+.steps { display: flex; gap: 6px; }
+.steps i { width: 28px; height: 4px; border-radius: 2px; background: var(--hair); }
+.steps i.on { background: var(--accent-ink); }
+.auth-form .input.code:not(:placeholder-shown) { text-align: center; font-size: 1.2rem; }      /* the typed code is big and in the middle; the placeholder stays plain text */
+.auth-form .input.code:placeholder-shown { font-family: var(--font); letter-spacing: normal; }
+.state { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.state-mark { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--accent-soft); color: var(--on-accent-soft); }
+.state-mark .icon { width: 30px; height: 30px; }
+.state-mark.ok { background: var(--ok-soft); color: var(--on-ok-soft); }
+.state-mark.danger { background: var(--danger-soft); color: var(--on-danger-soft); }
+.state-mark.run .icon { animation: spin 1s linear infinite; }
+.state .auth-line { max-width: 360px; margin-top: 0; }
+.state-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+
+/* ---------- two quiet lines at the top: no connection, a new version waits (pwa() of base.js) ---------- */
+.status-lines { position: fixed; z-index: 70; top: calc(env(safe-area-inset-top) + 8px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-inline: 12px; pointer-events: none; }
+.status-line { display: flex; align-items: center; gap: 8px; max-width: 100%; padding: 6px 14px; border-radius: var(--r-full); background: var(--surface); color: var(--text-2); font: 600 var(--text-xs)/1.3 var(--font); box-shadow: var(--shadow-float); pointer-events: auto; }
+.status-line .icon { width: 16px; height: 16px; flex: none; }
+.status-line .quiet { min-height: var(--touch); margin-block: -10px; margin-inline: 0 -8px; color: var(--accent-ink); font-weight: 700; }
 
 /* ---------- bars above the content (0.4): the action bar is a white card (radius like the menu pill's tabs), centred above the menu on a phone and at the bottom of the content on a wide screen;
  * the selection bar is dark and takes its place while rows are selected. floatBar() is the same bar. ---------- */

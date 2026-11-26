@@ -3,21 +3,21 @@
  *   start({ icon, onSignedIn })   asks the server who is there and shows the assistant, the sign-in, or hands over to the app.
  * The server decides everything; this file only draws (AUTH-08: the sign-in never says which part was wrong).
  * ===================================================================== */
-import { t, hasKey, LANG_CHOICES, getPref, setPref } from './i18n.js';
-import { h, icon, svg, api, field, dropdown, passwordField, submit, notice, theme, prefs, markSignedIn, copyText, errorText, ApiError, toast } from './base.js';
+import { t, hasKey, getLang } from './i18n.js';
+import { h, icon, svg, api, field, passwordField, submit, notice, prefs, markSignedIn, copyText, errorText, ApiError, toast } from './base.js';
+import { authCard, stateCard, mountAuth } from './gate.js';
 import { qrSvg } from './qr.js';
 import { roleName } from './people.js';
 
 /**
  * Starts the app. onSignedIn(me) is called with { user, roles, app: { id, name, version, base } } once somebody is signed in.
- * icon: the icon of the app (a name from icons.js), shown above the forms.
+ * icon: the icon of the app (a name from icons.js), shown on the card. line: the one line under the title (default: the description of the app, from /api/about).
  */
-export async function start({ icon: appIcon = 'grid', onSignedIn }) {
+export async function start({ icon: appIcon = 'grid', line, onSignedIn }) {
   let me;
   try { me = await api('GET', '/api/auth/me'); }
   catch (e) {
-    document.body.replaceChildren(h('main', { class: 'auth' }, notice(errorText(e), 'danger'),
-      h('button', { class: 'btn', type: 'button', text: t('common.retry'), onclick: () => location.reload() })));
+    mountAuth(stateCard({ icon: 'cloud', tone: 'danger', title: t('err.title'), text: errorText(e), actions: [{ label: t('common.retry'), icon: 'refresh', run: () => location.reload() }], foot: true }));
     return;
   }
   document.title = me.app.name;
@@ -28,7 +28,9 @@ export async function start({ icon: appIcon = 'grid', onSignedIn }) {
     onSignedIn(await api('GET', '/api/auth/me'));
   };
   if (me.user) { markSignedIn(); try { if (await prefs.load()) { location.reload(); return; } } catch { /* the settings can wait */ } onSignedIn(me); return; }
-  const page = (card) => document.body.replaceChildren(frame(me.app, appIcon, card));
+  const text = line ?? await describe();
+  // every page of the door is one card: the mark and the name of the app, one line, then what the page needs
+  const page = (opts) => { const card = authCard({ icon: appIcon, line: text, ...opts }); mountAuth(card); return card; };
   // an invitation link carries its token in the fragment (#invite=...), so it never reaches a server log
   const invited = /^#invite=([A-Za-z0-9_-]{20,100})$/.exec(location.hash);
   if (invited && !me.setupNeeded) invite(me, invited[1], page, enter);
@@ -36,72 +38,81 @@ export async function start({ icon: appIcon = 'grid', onSignedIn }) {
   else signIn(me, page, enter);
 }
 
-/** The page around a form: the mark and name of the app on top, language and light or dark below. */
-function frame(app, appIcon, card) {
-  const lang = dropdown({ name: 'lang', label: t('settings.language'), value: getPref(), options: LANG_CHOICES, onchange: (v) => { setPref(v); location.reload(); } });
-  const dark = h('button', { class: 'btn ghost icon-only', type: 'button', 'aria-label': t('shell.dark'), onclick: () => { theme.set(theme.isDark() ? 'light' : 'dark'); dark.replaceChildren(icon(theme.isDark() ? 'sun' : 'moon')); } }, icon(theme.isDark() ? 'sun' : 'moon'));
-  return h('main', { class: 'auth' },
-    h('div', { class: 'auth-card' },
-      h('div', { class: 'auth-head' }, h('span', { class: 'brand-mark' }, icon(appIcon)), h('div', { class: 'h2', text: app.name })),
-      card),
-    h('div', { class: 'auth-foot' }, lang, dark));
+/** The line under the title: what the app is, in the person's language (the anonymous /api/about); nothing when that cannot be read. */
+async function describe() {
+  try {
+    const about = await api('GET', '/api/about');
+    const d = about.description || {};
+    return (getLang() === 'de' ? d.de : d.en) || d.en || about.name || '';
+  } catch { return ''; }
 }
 
+/** A message at the top of a card, under the head. */
+const problem = (card, text) => { card.querySelector('.auth-note')?.remove(); card.querySelector('.auth-head').after(h('div', { class: 'auth-note' }, notice(text, 'danger'))); };
+
+/** The sign-in: the hub on top when there is one, then the own account. The main button is soft, the code field opens the number keyboard. */
 function signIn(me, page, enter) {
   // the central sign-in sends the browser back to "/?hub_error=<code>" when it did not work: the code has a text, nothing else is shown
   const params = new URLSearchParams(location.search);
   const hubError = params.get('hub_error');
   if (hubError) history.replaceState(null, '', location.pathname + location.hash);
-  const problem = hubError && hasKey('err.' + hubError) ? notice(t('err.' + hubError), 'danger') : null;
-  const form = submit(h('form', { class: 'card form' },
-    h('h1', { class: 'h1', text: t('auth.title') }),
-    field({ label: t('auth.user'), name: 'user', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', required: true }),
-    passwordField({ label: t('auth.password'), name: 'password', autocomplete: 'current-password', required: true }),
-    field({ label: t('auth.code'), name: 'code', hint: t('auth.codeHint'), class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', required: true }),
+  const code = field({ label: t('auth.code'), name: 'code', placeholder: t('auth.codePlaceholder'), labelHidden: true, class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', autocapitalize: 'none', spellcheck: 'false', required: true });
+  // a recovery code has letters: one quiet button turns the number keyboard into the normal one
+  const input = code.querySelector('input');
+  const letters = h('button', { class: 'quiet', type: 'button', text: t('auth.useRecovery') });
+  letters.addEventListener('click', () => {
+    const on = input.inputMode === 'numeric';
+    input.inputMode = on ? 'text' : 'numeric';
+    input.placeholder = t(on ? 'auth.recoveryPlaceholder' : 'auth.codePlaceholder');
+    letters.textContent = t(on ? 'auth.useApp' : 'auth.useRecovery');
+    input.focus();
+  });
+  const form = submit(h('form', { class: 'auth-form' },
+    field({ label: t('auth.user'), name: 'user', placeholder: t('auth.user'), labelHidden: true, autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', required: true }),
+    passwordField({ label: t('auth.password'), name: 'password', placeholder: t('auth.password'), labelHidden: true, autocomplete: 'current-password', required: true }),
+    code, h('div', { class: 'auth-aside' }, letters),
     h('button', { class: 'btn primary wide', type: 'submit', text: t('auth.signIn') })),
   async (v) => {
     const r = await api('POST', '/api/auth/login', v);
     await enter();
     if (r.recoveryLeft <= 3) toast(t('auth.recoveryLow', { n: r.recoveryLeft }), { kind: 'danger' });
   });
-  if (problem) form.querySelector('h1').after(problem);
+  const body = [form];
+  let card;
   if (me.hub) {
-    const go = h('button', { class: 'btn outline wide', type: 'button', text: t('auth.hub', { name: me.hub.name }) });
+    const go = h('button', { class: 'btn neutral wide', type: 'button' }, icon('globe'), t('auth.hub', { name: me.hub.name }));
     go.addEventListener('click', async () => {
       go.disabled = true;
-      try { const r = await api('POST', '/api/auth/hub/begin'); go.textContent = t('auth.hubWait', { name: me.hub.name }); location.assign(r.url); }
-      catch (e) { go.disabled = false; form.querySelector('h1').after(notice(errorText(e), 'danger')); }
+      try { const r = await api('POST', '/api/auth/hub/begin'); go.replaceChildren(t('auth.hubWait', { name: me.hub.name })); location.assign(r.url); }
+      catch (e) { go.disabled = false; problem(card, errorText(e)); }
     });
-    form.append(h('div', { class: 'auth-or', role: 'separator', text: t('auth.or') }), go);
+    body.unshift(go, h('div', { class: 'auth-or', role: 'separator', text: t('auth.or') }));
   }
-  page(form);
+  card = page({ title: t('auth.title'), body });
+  if (hubError && hasKey('err.' + hubError)) problem(card, t('err.' + hubError));
   form.querySelector('input').focus();
 }
 
 /** The person invited by an admin: choose a password, set up the authenticator, keep the recovery codes. The link works once. */
 function invite(me, token, page, enter) {
-  const steps = (n) => h('div', { class: 'steps', role: 'img', 'aria-label': t('setup.step', { n, of: 3 }) }, [1, 2, 3].map((i) => h('i', { class: i <= n ? 'on' : '' })));
   let begun = null;
   api('POST', '/api/invite/check', { token }).then((who) => one(who), (e) => {
-    page(h('div', { class: 'card form' }, notice(errorText(e), 'danger'), h('a', { class: 'btn outline wide', href: '/', text: t('auth.signIn') })));
+    page({ title: t('invite.title'), body: [notice(errorText(e), 'danger'), h('a', { class: 'btn wide', href: '/', text: t('auth.signIn') })] });
   });
 
   function one(who) {
-    const form = submit(h('form', { class: 'card form' }, steps(1),
-      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('invite.title') }),
-        h('p', { class: 'muted', text: t('invite.intro', { user: who.user, app: me.app.name, role: roleName(me, who.role) }) })),
-      passwordField({ label: t('auth.password'), name: 'password', hint: t('invite.passwordHint'), autocomplete: 'new-password', required: true }),
+    const form = submit(h('form', { class: 'auth-form' },
+      field({ label: t('auth.password'), name: 'password', type: 'password', placeholder: t('invite.passwordPlaceholder'), labelHidden: true, autocomplete: 'new-password', required: true }),
       h('button', { class: 'btn primary wide', type: 'submit', text: t('common.next') })),
     async (v) => { begun = await api('POST', '/api/invite/begin', { token, password: v.password }); two(who); });
-    page(form);
+    page({ title: t('invite.title'), line: t('invite.intro', { user: who.user, app: me.app.name, role: roleName(me, who.role) }), step: { n: 1, of: 3 }, body: form });
     form.querySelector('input').focus();
   }
 
   function two(who) {
-    const form = submit(h('form', { class: 'card form' }, steps(2),
-      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.totpTitle') }), h('p', { class: 'muted', text: t('setup.totpIntro') })),
+    const form = submit(h('form', { class: 'auth-form' },
       authenticator(begun.uri, begun.secret),
-      field({ label: t('setup.totpCode'), name: 'totp', class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', required: true }),
+      field({ label: t('setup.totpCode'), name: 'totp', placeholder: t('setup.totpCode'), labelHidden: true, class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', required: true }),
       h('div', { class: 'form-actions' },
         h('button', { class: 'btn ghost', type: 'button', text: t('common.back'), onclick: () => one(who) }),
         h('button', { class: 'btn primary', type: 'submit', text: t('common.next') }))),
@@ -111,46 +122,42 @@ function invite(me, token, page, enter) {
       history.replaceState(null, '', location.pathname);          // the link is used up: it does not stay in the address bar
       three();
     });
-    page(form);
+    page({ title: t('setup.totpTitle'), line: t('setup.totpIntro'), step: { n: 2, of: 3 }, body: form });
     form.querySelector('input').focus();
   }
 
   function three() {
-    const ok = h('input', { type: 'checkbox' });
-    const go = h('button', { class: 'btn primary wide', type: 'button', text: t('setup.finish'), disabled: true, onclick: enter });
-    ok.addEventListener('change', () => { go.disabled = !ok.checked; });
-    page(h('div', { class: 'card form' }, steps(3),
-      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.recoveryTitle') }), h('p', { class: 'muted', text: t('setup.recoveryIntro') })),
-      recoveryCodes(begun.recovery),
-      h('label', { class: 'check' }, ok, h('span', { text: t('setup.recoverySaved') })),
-      go));
+    page({ title: t('setup.recoveryTitle'), line: t('setup.recoveryIntro'), step: { n: 3, of: 3 }, body: finish(begun.recovery, enter) });
   }
+}
+
+/** The last step of both assistants: the codes, "I have saved them", and the button that goes in. */
+function finish(codes, enter) {
+  const ok = h('input', { type: 'checkbox' });
+  const go = h('button', { class: 'btn primary wide', type: 'button', text: t('setup.finish'), disabled: true, onclick: enter });
+  ok.addEventListener('change', () => { go.disabled = !ok.checked; });
+  return h('div', { class: 'auth-form' }, recoveryCodes(codes), h('label', { class: 'check' }, ok, h('span', { text: t('setup.recoverySaved') })), go);
 }
 
 /** The setup assistant: 1 the first account (with the code from the server log), 2 the authenticator, 3 the recovery codes. */
 function setup(app, page, enter) {
-  const steps = (n) => h('div', { class: 'steps', role: 'img', 'aria-label': t('setup.step', { n, of: 3 }) }, [1, 2, 3].map((i) => h('i', { class: i <= n ? 'on' : '' })));
   let first = null;
 
   function one() {
-    const form = submit(h('form', { class: 'card form' },
-      steps(1),
-      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.title') }), h('p', { class: 'muted', text: t('setup.intro', { name: app.name }) })),
-      field({ label: t('setup.code'), name: 'code', hint: t('setup.codeHint'), class: 'input code', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', required: true }),
-      field({ label: t('auth.user'), name: 'user', hint: t('setup.userHint'), autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', required: true }),
-      passwordField({ label: t('auth.password'), name: 'password', hint: t('setup.passwordHint'), autocomplete: 'new-password', required: true }),
-      h('button', { class: 'btn primary wide', type: 'submit', text: t('common.next') })),
+    const form = submit(h('form', { class: 'auth-form' },
+      field({ label: t('setup.code'), name: 'code', placeholder: t('setup.codePlaceholder'), labelHidden: true, autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', required: true }),
+      field({ label: t('auth.user'), name: 'user', placeholder: t('setup.userPlaceholder'), labelHidden: true, autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', required: true }),
+      field({ label: t('auth.password'), name: 'password', type: 'password', placeholder: t('setup.passwordPlaceholder'), labelHidden: true, autocomplete: 'new-password', required: true }),
+      h('button', { class: 'btn primary wide', type: 'submit', text: t('setup.next') })),
     async (v) => { first = { ...v, ...(await api('POST', '/api/setup/begin', v)) }; two(); });
-    page(form);
+    page({ title: t('setup.title'), line: t('setup.intro', { name: app.name }), step: { n: 1, of: 3 }, body: form });
     form.querySelector('input').focus();
   }
 
   function two() {
-    const form = submit(h('form', { class: 'card form' },
-      steps(2),
-      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.totpTitle') }), h('p', { class: 'muted', text: t('setup.totpIntro') })),
+    const form = submit(h('form', { class: 'auth-form' },
       authenticator(first.uri, first.secret),
-      field({ label: t('setup.totpCode'), name: 'totp', class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', required: true }),
+      field({ label: t('setup.totpCode'), name: 'totp', placeholder: t('setup.totpCode'), labelHidden: true, class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code', required: true }),
       h('div', { class: 'form-actions' },
         h('button', { class: 'btn ghost', type: 'button', text: t('common.back'), onclick: one }),
         h('button', { class: 'btn primary', type: 'submit', text: t('common.next') }))),
@@ -159,20 +166,12 @@ function setup(app, page, enter) {
       catch (e) { if (e instanceof ApiError && e.code === 'totp.wrong') e.fields = { totp: 'totp.wrong' }; throw e; }
       three();
     });
-    page(form);
+    page({ title: t('setup.totpTitle'), line: t('setup.totpIntro'), step: { n: 2, of: 3 }, body: form });
     form.querySelector('input').focus();
   }
 
   function three() {
-    const ok = h('input', { type: 'checkbox' });
-    const go = h('button', { class: 'btn primary wide', type: 'button', text: t('setup.finish'), disabled: true, onclick: enter });
-    ok.addEventListener('change', () => { go.disabled = !ok.checked; });
-    page(h('div', { class: 'card form' },
-      steps(3),
-      h('div', { class: 'stack s' }, h('h1', { class: 'h1', text: t('setup.recoveryTitle') }), h('p', { class: 'muted', text: t('setup.recoveryIntro') })),
-      recoveryCodes(first.recovery),
-      h('label', { class: 'check' }, ok, h('span', { text: t('setup.recoverySaved') })),
-      go));
+    page({ title: t('setup.recoveryTitle'), line: t('setup.recoveryIntro'), step: { n: 3, of: 3 }, body: finish(first.recovery, enter) });
   }
   one();
 }

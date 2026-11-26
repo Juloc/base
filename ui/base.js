@@ -13,6 +13,7 @@
  *   swipeFade               the soft edge of a row you swipe sideways
  *   emptyState, loading, skeleton, notice, badge
  *   shell, router           the frame of the app (menu, head, person menu) and the pages inside it
+ *   pwa                     the service worker, the quiet "offline" line and the offer of a new version (the app calls it once)
  * The catalogue (/base/catalog.html) shows each of them with the code.
  * ===================================================================== */
 import { t, hasKey, getPref as getLangPref, setPref as setLangPref } from './i18n.js';
@@ -87,7 +88,8 @@ export async function api(method, url, body) {
   if (body !== undefined) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(body); }
   let res;
   try { res = await fetch(url, init); }
-  catch { throw new ApiError(0, { error: 'network', message: 'The server cannot be reached.' }); }
+  catch { setOffline(true); throw new ApiError(0, { error: 'network', message: 'The server cannot be reached.' }); }
+  setOffline(false);
   if (res.status === 204) return null;
   let data = null;
   try { data = await res.json(); } catch { /* an answer without JSON */ }
@@ -320,8 +322,9 @@ export function openMenu(anchor, items) {
  * A field: label, control, hint, and a place for the error (FORM-01: every control has a visible label).
  * type: any input type, or 'textarea', or 'select' (a dropdown() of our own; options: [[value, label], ...], and search, placeholder, onchange, disabled go to it).
  * Other props go to the control (required, maxlength, autocomplete, inputmode ...). Explain in the placeholder, keep the label short.
+ * labelHidden: the label stays for a screen reader but is not drawn (the sign-in card: the placeholder says the same, FORM-01).
  */
-export function field({ label, name, type = 'text', value = '', hint, options, rows, ...rest }) {
+export function field({ label, name, type = 'text', value = '', hint, options, rows, labelHidden = false, ...rest }) {
   const id = nextId('f');
   let control, shown;
   if (type === 'textarea') { control = h('textarea', { class: 'textarea', id, name, rows: rows || 4, ...rest }); control.value = value; }
@@ -338,7 +341,7 @@ export function field({ label, name, type = 'text', value = '', hint, options, r
   describedBy.push(id + '-error');
   control.setAttribute('aria-describedby', describedBy.join(' '));
   return h('div', { class: 'field', dataset: { field: name } },
-    h('label', { for: id, id: id + '-label', text: label }), shown, hintEl,
+    h('label', { for: id, id: id + '-label', class: labelHidden ? 'sr-only' : null, text: label }), shown, hintEl,
     h('p', { class: 'field-error', id: id + '-error', hidden: true }));
 }
 
@@ -857,6 +860,47 @@ export function router(routes, frame, { fallback = '/' } = {}) {
   addEventListener('hashchange', () => { closeDialogs(); render(); });
   render();
   return { go: (path) => { if (location.hash === '#' + path) render(); else location.hash = path; }, refresh: render };
+}
+
+/* ---------- installable: the service worker, the offline line, a new version (0.4) ---------- */
+
+let notes, offline = false, waiting = null;
+const offlineLine = h('div', { class: 'status-line', role: 'status' }, icon('cloud'), h('span', { text: t('pwa.offline') }));
+const updateLine = h('div', { class: 'status-line', role: 'status' }, icon('refresh'), h('span', { text: t('pwa.update') }),
+  h('button', { class: 'quiet', type: 'button', text: t('pwa.reload'), onclick: () => { wantReload = true; waiting.postMessage('skip-waiting'); } }));
+let wantReload = false;
+/** The two quiet lines (offline, new version) hang at the top of the window, on the page's root element so no change of the body removes them. */
+function paintNotes() {
+  const lines = [offline ? offlineLine : null, waiting ? updateLine : null].filter(Boolean);
+  if (!lines.length) { notes?.remove(); return; }
+  if (!notes) notes = h('div', { class: 'status-lines' });
+  notes.replaceChildren(...lines);
+  if (!notes.isConnected) document.documentElement.append(notes);
+}
+/** The page knows it has no connection (the device says so, or a request did not get through); a request that gets through says it is back. */
+function setOffline(value) { if (value === offline) return; offline = value; paintNotes(); }
+addEventListener('offline', () => setOffline(true));
+addEventListener('online', () => setOffline(false));
+if (navigator.onLine === false) setOffline(true);
+
+/**
+ * Makes the app installable and keeps it fresh: registers the service worker (the base serves /sw.js, or the app's own file does), shows
+ * "Neue Version · Neu laden" when a new worker waits, and reloads once the person pressed it. Without a connection a quiet line says "offline" in words.
+ * Call it once at the start of the app, before start().
+ */
+export function pwa({ worker = '/sw.js' } = {}) {
+  if (!('serviceWorker' in navigator)) return;
+  const offer = (w) => { if (navigator.serviceWorker.controller) { waiting = w; paintNotes(); } };
+  navigator.serviceWorker.register(worker).then((reg) => {
+    if (reg.waiting) offer(reg.waiting);
+    reg.addEventListener('updatefound', () => {
+      const w = reg.installing;
+      if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') offer(w); });
+    });
+    // somebody who comes back to an open tab gets the new version offered too
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => { /* the app works without it */ });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (wantReload) location.reload(); });
 }
 
 theme.apply();

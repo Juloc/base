@@ -39,6 +39,14 @@ public sealed class UiFiles
 
     public IReadOnlyCollection<string> Paths => _files.Keys;
 
+    /// <summary>The bytes of a file of the look by its path under /base/ (for what the server draws from it, such as the icon of an app).</summary>
+    public bool TryGet(string path, out byte[] bytes)
+    {
+        var found = _files.TryGetValue(path, out var file);
+        bytes = file.Bytes;
+        return found;
+    }
+
     /// <summary>Answers a request under /base/ and returns true, or returns false when there is no such file.</summary>
     public async Task<bool> TryServeAsync(HttpContext ctx)
     {

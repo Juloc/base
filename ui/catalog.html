@@ -473,6 +473,32 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         </div>
       </section>
 
+      <section class="cat-item wide" id="authcard">
+        <h2 class="h1">Sign-in card</h2>
+        <p class="muted"><code class="mono">authCard({ icon, title, line, target?, step?, body, foot })</code> (from <code class="mono">/base/gate.js</code>): the door of every app is one white card in the middle of the page (radius 28, soft shadow; on a phone it fills the width with a 16 px margin): the mark of the app, a title, one line, then what the page needs, and language and light or dark as quiet text buttons at the bottom. The sign-in, the first setup (with <code class="mono">step: { n: 1, of: 3 }</code>) and the invitation of the base are made with it. An app with pages of its own around a sign-in (a gate in front of other sites) uses the same call; <code class="mono">target: { host, note? }</code> adds the soft box "you go straight there afterwards". Fields on the card have their label for the screen reader only (<code class="mono">labelHidden</code>) and say what they want in the placeholder; the main button is the soft one, the hub button is <code class="mono">.btn.neutral</code>. <code class="mono">mountAuth(card)</code> puts the card on an empty page.</p>
+        <div class="cat-demo" data-run="authCard" data-inline></div>
+        <div class="cat-demo" data-run="authTarget" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="statecard">
+        <h2 class="h1">State card</h2>
+        <p class="muted"><code class="mono">stateCard({ icon, tone, title, text, actions })</code>: the same card for one state, with a round mark, one sentence and one or two buttons. <code class="mono">tone</code> is <code class="mono">'run'</code> (the mark turns, "you are being sent on"), <code class="mono">'ok'</code> or <code class="mono">'danger'</code> ("not allowed", "link expired"). The first action is the main one, a second is quiet; an action has <code class="mono">href</code> or <code class="mono">run</code>.</p>
+        <div class="cat-demo" data-run="stateRun" data-inline></div>
+        <div class="cat-demo" data-run="stateDenied" data-inline></div>
+        <div class="cat-demo" data-run="stateExpired" data-inline></div>
+      </section>
+
+      <section class="cat-item" id="statuslines">
+        <h2 class="h1">Offline line and new version</h2>
+        <p class="muted"><code class="mono">pwa()</code> (from <code class="mono">/base/base.js</code>, called once at the start of an app) registers the service worker and keeps two quiet lines at the top of the window: <b>offline</b> when the device has no connection or a request did not get through (the shell still loads from the cache, the data says it is offline in words), and <b>new version, reload</b> when a new worker waits (nothing is replaced behind the person's back). They hang on the root element, so a change of the page does not remove them. The base serves the manifest, the icons (SVG and PNG, from the app's name, icon and colour in <code class="mono">BaseAppOptions</code>) and the worker; see the README.</p>
+        <div class="cat-demo on-surface">
+          <div class="stack">
+            <div class="status-line"><span data-icon="cloud"></span><span>Offline: no connection to the server. What is shown was loaded last.</span></div>
+            <div class="status-line"><span data-icon="refresh"></span><span>New version</span><button class="quiet" type="button">Reload</button></div>
+          </div>
+        </div>
+      </section>
+
       <section class="cat-item" id="shell">
         <h2 class="h1">Shell</h2>
         <p class="muted">The frame of every app (SHELL-01): on a phone a head and a floating white pill at the bottom that holds all places and is swiped sideways (the current one is scrolled to the middle, the edges fade), thought of first (MOBILE-02); on a wide screen the menu on the left. A dot or a count on a place: <code class="mono">navBadge(path, value)</code>. The person menu (settings, light or dark, sign out) is the same everywhere (SHELL-01). <a href="/">Open the app</a> to see it live.</p>

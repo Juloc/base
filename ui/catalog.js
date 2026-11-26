@@ -2,6 +2,7 @@
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
 import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
 import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash } from './parts.js';
+import { authCard, stateCard } from './gate.js';
 import { GLYPHS } from './icons.js';
 
 /* ---------- the examples that are JavaScript: the source shown is the function itself ---------- */
@@ -181,6 +182,32 @@ const demos = {
   flash() {
     const box = h('div', { class: 'panel stack' }, h('p', { class: 'muted', text: 'Something happened here.' }));
     return h('div', { class: 'stack' }, h('button', { class: 'btn', type: 'button', text: 'Light it up', onclick: () => flash(box) }), box);
+  },
+  authCard() {
+    return authCard({ icon: 'shield', title: 'Sign in', line: 'Proxy for example.com',
+      body: [
+        h('button', { class: 'btn neutral wide', type: 'button' }, icon('globe'), 'Sign in with the hub'),
+        h('div', { class: 'auth-or', role: 'separator', text: 'or with your own account' }),
+        h('form', { class: 'auth-form' },
+          field({ label: 'User name', name: 'user', placeholder: 'User name', labelHidden: true }),
+          passwordField({ label: 'Password', name: 'password', placeholder: 'Password', labelHidden: true }),
+          field({ label: 'Code', name: 'code', placeholder: 'Code from the app (6 digits)', labelHidden: true, class: 'input code', inputmode: 'numeric', autocomplete: 'one-time-code' }),
+          h('button', { class: 'btn primary wide', type: 'button', text: 'Sign in' }))] });
+  },
+  authTarget() {
+    return authCard({ icon: 'shield', title: 'Sign in', line: 'This page is protected.', target: { host: 'notes.example.com' },
+      body: h('button', { class: 'btn primary wide', type: 'button', text: 'Continue to notes.example.com' }) });
+  },
+  stateRun() {
+    return stateCard({ icon: 'refresh', tone: 'run', title: 'Signed in', text: 'You are being sent to notes.example.com ...' });
+  },
+  stateDenied() {
+    return stateCard({ icon: 'lock', tone: 'danger', title: 'Not allowed here', text: 'This account may not open notes.example.com. Sign in with another account.',
+      actions: [{ label: 'Another account', run: () => toast('Back to the sign-in') }, { label: 'Back to the app', icon: 'home', href: '#statecard' }] });
+  },
+  stateExpired() {
+    return stateCard({ icon: 'clock', tone: 'danger', title: 'Link expired', text: 'The sign-in link was valid for a short time only, or was used already. Just open the page again.',
+      actions: [{ label: 'Open notes.example.com again', icon: 'refresh', run: () => toast('Opening ...') }] });
   },
   form() {
     // stands in for a request: the server answers with the fields that are wrong

@@ -373,7 +373,7 @@ public partial class RuleFileTests
         var catalogue = Repo.Read("ui", "catalog.html") + Repo.Read("ui", "catalog.js");
         string[] classes = ["btn", "field", "input", "textarea", "select", "switch", "check", "seg", "card", "list", "row", "table", "badge", "notice", "empty", "spinner", "skeleton", "capsule", "chip", "tile", "tiles", "search", "panel", "tabbar"];
         Assert.All(classes, c => Assert.Matches($@"class=""[^""]*\b{c}\b", catalogue));
-        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule(", "dropdown(", "choiceTiles(", "actionBar(", "selectionBar(", "navBadge(", "closeDialogs(", "table(", "tabs(", "chips(", "numberBox(", "chart(", "liveFeed(", "timeline(", "ring(", "foldCard(", "flash("];
+        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule(", "dropdown(", "choiceTiles(", "actionBar(", "selectionBar(", "navBadge(", "closeDialogs(", "table(", "tabs(", "chips(", "numberBox(", "chart(", "liveFeed(", "timeline(", "ring(", "foldCard(", "flash(", "authCard(", "stateCard(", "mountAuth(", "pwa("];
         Assert.All(functions, f => Assert.Contains(f, catalogue));
         Assert.Contains("Object.keys(GLYPHS)", catalogue);                                 // every icon, by itself
         // every colour token is shown
@@ -382,13 +382,15 @@ public partial class RuleFileTests
     }
 
     [Fact]
-    public void The_service_worker_keeps_only_the_shell()
+    public void An_app_has_no_worker_list_of_its_own_and_the_page_names_the_manifest_and_the_icon()
     {
-        var sw = Repo.Read("samples", "StartApp", "wwwroot", "sw.js");
-        Assert.Contains("const SHELL", sw);
-        Assert.Contains("!isShell(url.pathname)", sw);              // everything that is not on the list passes through untouched
-        Assert.DoesNotContain("startsWith('/api/')", sw);           // the old rule "everything but /api" kept pages that need a session
-        Assert.DoesNotContain("'app-v1'", sw);                      // the cache was renamed when the list came
+        // the worker (SEC-08) is made by the base (PwaTests); the start app keeps no copy of it, of the manifest or of the icons
+        var wwwroot = Path.Combine(Repo.Root, "samples", "StartApp", "wwwroot");
+        foreach (var name in new[] { "sw.js", "manifest.webmanifest", "icon.svg", "icon-maskable.svg" }) Assert.False(File.Exists(Path.Combine(wwwroot, name)), name);
+        var page = Repo.Read("samples", "StartApp", "wwwroot", "index.html");
+        Assert.Contains("rel=\"manifest\" href=\"/manifest.webmanifest\"", page);
+        Assert.Contains("rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\"", page);
+        Assert.Contains("pwa();", Repo.Read("samples", "StartApp", "wwwroot", "app.js"));
     }
 }
 

@@ -80,7 +80,12 @@ done < <(find "$app/src" -path '*/wwwroot/i18n/de.js' -not -path '*/bin/*' -not 
 while IFS= read -r -d '' prog; do
   css="$(dirname "$prog")/wwwroot/app.css"
   [ -f "$css" ] || continue
-  grep -qE -e '--accent-color:' "$css" && continue      # a colour, not a hue: AccentHue is its approximate hue and is not compared (COLOR-01)
+  if grep -qE -e '--accent-color:' "$css"; then      # a colour, not a hue: AccentHue is its approximate hue and is not compared (COLOR-01); AccentColor (icon, theme colour) must be the same colour
+    col_code="$(grep -oE 'AccentColor = "#[0-9A-Fa-f]{6}"' "$prog" | grep -oE '#[0-9A-Fa-f]{6}' | head -1 | tr 'A-F' 'a-f' || true)"
+    col_css="$(grep -oE -e '--accent-color: *#[0-9A-Fa-f]{6}' "$css" | grep -oE '#[0-9A-Fa-f]{6}' | head -1 | tr 'A-F' 'a-f' || true)"
+    [ -z "$col_css" ] || [ "$col_code" = "$col_css" ] || bad CONTRACT-02 "${prog#"$app/"}: AccentColor (${col_code:-none}) is not the --accent-color of app.css ($col_css); the icon and the theme colour come from it"
+    continue
+  fi
   hue_code="$(grep -oE 'AccentHue = [0-9]+' "$prog" | grep -oE '[0-9]+' | head -1 || true)"
   hue_css="$(grep -oE -e '--accent-hue: [0-9]+' "$css" | grep -oE '[0-9]+' | head -1 || true)"
   [ -n "$hue_code" ] && [ "$hue_code" = "$hue_css" ] || bad CONTRACT-02 "${prog#"$app/"}: AccentHue ($hue_code) is not the --accent-hue of app.css ($hue_css)"

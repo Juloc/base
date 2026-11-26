@@ -3,7 +3,7 @@
  *   a dialog for adding and editing, a confirmation before deleting, an empty state, settings that follow the person.
  * Replace the list by what the app is for; keep the pattern. */
 import { addMessages, t, fmtAgo, fmtDate } from '/base/i18n.js';
-import { h, icon, api, shell, router, openDialog, confirmDialog, toast, field, switchField, formValues, showErrors, clearErrors, emptyState, badge, prefs, errorText, ApiError } from '/base/base.js';
+import { h, icon, api, pwa, shell, router, openDialog, confirmDialog, toast, field, switchField, formValues, showErrors, clearErrors, emptyState, badge, prefs, errorText, ApiError } from '/base/base.js';
 import { start } from '/base/auth.js';
 import { appearanceCard, securityCard, devicesCard, historyCard, installationCard, aboutCard } from '/base/account.js';
 import { peopleCard } from '/base/people.js';
@@ -13,7 +13,7 @@ import en from '/i18n/en.js';
 
 addMessages('de', de);
 addMessages('en', en);
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => { /* the app works without it */ });
+pwa();                                  // installable: the service worker, the quiet offline line, "new version"
 
 start({ icon: 'bookmark', onSignedIn: run });
 

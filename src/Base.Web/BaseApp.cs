@@ -32,6 +32,7 @@ public static class BaseApp
         var connection = cfg["BASE_DB"] ?? throw new InvalidOperationException("BASE_DB is missing (the connection to PostgreSQL, see docker-compose.yml).");
         var info = AppInfo.From(options);
         Describe.Check(options);
+        Pwa.Check(options);
         ApiDoor.Validate(options.Doors, [.. ApiGuard.BasePublicPaths, .. options.PublicPaths, .. options.LargeBodyPaths]);
         services.AddSingleton(options);
         services.AddSingleton(info);
@@ -127,6 +128,7 @@ public static class BaseApp
             return Results.Json(new Health(dbOk, dbOk, info.Id, info.Version, info.BaseVersion, status, AppInfo.ContractVersion, clock.GetUtcNow()), statusCode: dbOk ? 200 : 503);
         });
         app.MapAbout(info, options);
+        app.MapPwa(info, options, app.Services.GetRequiredService<UiFiles>());
         app.MapBasePeople();
         app.MapBaseHub();
         app.MapBaseAuth();

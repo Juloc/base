@@ -42,6 +42,18 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
     /// <summary>The colour of the app as an angle on the colour wheel (0 to 359): the same number as <c>--accent-hue</c> in its stylesheet (COLOR-01).</summary>
     public int AccentHue { get; init; } = 250;
 
+    /// <summary>
+    /// The colour of the app as a colour <c>#rrggbb</c>: the same as <c>--accent-color</c> in its stylesheet, when the app names a colour and not only a hue. The icon and the
+    /// theme colour of the installed app come from it (else from <see cref="AccentHue"/>).
+    /// </summary>
+    public string? AccentColor { get; init; }
+
+    /// <summary>
+    /// More static files the offline shell keeps (SEC-08), besides the page, <c>app.css</c>, <c>app.js</c>, <c>/base/</c> and <c>/i18n/</c>: paths that begin with a slash,
+    /// a folder ends with one. Never a page or an answer that needs a session.
+    /// </summary>
+    public IReadOnlyList<string> ShellPaths { get; init; } = [];
+
     /// <summary>Where the app starts, a path on its own address.</summary>
     public string Start { get; init; } = "/";
 
