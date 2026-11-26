@@ -23,10 +23,12 @@ h1, h2, h3, h4, p, ul, ol, dl, dd, figure { margin: 0; }
 ul, ol { padding: 0; list-style: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-a { color: var(--accent); text-underline-offset: 0.18em; }
+a { color: var(--accent-ink); text-underline-offset: 0.18em; }
 img, svg { display: block; max-width: 100%; }
 [hidden] { display: none !important; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+/* the chrome is not text to copy (above all on a phone, where a long press selects); content stays selectable */
+.shell-side, .shell-tabs, .shell-head, .nav, .tab, .menu, .menu-item, .btn, .chip, .seg, .capsule, .badge, .card-head, .section-title, .table th, .float-bar, .toast, .dialog-head, .switch, .check, .tile, .person { -webkit-user-select: none; user-select: none; }
 ::selection { background: var(--accent-soft); color: var(--on-accent-soft); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -107,12 +109,12 @@ img, svg { display: block; max-width: 100%; }
 .tab .icon { width: 24px; height: 24px; }
 /* the pill behind the icon of the place you are in grows from the middle (the navigation bar of JulOS) */
 .tab-pill { position: relative; display: grid; place-items: center; width: 56px; height: 28px; border-radius: var(--r-full); overflow: hidden; }
-.tab-pill::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--secondary-soft); transform: scaleX(0.3); opacity: 0; transition: transform var(--dur-m) var(--ease), opacity var(--dur) linear; }
+.tab-pill::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--accent-soft); transform: scaleX(0.3); opacity: 0; transition: transform var(--dur-m) var(--ease), opacity var(--dur) linear; }
 .tab-pill .icon { position: relative; }
 @media (hover: hover) { .tab:hover .tab-pill::after { content: ""; position: absolute; inset: 0; background: currentColor; opacity: 0.08; } }
 .tab[aria-current="page"] { color: var(--text); font-weight: 700; }
 .tab[aria-current="page"] .tab-pill::before { transform: none; opacity: 1; }
-.tab[aria-current="page"] .tab-pill .icon { color: var(--on-secondary-soft); }
+.tab[aria-current="page"] .tab-pill .icon { color: var(--on-accent-soft); }
 
 .brand { display: flex; align-items: center; gap: var(--s3); min-height: var(--touch); padding: var(--s1) var(--s2); color: var(--text); text-decoration: none; font: 600 var(--text-l)/1.2 var(--font); letter-spacing: -0.2px; border-radius: var(--r-full); }
 .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 10px; background: var(--accent); color: var(--on-accent); }
@@ -149,27 +151,26 @@ img, svg { display: block; max-width: 100%; }
   .shell-tabs { display: none; }
 }
 
-/* ---------- button: tonal by default, filled for the main action, text for the quiet one (the buttons of JulOS); round, and they "form" when pressed ---------- */
+/* ---------- button: tonal by default, soft accent for the main action, text for the quiet one; bold, radius 14, and it keeps its shape and colour when pressed ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--control-h); min-width: var(--control-h); padding: 0 var(--s5);
-  border: 1px solid transparent; border-radius: var(--r-full); background: var(--secondary-soft); color: var(--on-secondary-soft);
-  font: 500 var(--text-s)/1.2 var(--font); letter-spacing: 0.1px; text-decoration: none; white-space: nowrap; user-select: none; flex-shrink: 0;
-  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), border-radius var(--dur-m) var(--ease), opacity var(--dur) var(--ease);
+  border: 1px solid transparent; border-radius: var(--r-btn); background: var(--secondary-soft); color: var(--on-secondary-soft);
+  font: 700 var(--text-s)/1.2 var(--font); letter-spacing: 0.1px; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .btn .icon { width: 18px; height: 18px; }
 .btn:hover { background: color-mix(in oklab, var(--secondary-soft) 90%, var(--on-secondary-soft)); }
-.btn:active { border-radius: var(--r-m); }
-.btn.primary { background: var(--accent); color: var(--on-accent); }
-.btn.primary:hover { background: color-mix(in oklab, var(--accent) 90%, var(--on-accent)); }
+.btn.primary { background: var(--accent-soft); color: var(--on-accent-soft); }
+.btn.primary:hover { background: color-mix(in oklab, var(--accent-soft) 88%, var(--on-accent-soft)); }
 .btn.danger { background: var(--danger-soft); color: var(--on-danger-soft); }
 .btn.danger:hover { background: color-mix(in oklab, var(--danger-soft) 90%, var(--on-danger-soft)); }
-.btn.outline { background: transparent; color: var(--accent); border-color: var(--glass-edge); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 24%, transparent); }
-.btn.outline:hover { background: color-mix(in oklab, var(--accent) 8%, transparent); }
-.btn.ghost { background: transparent; color: var(--accent); padding: 0 var(--s3); }
-.btn.ghost:hover { background: color-mix(in oklab, var(--accent) 8%, transparent); }
+.btn.outline { background: transparent; color: var(--on-accent-soft); border-color: var(--glass-edge); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-ink) 24%, transparent); }
+.btn.outline:hover { background: color-mix(in oklab, var(--accent-ink) 8%, transparent); }
+.btn.ghost { background: transparent; color: var(--on-accent-soft); padding: 0 var(--s3); }
+.btn.ghost:hover { background: color-mix(in oklab, var(--accent-ink) 8%, transparent); }
 .btn.ghost.danger { color: var(--danger); background: transparent; }
 .btn.ghost.danger:hover { background: var(--danger-soft); color: var(--on-danger-soft); }
-.btn.icon-only { padding: 0; width: var(--control-h); border-radius: var(--r-full); }
+.btn.icon-only { padding: 0; width: var(--control-h); }
 .btn.icon-only .icon { width: 24px; height: 24px; }
 .btn.ghost.icon-only { color: var(--text-2); }
 .btn.outline.icon-only { color: var(--text-2); background: var(--glass); border-color: var(--glass-edge); }
@@ -179,9 +180,24 @@ img, svg { display: block; max-width: 100%; }
 .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
 .btn.busy { position: relative; color: transparent !important; pointer-events: none; }
 .btn.busy::after { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--on-secondary-soft); border-top-color: transparent; animation: spin 0.7s linear infinite; }
-.btn.primary.busy::after { border-color: var(--on-accent); border-top-color: transparent; }
+.btn.primary.busy::after, .btn.mini.busy::after { border-color: var(--on-accent-soft); border-top-color: transparent; }
 .btn.danger.busy::after { border-color: var(--on-danger-soft); border-top-color: transparent; }
-.btn.ghost.busy::after, .btn.outline.busy::after { border-color: var(--accent); border-top-color: transparent; }
+.btn.ghost.busy::after, .btn.outline.busy::after { border-color: var(--on-accent-soft); border-top-color: transparent; }
+
+/* row button: the small button in a row of a list or table (34 px high, radius 11, bold). Tonal by default (soft accent); .strong is the accent fill, .quiet has no surface.
+ * The target stays 44 px for a finger (MOBILE-01): the area around the button is part of it. */
+.btn.mini { position: relative; min-height: 34px; min-width: 34px; padding: 0 14px; border-radius: var(--r-row); background: var(--accent-soft); color: var(--on-accent-soft); }
+.btn.mini::after { content: ""; position: absolute; inset: -5px -2px; }
+.btn.mini:hover { background: color-mix(in oklab, var(--accent-soft) 85%, var(--on-accent-soft)); }
+.btn.mini.strong { background: var(--accent); color: var(--on-accent); }
+.btn.mini.strong:hover { background: color-mix(in oklab, var(--accent) 88%, var(--on-accent)); }
+.btn.mini.quiet { background: none; color: var(--text-2); }
+.btn.mini.quiet:hover { background: var(--surface-2); color: var(--text); }
+.btn.mini.danger { background: var(--danger-soft); color: var(--on-danger-soft); }
+.btn.mini.danger:hover { background: color-mix(in oklab, var(--danger-soft) 88%, var(--on-danger-soft)); }
+.btn.mini.icon-only { padding: 0; width: 34px; }
+.btn.mini.icon-only .icon { width: 20px; height: 20px; }
+.btn.mini.busy::after { width: 16px; height: 16px; }
 @keyframes spin { to { transform: rotate(1turn); } }
 
 /* ---------- field, input, select, textarea ---------- */
@@ -198,7 +214,7 @@ img, svg { display: block; max-width: 100%; }
 }
 .textarea { padding-block: var(--s3); min-height: 96px; resize: vertical; }
 .input::placeholder, .textarea::placeholder { color: var(--text-2); opacity: 0.8; }
-.input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--accent), 0 0 0 2px color-mix(in oklab, var(--accent) 30%, transparent); }
+.input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--accent-ink), 0 0 0 2px color-mix(in oklab, var(--accent-ink) 30%, transparent); }
 .field.invalid .input, .field.invalid .select, .field.invalid .textarea { box-shadow: inset 0 -2px 0 var(--danger); }
 .field.invalid .input:focus-visible, .field.invalid .textarea:focus-visible { box-shadow: inset 0 -2px 0 var(--danger), 0 0 0 2px color-mix(in oklab, var(--danger) 30%, transparent); }
 .input:disabled, .select:disabled, .textarea:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -208,7 +224,7 @@ img, svg { display: block; max-width: 100%; }
 .search > .icon { position: absolute; left: var(--s4); color: var(--text-2); pointer-events: none; }
 .search > .input[type="search"] { padding-left: 46px; }
 .input[type="search"] { border-radius: var(--r-full); padding-inline: var(--s5); background: var(--glass-strong); box-shadow: inset 0 0 0 1px var(--glass-edge), var(--shadow-1); -webkit-appearance: none; appearance: none; }
-.input[type="search"]:focus-visible { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-1); }
+.input[type="search"]:focus-visible { box-shadow: inset 0 0 0 2px var(--accent-ink), var(--shadow-1); }
 .input[type="search"]::-webkit-search-cancel-button { display: none; }
 .select {
   appearance: none; -webkit-appearance: none; padding-right: 40px; cursor: pointer;
@@ -227,30 +243,30 @@ img, svg { display: block; max-width: 100%; }
 .switch-track::after { content: ""; position: absolute; left: 8px; top: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--line-strong); transition: all var(--dur-m) var(--ease); }
 .switch input:checked + .switch-track { background: var(--accent); box-shadow: none; }
 .switch input:checked + .switch-track::after { left: 24px; top: 4px; width: 24px; height: 24px; background: var(--on-accent); }
-.switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .switch input:disabled + .switch-track { opacity: 0.5; }
 .switch-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .switch.reverse { flex-direction: row-reverse; }
 
 .check { display: flex; align-items: center; gap: var(--s3); min-height: var(--touch); cursor: pointer; }
-.check input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(--accent); }
+.check input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(--accent-ink); }
 
 /* capsule: a group in a round outline, the chosen part a filled pill inside it (the capsules of Jularr). segmented() and capsule() both. */
 .seg, .capsule { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--glass-edge); border-radius: var(--r-full); background: var(--glass); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .seg::-webkit-scrollbar, .capsule::-webkit-scrollbar { display: none; }
 .seg label { position: relative; display: flex; flex: 1 1 auto; }
 .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.seg span, .capsule-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: calc(var(--control-h) - 8px); padding: 0 var(--s4); border-radius: var(--r-full); font: 500 var(--text-s)/1.2 var(--font); letter-spacing: 0.1px; color: var(--text-2); text-decoration: none; white-space: nowrap; width: 100%; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.seg span, .capsule-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: calc(var(--control-h) - 8px); padding: 0 var(--s4); border-radius: var(--r-full); font: 700 var(--text-s)/1.2 var(--font); letter-spacing: 0.1px; color: var(--text-2); text-decoration: none; white-space: nowrap; width: 100%; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
 .seg span .icon, .capsule-item .icon { width: 18px; height: 18px; }
 .seg label:hover span, .capsule-item:hover { color: var(--text); background: color-mix(in oklab, var(--text) 8%, transparent); }
-.seg input:checked + span, .capsule-item[aria-current="page"] { background: var(--accent); color: var(--on-accent); font-weight: 650; }
-.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg input:checked + span, .capsule-item[aria-current="page"] { background: var(--accent-soft); color: var(--on-accent-soft); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
 
 /* chip: a rounded rectangle with a fine edge, for categories and filters; a button, a link or plain text */
-.chip { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-h); padding: 0 var(--s3); border: 1px solid var(--glass-edge); border-radius: var(--r-m); background: var(--glass); color: var(--text-2); font: 500 var(--text-s)/1.2 var(--font); text-decoration: none; white-space: nowrap; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-h); padding: 0 var(--s3); border: 1px solid var(--glass-edge); border-radius: var(--r-m); background: var(--glass); color: var(--text-2); font: 700 var(--text-s)/1.2 var(--font); text-decoration: none; white-space: nowrap; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease); }
 .chip .icon { width: 16px; height: 16px; }
 a.chip:hover, button.chip:hover { color: var(--text); background: var(--glass-strong); }
-.chip[aria-pressed="true"], .chip.on { border-color: color-mix(in oklab, var(--accent) 55%, transparent); background: var(--accent-soft); color: var(--on-accent-soft); }
+.chip[aria-pressed="true"], .chip.on { border-color: color-mix(in oklab, var(--accent-ink) 45%, transparent); background: var(--accent-soft); color: var(--on-accent-soft); }
 .chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
 
 /* ---------- form ---------- */
@@ -272,8 +288,8 @@ a.chip:hover, button.chip:hover { color: var(--text); background: var(--glass-st
   border: 1px solid var(--glass-edge); border-radius: 14px; background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-1);
   width: 100%; text-align: left; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-a.row:hover, button.row:hover, .row.link:hover { border-color: color-mix(in oklab, var(--accent) 45%, var(--glass-edge)); }
-.card .row, .list.lines .row { border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+a.row:hover, button.row:hover, .row.link:hover { border-color: color-mix(in oklab, var(--accent-ink) 45%, var(--glass-edge)); }
+.card .row, .list.lines .row { border: 0; border-top: 1px solid var(--hair); border-radius: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
 .card .list, .list.lines { gap: 0; }
 .card .list > :first-child > .row, .card .list > .row:first-child, .list.lines > :first-child > .row, .list.lines > .row:first-child { border-top-width: 0; }
 .card .row:hover, .list.lines a.row:hover { background: color-mix(in oklab, var(--text) 8%, transparent); }
@@ -288,8 +304,7 @@ a.row:hover, button.row:hover, .row.link:hover { border-color: color-mix(in okla
 /* tiles: a grid of soft tiles with a symbol in a tinted round ground (the quick actions of JulOS); a button or a link */
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: var(--s2); }
 .tile { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s3); min-height: 104px; padding: var(--s4); border: 1px solid var(--glass-edge); border-radius: var(--r-l); background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-1); color: var(--text); text-decoration: none; text-align: left; transition: border-color var(--dur) var(--ease), border-radius var(--dur-m) var(--ease); }
-a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent) 45%, var(--glass-edge)); }
-.tile:active { border-radius: var(--r-m); }
+a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent-ink) 45%, var(--glass-edge)); }
 .tile-lead { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r-full); background: var(--accent-soft); color: var(--on-accent-soft); }
 .tile-title, .tile-sub { display: block; }
 .tile-title { font: 600 var(--text-m)/1.3 var(--font); }
@@ -299,12 +314,12 @@ a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent
 .table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: var(--text-m); }
 .table th { text-align: left; font: 500 var(--text-s)/1.4 var(--font); color: var(--text-2); padding: var(--s2) var(--s4); white-space: nowrap; }
-.table td { padding: var(--s3) var(--s4); border-top: 1px solid var(--line); vertical-align: middle; }
+.table td { padding: var(--s3) var(--s4); border-top: 1px solid var(--hair); vertical-align: middle; }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 599px) {
   .table.cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .table.cards, .table.cards tbody, .table.cards tr, .table.cards td { display: block; }
-  .table.cards tr { padding: var(--s3) var(--s4); border-top: 1px solid var(--line); }
+  .table.cards tr { padding: var(--s3) var(--s4); border-top: 1px solid var(--hair); }
   .table.cards tr:first-child { border-top: 0; }
   .table.cards td { border: 0; padding: 2px 0; display: flex; justify-content: space-between; gap: var(--s4); text-align: right; }
   .table.cards td::before { content: attr(data-label); color: var(--text-2); font-size: var(--text-s); text-align: left; }
@@ -358,10 +373,10 @@ a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent
 .menu-item:hover, .menu-item:focus-visible { background: color-mix(in oklab, var(--text) 8%, transparent); outline: none; }
 .menu-item.danger { color: var(--danger); }
 .menu-item .icon { color: var(--text-2); }
-.menu-item[aria-checked="true"] { color: var(--accent); font-weight: 650; }
+.menu-item[aria-checked="true"] { color: var(--accent-ink); font-weight: 650; }
 .menu-item[aria-checked="true"] .icon { color: inherit; }
 .menu-item.danger .icon { color: inherit; }
-.menu-sep { height: 1px; margin: var(--s1) 0; background: var(--line); }
+.menu-sep { height: 1px; margin: var(--s1) 0; background: var(--hair); }
 .menu-label { padding: var(--s2) var(--s3); font: 500 var(--text-xs)/1.3 var(--font); color: var(--text-2); }
 
 /* ---------- toast: a short message that goes away by itself ---------- */
@@ -382,7 +397,7 @@ a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent
 .empty-mark .icon { width: 34px; height: 34px; }
 .empty-title { font: 700 var(--text-l)/1.3 var(--font); letter-spacing: -0.2px; }
 .empty-text { color: var(--text-2); max-width: 44ch; }
-.spinner { width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--accent); animation: spin 0.7s linear infinite; }
+.spinner { width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--accent-ink); animation: spin 0.7s linear infinite; }
 .loading { display: grid; place-items: center; padding: var(--s7); }
 .skeleton { display: block; height: 14px; border-radius: var(--r-xs); background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
 .skeleton.title { height: 20px; width: 40%; }

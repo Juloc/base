@@ -168,7 +168,7 @@ public partial class RuleFileTests
     public void The_version_is_semver_and_has_a_changelog_entry()
     {
         var version = Repo.Read("VERSION").Trim();
-        Assert.Matches(@"^\d+\.\d+\.\d+$", version);
+        Assert.Matches(@"^\d+\.\d+\.\d+(-[a-z]+\.\d+)?$", version);
         Assert.Matches($@"(?m)^## {Regex.Escape(version)}\b", Repo.Read("CHANGELOG.md"));
         Assert.DoesNotContain("<Version>", Regex.Replace(Repo.Read("Directory.Build.props"), @"<Version>\$\(\[System\.IO\.File\][^<]+</Version>", ""));     // the number stands in VERSION only
     }
@@ -201,21 +201,40 @@ public partial class RuleFileTests
         foreach (var css in Files(["samples"], "*.css"))
         {
             var text = Regex.Replace(File.ReadAllText(css), @"/\*.*?\*/", "", RegexOptions.Singleline);
-            Assert.Single(Regex.Matches(text, @"--accent-hue:\s*\d{1,3};"));
-            Assert.DoesNotMatch(literal, text);
-            Assert.DoesNotMatch(@"--(?!accent-hue)[a-z0-9-]+\s*:", text);                 // an app does not redefine tokens
+            // exactly one of the two: a colour (any CSS colour, the one place a colour value may stand) or a hue
+            var colour = Regex.Matches(text, @"--accent-color:\s*[^;{}]+;");
+            var hue = Regex.Matches(text, @"--accent-hue:\s*\d{1,3};");
+            Assert.Equal(1, colour.Count + hue.Count);
+            Assert.DoesNotMatch(literal, colour.Count == 1 ? text.Replace(colour[0].Value, "") : text);
+            Assert.DoesNotMatch(@"--(?!accent-hue|accent-color)[a-z0-9-]+\s*:", text);        // an app does not redefine tokens
         }
         // in the base itself, colour values live in tokens.css; the styles only use the tokens (the white ground of the QR code is the one exception: a scanner needs it)
         var styles = Regex.Replace(Repo.Read("ui", "base.css"), @"/\*.*?\*/|url\(""data:[^""]*""\)", "", RegexOptions.Singleline);
         Assert.Equal(["#fff"], Regex.Matches(styles, literal).Select(m => m.Value));
         Assert.Matches(@"\.qr\s*\{[^}]*#fff", styles);
+        // the colour of the app reaches the tokens through one place
+        Assert.Matches(@"--accent-base:\s*var\(--accent-color,\s*var\(--accent-from-hue\)\)", Repo.Read("ui", "tokens.css"));
+    }
+
+    [Fact]
+    public void Buttons_keep_their_shape_and_text_in_the_chrome_cannot_be_selected()
+    {
+        var styles = Repo.Read("ui", "base.css");
+        Assert.DoesNotMatch(@"\.(btn|tile)[^{]*:active\s*\{[^}]*border-radius", styles);      // no change of shape when pressed
+        Assert.DoesNotMatch(@"\.btn\s*\{[^}]*transition:[^;}]*border-radius", styles);
+        Assert.Matches(@"\.btn\s*\{[^}]*font:\s*700 ", styles);                             // bold
+        Assert.Matches(@"\.btn\.mini\s*\{[^}]*min-height:\s*34px", styles);                   // the row button, with the 44 px target around it
+        Assert.Matches(@"\.btn\.mini::after\s*\{[^}]*inset:\s*-5px", styles);
+        Assert.Matches(@"\.nav,[^{]*\.tab,[^{]*\.btn,[^{]*\.chip,[^{]*\.table th[^{]*\{[^}]*user-select:\s*none", styles);
+        Assert.Contains("--hair", Repo.Read("ui", "tokens.css"));
+        Assert.Matches(@"\.table td\s*\{[^}]*var\(--hair\)", styles);
     }
 
     [Fact]
     public void Focus_is_visible_and_motion_can_be_switched_off()
     {
         var styles = Repo.Read("ui", "base.css");
-        Assert.Matches(@":focus-visible\s*\{\s*outline:\s*2px solid var\(--accent\)", styles);
+        Assert.Matches(@":focus-visible\s*\{\s*outline:\s*2px solid var\(--accent-ink\)", styles);
         Assert.Matches(@"@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*animation-duration:[^}]*transition-duration:", styles);
         // where the outline is taken away, something else shows the focus on the same element
         foreach (Match m in Regex.Matches(styles, @"([^{}]+)\{([^{}]*outline:\s*none[^{}]*)\}"))

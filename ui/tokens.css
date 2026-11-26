@@ -144,6 +144,8 @@
   --r-l: 20px;
   --r-xl: 28px;
   --r-full: 999px;
+  --r-btn: 14px;                 /* buttons (0.4) */
+  --r-row: 11px;                 /* row buttons */
 
   /* ---- sizes ---- */
   --touch: 44px;                 /* the smallest target for a finger (MOBILE-01) */
