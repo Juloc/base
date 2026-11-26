@@ -89,7 +89,7 @@ for (const demo of document.querySelectorAll('.cat-demo')) {
 hydrateIcons();
 
 /* ---------- colours, sizes, icons ---------- */
-const COLOURS = ['bg', 'surface', 'surface-1', 'surface-2', 'surface-3', 'surface-4', 'text', 'text-2', 'line', 'line-strong', 'accent', 'on-accent', 'accent-soft', 'on-accent-soft',
+const COLOURS = ['bg', 'surface', 'surface-1', 'surface-2', 'surface-3', 'surface-4', 'text', 'text-2', 'line', 'line-strong', 'hair', 'accent-from-hue', 'accent', 'on-accent', 'accent-ink', 'accent-soft', 'on-accent-soft',
   'secondary-soft', 'on-secondary-soft', 'tertiary-soft', 'on-tertiary-soft', 'danger', 'on-danger', 'danger-soft', 'on-danger-soft', 'ok', 'ok-soft', 'on-ok-soft', 'warn', 'warn-soft', 'on-warn-soft'];
 document.getElementById('cat-swatches').append(...COLOURS.map((name) => {
   const chip = h('i');
@@ -102,7 +102,7 @@ for (const s of ['s1', 's2', 's3', 's4', 's5', 's6', 's7']) {
   bar.style.width = `var(--${s})`;
   scale.append(h('div', { class: 'scale-row' }, h('code', { class: 'mono', text: '--' + s }), bar));
 }
-for (const r of ['r-xs', 'r-s', 'r-m', 'r-l', 'r-xl', 'r-full']) {
+for (const r of ['r-xs', 'r-s', 'r-m', 'r-row', 'r-btn', 'r-l', 'r-xl', 'r-full']) {
   const box = h('div', { class: 'radius-box' });
   box.style.borderRadius = `var(--${r})`;
   scale.append(h('div', { class: 'scale-row' }, h('code', { class: 'mono', text: '--' + r }), box));
@@ -116,5 +116,10 @@ document.getElementById('cat-scheme').append(segmented({
   options: [['auto', 'System', 'monitor'], ['light', 'Light', 'sun'], ['dark', 'Dark', 'moon']],
 }));
 const hue = document.getElementById('cat-hue'), hueValue = document.getElementById('cat-hue-value');
+const colour = document.getElementById('cat-color'), root = document.documentElement.style;
+colour.addEventListener('input', () => root.setProperty('--accent-color', colour.value));
+document.getElementById('cat-color-off').addEventListener('click', () => root.removeProperty('--accent-color'));
+document.getElementById('cat-presets').append(...[['Cyan', '#00e5ff'], ['Yellow', '#eaff00'], ['Navy', '#1a237e'], ['Violet', '#7c4dff'], ['Orange', '#ff6f00'], ['Black', '#000000']].map(([label, value]) =>
+  h('button', { class: 'btn mini', type: 'button', text: label + ' ' + value, onclick: () => { colour.value = value; root.setProperty('--accent-color', value); } })));
 hue.addEventListener('input', () => { document.documentElement.style.setProperty('--accent-hue', hue.value); hueValue.textContent = hue.value; theme.apply(); });
 fetch('/api/health').then((r) => r.json()).then((d) => { document.getElementById('cat-version').textContent = 'base ' + d.base; }).catch(() => { document.getElementById('cat-version').remove(); });

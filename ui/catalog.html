@@ -27,6 +27,7 @@
     <span class="grow"></span>
     <div class="cat-tools">
       <label class="cat-hue">--accent-hue <input type="range" id="cat-hue" min="0" max="359" value="299" aria-label="Accent hue"> <code id="cat-hue-value">299</code></label>
+      <label class="cat-hue">--accent-color <input type="color" id="cat-color" value="#00e5ff" aria-label="Accent colour"> <button class="btn mini" type="button" id="cat-color-off">Hue only</button></label>
       <div id="cat-scheme"></div>
     </div>
   </header>
@@ -36,10 +37,10 @@
 
       <section class="cat-item" id="start">
         <h2 class="h1">How to use the kit</h2>
-        <p class="muted">Three files in the head, nothing to build (CODE-06). The app sets its colour with one variable in its own stylesheet (COLOR-01) and builds its pages from the parts below. Everything is served under <code class="mono">/base/</code> by the base itself.</p>
+        <p class="muted">Three files in the head, nothing to build (CODE-06). The app sets its colour with one variable in its own stylesheet, a colour or a hue (COLOR-01) and builds its pages from the parts below. Everything is served under <code class="mono">/base/</code> by the base itself.</p>
         <pre class="cat-code" data-static>&lt;script src="/base/boot.js"&gt;&lt;/script&gt;
 &lt;link rel="stylesheet" href="/base/base.css"&gt;
-&lt;link rel="stylesheet" href="/app.css"&gt;        /* :root { --accent-hue: 152; } */
+&lt;link rel="stylesheet" href="/app.css"&gt;        /* :root { --accent-color: #00e5ff; } or { --accent-hue: 152; } */
 &lt;script type="module" src="/app.js"&gt;&lt;/script&gt;
 
 // app.js
@@ -55,14 +56,16 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
           <table class="look-map">
             <thead><tr><th>Material 3 role (JulOS)</th><th>Kit token</th></tr></thead>
             <tbody>
-              <tr><td>primary, on-primary</td><td><code class="mono">--accent</code>, <code class="mono">--on-accent</code></td></tr>
+              <tr><td>primary, on-primary (the colour of the app itself; text on it is black or white)</td><td><code class="mono">--accent</code>, <code class="mono">--on-accent</code></td></tr>
+              <tr><td>primary as ink: links, icons, lines, rings (dark ink of the same hue)</td><td><code class="mono">--accent-ink</code></td></tr>
               <tr><td>primary-container, on-primary-container</td><td><code class="mono">--accent-soft</code>, <code class="mono">--on-accent-soft</code></td></tr>
               <tr><td>secondary-container (chips, selected items, default button)</td><td><code class="mono">--secondary-soft</code>, <code class="mono">--on-secondary-soft</code></td></tr>
               <tr><td>tertiary-container (the hue turned by 55 degrees)</td><td><code class="mono">--tertiary-soft</code>, <code class="mono">--on-tertiary-soft</code></td></tr>
               <tr><td>surface, surface-container-lowest / low / container / high / highest</td><td><code class="mono">--bg</code>, <code class="mono">--surface</code>, <code class="mono">--surface-1</code> to <code class="mono">--surface-4</code></td></tr>
               <tr><td>on-surface, on-surface-variant, outline-variant, outline</td><td><code class="mono">--text</code>, <code class="mono">--text-2</code>, <code class="mono">--line</code>, <code class="mono">--line-strong</code></td></tr>
               <tr><td>error-container, glass, scrim</td><td><code class="mono">--danger-soft</code>, <code class="mono">--glass</code> / <code class="mono">--glass-strong</code> / <code class="mono">--glass-edge</code>, <code class="mono">--scrim</code></td></tr>
-              <tr><td>shape: tile and card 20, sheet 28, buttons round</td><td><code class="mono">--r-l</code>, <code class="mono">--r-xl</code>, <code class="mono">--r-full</code></td></tr>
+              <tr><td>shape: tile and card 20, sheet 28, buttons 14, row buttons 11</td><td><code class="mono">--r-l</code>, <code class="mono">--r-xl</code>, <code class="mono">--r-btn</code>, <code class="mono">--r-row</code></td></tr>
+              <tr><td>fine line between rows (7 % of the text colour)</td><td><code class="mono">--hair</code></td></tr>
               <tr><td>type scale (Roboto Flex, then the system font) and motion</td><td><code class="mono">--font</code>, <code class="mono">--text-*</code>; <code class="mono">--dur*</code>, <code class="mono">--ease*</code></td></tr>
             </tbody>
           </table>
@@ -76,8 +79,15 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="colours">
         <h2 class="h1">Colours</h2>
-        <p class="muted">Only these tokens; never a colour value in an app (COLOR-01). Each pair that carries text is tested for contrast AA in light and dark, for every hue (COLOR-02). Move the slider above: the whole page follows one variable.</p>
+        <p class="muted">Only these tokens; never a colour value in an app (COLOR-01). Each pair that carries text is tested for contrast AA in light and dark, for every hue and for hard colours (COLOR-02). An app names a colour (<code class="mono">--accent-color: #00e5ff</code>) or only a hue (<code class="mono">--accent-hue: 152</code>); pick either above and the whole page follows. The fill (<code class="mono">--accent</code>) is the colour itself and is for switches that are on, the brand mark and charts; links, icons, lines and rings use <code class="mono">--accent-ink</code>; the selection (current page, chosen segment, primary button) is soft (<code class="mono">--accent-soft</code> with <code class="mono">--on-accent-soft</code>). Faults are raspberry, warnings soft amber.</p>
+        <div class="cat-demo" data-nocode><div class="cluster" id="cat-presets"></div></div>
         <div class="cat-demo" data-nocode><div class="swatches" id="cat-swatches"></div></div>
+        <div class="cat-demo">
+          <div class="cluster">
+            <a class="btn ghost" href="#colours">A link in ink</a>
+            <span class="badge accent">accent soft</span><span class="badge danger">danger</span><span class="badge warn">warn</span><span class="badge ok">ok</span>
+          </div>
+        </div>
       </section>
 
       <section class="cat-item" id="type">
@@ -97,10 +107,10 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="buttons">
         <h2 class="h1">Button</h2>
-        <p class="muted">One primary button per view. The label says what happens ("Delete entry", not "OK"). A finger needs 44 px (MOBILE-01); the height comes from <code class="mono">--control-h</code>.</p>
+        <p class="muted">One primary button per view. The label says what happens ("Delete entry", not "OK"). A finger needs 44 px (MOBILE-01); the height comes from <code class="mono">--control-h</code>. Text is bold and the radius is 14 px; a button keeps its shape and colour when pressed. The primary button is the soft accent (the same surface as the current menu entry); the bright accent is for switches, rings and charts.</p>
         <div class="cat-demo">
           <div class="cluster">
-            <button class="btn primary" type="button">Filled (primary)</button>
+            <button class="btn primary" type="button">Soft accent (primary)</button>
             <button class="btn" type="button">Tonal (default)</button>
             <button class="btn outline" type="button">Outline</button>
             <button class="btn ghost" type="button">Text (ghost)</button>
@@ -115,6 +125,20 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
             <button class="btn primary busy" type="button" disabled>Saving</button>
             <button class="btn" type="button" disabled>Disabled</button>
             <a class="btn outline" href="#buttons"><span data-icon="external"></span>A link as a button</a>
+          </div>
+        </div>
+        <h3 class="h3" id="row-buttons">Row button (mini)</h3>
+        <p class="muted">The small button in a row of a list or a table: <code class="mono">.btn.mini</code>, 34 px high, radius 11, bold. Tonal (soft accent) by default, <code class="mono">.strong</code> is the accent fill, <code class="mono">.quiet</code> has no surface, <code class="mono">.danger</code> is raspberry; <code class="mono">.icon-only</code> for a symbol. The target stays 44 px for a finger.</p>
+        <div class="cat-demo">
+          <div class="list lines">
+            <div class="row"><span class="row-main"><span class="row-title">example.com</span><span class="row-sub">192.0.2.10</span></span>
+              <span class="row-end">
+                <button class="btn mini strong" type="button">Apply</button>
+                <button class="btn mini" type="button">Edit</button>
+                <button class="btn mini quiet" type="button">Details</button>
+                <button class="btn mini danger" type="button">Delete</button>
+                <button class="btn mini quiet icon-only" type="button" aria-label="More"><span data-icon="more"></span></button>
+              </span></div>
           </div>
         </div>
       </section>
@@ -176,7 +200,7 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item" id="capsules">
         <h2 class="h1">Capsule and chip</h2>
-        <p class="muted">A capsule holds a group in one round outline, the chosen part is a filled pill inside it (from Jularr). <code class="mono">segmented()</code> makes one for choices; <code class="mono">capsule({ label, items })</code> makes one for places, for example in the head of a page. A chip is a rounded rectangle with a fine edge for categories and filters; it can be a button (<code class="mono">aria-pressed</code>), a link or plain text.</p>
+        <p class="muted">A capsule holds a group in one round outline, the chosen part is a soft accent pill inside it (from Jularr), as the current menu entry and the chosen tab. <code class="mono">segmented()</code> makes one for choices; <code class="mono">capsule({ label, items })</code> makes one for places, for example in the head of a page. A chip is a rounded rectangle with a fine edge for categories and filters; it can be a button (<code class="mono">aria-pressed</code>), a link or plain text.</p>
         <div class="cat-demo">
           <div class="stack">
             <nav class="capsule" aria-label="Kinds">
