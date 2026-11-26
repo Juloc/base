@@ -4,15 +4,20 @@
  * The look is that of JulOS (Material 3 Expressive, see the section "The look and where it comes from" in the catalogue): tonal surfaces,
  * soft glass over a gradient, large radii, filled and tonal controls. The roles of Material 3 have the names of this kit (the mapping is in the catalogue).
  *
- * ONE variable gives an app its own colour (COLOR-01): --accent-hue, an angle on the colour wheel (0 to 360).
- *   :root { --accent-hue: 152; }      in the app's own app.css, nothing else
- * The accent ("primary"), the secondary and tertiary tones and the tint of every surface follow it. The tertiary tone is the accent turned by 55 degrees.
+ * ONE variable gives an app its own colour (COLOR-01), in its own app.css, nothing else:
+ *   :root { --accent-color: #00e5ff; }     any CSS colour: the accent itself (since 0.4.0)
+ *   :root { --accent-hue: 152; }           or only an angle on the colour wheel (0 to 360): the look of 0.3
+ * Every colour token derives from it with relative colour syntax, oklch(from var(--accent-base) L C h): the tints of the surfaces from its hue, the fill (--accent) is
+ * the colour itself, its text (--on-accent) is black for a light colour and white for a dark one (by luminance, so 4.5:1 holds for every colour), the ink (--accent-ink, lightness 0.49 in light) is for lines, icons and links,
+ * the soft surfaces carry selections. The tertiary tone is the accent turned by 55 degrees.
  * Light and dark come from light-dark(): the first value is light, the second dark.
  * The browser picks by color-scheme; <html data-scheme="light|dark"> (set by boot.js from the person's choice) overrides the device.
  *
  * Colours are written as oklch(lightness chroma hue). Lightness is what makes contrast, and it is fixed here per role (the tone steps of Material 3:
  * tone T is about L = (T + 16) / 116), so every hue passes. The lines "@contrast A B N" below are read by a test (ContrastTests): colour A on colour B
- * reaches at least N:1 in light and in dark, for every accent hue (COLOR-02). Add a line when you add a pair that carries text or a control.
+ * reaches at least N:1 in light and in dark, for every accent hue and for a set of accent colours (COLOR-02). The test evaluates the formulas below itself,
+ * so keep them to the forms it knows: oklch(L C H), oklch(from var(--token) L C H) and color(from var(--token) xyz-d65 X Y Z) with numbers, l, c, h, x, y, z, min(), max(), clamp(), calc(); light-dark(); var(--token).
+ * Add a line when you add a pair that carries text or a control.
  * Glass (semi-transparent surfaces) is made from the solid ones, so the pairs of the solid surfaces stand for it; where transparency is
  * switched off (prefers-reduced-transparency) the glass is the solid surface itself.
  *
@@ -28,10 +33,10 @@
  * @contrast text-2 surface-2 4.5
  * @contrast text-2 surface-3 4.5
  * @contrast text-2 surface-4 4.5
- * @contrast accent bg 4.5
- * @contrast accent surface 4.5
- * @contrast accent surface-2 4.5
- * @contrast accent surface-4 3
+ * @contrast accent-ink bg 4.5
+ * @contrast accent-ink surface 4.5
+ * @contrast accent-ink surface-2 4.5
+ * @contrast accent-ink surface-4 3
  * @contrast on-accent accent 4.5
  * @contrast on-accent-soft accent-soft 4.5
  * @contrast on-secondary-soft secondary-soft 4.5
@@ -40,61 +45,65 @@
  * @contrast danger bg 4.5
  * @contrast danger surface 4.5
  * @contrast danger surface-2 4.5
- * @contrast danger surface-4 4.5
+ * @contrast danger surface-4 3
  * @contrast on-danger danger 4.5
  * @contrast on-danger-soft danger-soft 4.5
  * @contrast ok bg 4.5
  * @contrast ok surface 4.5
  * @contrast on-ok-soft ok-soft 4.5
- * @contrast warn bg 4.5
- * @contrast warn surface 4.5
  * @contrast on-warn-soft warn-soft 4.5
  * @contrast line-strong bg 3
  * @contrast line-strong surface 3
  * @contrast line-strong surface-2 3
  * @contrast line-strong surface-4 3
- * @contrast accent surface-3 3
- * @contrast accent secondary-soft 3
+ * @contrast accent-ink surface-3 3
+ * @contrast accent-ink secondary-soft 3
  * ===================================================================== */
 /* the default hue is that of JulOS (its seed colour #9a67ea): an app that sets none looks like JulOS */
 :root {
   color-scheme: light dark;
   --accent-hue: 299;
-  --tertiary-hue: calc(var(--accent-hue) - 55);
+  /* the colour of the app: --accent-color (any CSS colour) when the app names one, else the old look from --accent-hue; every token below derives from --accent-base */
+  --accent-from-hue: light-dark(oklch(0.483 0.15 var(--accent-hue)), oklch(0.828 0.105 var(--accent-hue)));
+  --accent-base: var(--accent-color, var(--accent-from-hue));
 
-  /* ---- surfaces: the tonal containers of Material 3, from the page (bg) over the lowest (surface, cards) to the highest (surface-4, filled fields) ---- */
-  --bg: light-dark(oklch(0.983 0.008 var(--accent-hue)), oklch(0.165 0.02 var(--accent-hue)));
-  --surface: light-dark(oklch(1 0 var(--accent-hue)), oklch(0.205 0.022 var(--accent-hue)));
-  --surface-1: light-dark(oklch(0.966 0.012 var(--accent-hue)), oklch(0.225 0.024 var(--accent-hue)));
-  --surface-2: light-dark(oklch(0.948 0.016 var(--accent-hue)), oklch(0.245 0.026 var(--accent-hue)));
-  --surface-3: light-dark(oklch(0.931 0.018 var(--accent-hue)), oklch(0.275 0.028 var(--accent-hue)));
-  --surface-4: light-dark(oklch(0.914 0.02 var(--accent-hue)), oklch(0.305 0.03 var(--accent-hue)));
-  --text: light-dark(oklch(0.224 0.02 var(--accent-hue)), oklch(0.94 0.01 var(--accent-hue)));
-  --text-2: light-dark(oklch(0.397 0.03 var(--accent-hue)), oklch(0.78 0.03 var(--accent-hue)));
-  --line: light-dark(oklch(0.828 0.03 var(--accent-hue)), oklch(0.34 0.035 var(--accent-hue)));
-  --line-strong: light-dark(oklch(0.569 0.03 var(--accent-hue)), oklch(0.62 0.03 var(--accent-hue)));
+  /* ---- surfaces: the tonal containers of Material 3, from the page (bg) over the lowest (surface, cards) to the highest (surface-4, filled fields); tinted by the hue of the accent ---- */
+  --bg: light-dark(oklch(from var(--accent-base) 0.983 0.008 h), oklch(from var(--accent-base) 0.165 0.02 h));
+  --surface: light-dark(oklch(from var(--accent-base) 1 0 h), oklch(from var(--accent-base) 0.205 0.022 h));
+  --surface-1: light-dark(oklch(from var(--accent-base) 0.966 0.012 h), oklch(from var(--accent-base) 0.225 0.024 h));
+  --surface-2: light-dark(oklch(from var(--accent-base) 0.948 0.016 h), oklch(from var(--accent-base) 0.245 0.026 h));
+  --surface-3: light-dark(oklch(from var(--accent-base) 0.931 0.018 h), oklch(from var(--accent-base) 0.275 0.028 h));
+  --surface-4: light-dark(oklch(from var(--accent-base) 0.914 0.02 h), oklch(from var(--accent-base) 0.305 0.03 h));
+  --text: light-dark(oklch(from var(--accent-base) 0.224 0.02 h), oklch(from var(--accent-base) 0.94 0.01 h));
+  --text-2: light-dark(oklch(from var(--accent-base) 0.397 0.03 h), oklch(from var(--accent-base) 0.78 0.03 h));
+  --line: light-dark(oklch(from var(--accent-base) 0.828 0.03 h), oklch(from var(--accent-base) 0.34 0.035 h));
+  --line-strong: light-dark(oklch(from var(--accent-base) 0.569 0.03 h), oklch(from var(--accent-base) 0.62 0.03 h));
+  --hair: color-mix(in oklab, var(--text) 7%, transparent);     /* the fine line between rows of a card, a list or a table */
 
-  /* ---- the accent of the app: "primary" and its container; the secondary and tertiary containers for chips, selected items, badges ---- */
-  --accent: light-dark(oklch(0.483 0.15 var(--accent-hue)), oklch(0.828 0.105 var(--accent-hue)));
-  --on-accent: light-dark(oklch(1 0 var(--accent-hue)), oklch(0.31 0.085 var(--accent-hue)));
-  --accent-soft: light-dark(oklch(0.914 0.06 var(--accent-hue)), oklch(0.34 0.09 var(--accent-hue)));
-  --on-accent-soft: light-dark(oklch(0.224 0.1 var(--accent-hue)), oklch(0.914 0.06 var(--accent-hue)));
-  --secondary-soft: light-dark(oklch(0.914 0.035 var(--accent-hue)), oklch(0.35 0.045 var(--accent-hue)));
-  --on-secondary-soft: light-dark(oklch(0.224 0.05 var(--accent-hue)), oklch(0.914 0.035 var(--accent-hue)));
-  --tertiary-soft: light-dark(oklch(0.914 0.055 var(--tertiary-hue)), oklch(0.35 0.06 var(--tertiary-hue)));
-  --on-tertiary-soft: light-dark(oklch(0.224 0.07 var(--tertiary-hue)), oklch(0.914 0.055 var(--tertiary-hue)));
+  /* ---- the accent of the app. --accent is the colour itself: switches that are on, rings of charts, brand mark; its text --on-accent is dark when the colour is light.
+   * --accent-ink is the dark ink of the same hue for lines, icons and links (a light colour does not read on a light page).
+   * The soft surfaces carry the selection: the current page, the chosen segment, primary buttons. Chroma is capped, so a strong colour gives a calm surface. ---- */
+  --accent: var(--accent-base);
+  --on-accent: color(from var(--accent) xyz-d65 calc(clamp(0.0003, (0.1795 - y) * 1000, 1) * 0.95047) clamp(0.0003, (0.1795 - y) * 1000, 1) calc(clamp(0.0003, (0.1795 - y) * 1000, 1) * 1.08883));     /* black or white, whichever reads better on the fill (by luminance) */
+  --accent-ink: light-dark(oklch(from var(--accent-base) 0.49 min(c, 0.14) h), oklch(from var(--accent-base) 0.82 min(c, 0.12) h));
+  --accent-soft: light-dark(oklch(from var(--accent-base) 0.93 min(c, 0.055) h), oklch(from var(--accent-base) 0.34 min(c, 0.08) h));
+  --on-accent-soft: light-dark(oklch(from var(--accent-base) 0.3 min(c, 0.09) h), oklch(from var(--accent-base) 0.93 min(c, 0.05) h));
+  --secondary-soft: light-dark(oklch(from var(--accent-base) 0.94 min(c, 0.035) h), oklch(from var(--accent-base) 0.35 min(c, 0.045) h));
+  --on-secondary-soft: light-dark(oklch(from var(--accent-base) 0.3 min(c, 0.05) h), oklch(from var(--accent-base) 0.93 min(c, 0.035) h));
+  --tertiary-soft: light-dark(oklch(from var(--accent-base) 0.93 min(c, 0.055) calc(h - 55)), oklch(from var(--accent-base) 0.35 min(c, 0.06) calc(h - 55)));
+  --on-tertiary-soft: light-dark(oklch(from var(--accent-base) 0.28 min(c, 0.07) calc(h - 55)), oklch(from var(--accent-base) 0.93 min(c, 0.055) calc(h - 55)));
 
-  /* ---- states: the same in every app ---- */
-  --danger: light-dark(oklch(0.52 0.19 27), oklch(0.76 0.13 25));
-  --on-danger: light-dark(oklch(0.99 0.01 27), oklch(0.20 0.05 25));
-  --danger-soft: light-dark(oklch(0.93 0.035 27), oklch(0.34 0.1 27));
-  --on-danger-soft: light-dark(oklch(0.27 0.1 27), oklch(0.93 0.035 27));
+  /* ---- states: the same in every app. Faults are raspberry, warnings soft amber; the strong amber is for dots, bars and icons next to a text, never for text itself ---- */
+  --danger: light-dark(oklch(0.55 0.21 5), oklch(0.76 0.14 8));
+  --on-danger: light-dark(oklch(0.99 0.01 5), oklch(0.2 0.05 5));
+  --danger-soft: light-dark(oklch(0.94 0.04 5), oklch(0.34 0.1 5));
+  --on-danger-soft: light-dark(oklch(0.42 0.16 5), oklch(0.93 0.04 5));
   --ok: light-dark(oklch(0.47 0.12 150), oklch(0.78 0.14 150));
   --ok-soft: light-dark(oklch(0.94 0.04 150), oklch(0.30 0.05 150));
   --on-ok-soft: light-dark(oklch(0.33 0.09 150), oklch(0.90 0.07 150));
-  --warn: light-dark(oklch(0.50 0.11 70), oklch(0.82 0.13 80));
-  --warn-soft: light-dark(oklch(0.95 0.05 85), oklch(0.31 0.05 80));
-  --on-warn-soft: light-dark(oklch(0.36 0.08 70), oklch(0.91 0.07 85));
+  --warn: light-dark(oklch(0.70 0.17 75), oklch(0.80 0.15 80));
+  --warn-soft: light-dark(oklch(0.96 0.05 85), oklch(0.31 0.05 80));
+  --on-warn-soft: light-dark(oklch(0.42 0.12 70), oklch(0.91 0.07 85));
 
   /* ---- glass: tinted, clearly translucent surfaces with a fine light edge, over the gradient of the page ---- */
   --glass: color-mix(in oklab, var(--surface) 56%, transparent);
@@ -145,9 +154,9 @@
   --content-w: 920px;
 
   /* ---- elevation: tone and a fine edge first; the tinted shadow only in light, in dark the edge carries (as in Jularr) ---- */
-  --shadow-1: 0 1px 2px light-dark(color-mix(in oklab, var(--accent) 22%, transparent), transparent), 0 1px 3px light-dark(color-mix(in oklab, var(--accent) 12%, transparent), transparent);
-  --shadow-2: 0 2px 6px light-dark(color-mix(in oklab, var(--accent) 22%, transparent), oklch(0 0 0 / 0.3)), 0 6px 14px light-dark(color-mix(in oklab, var(--accent) 12%, transparent), oklch(0 0 0 / 0.2));
-  --shadow-3: 0 8px 22px light-dark(color-mix(in oklab, var(--accent) 30%, transparent), oklch(0 0 0 / 0.5));
+  --shadow-1: 0 1px 2px light-dark(color-mix(in oklab, var(--accent-ink) 22%, transparent), transparent), 0 1px 3px light-dark(color-mix(in oklab, var(--accent-ink) 12%, transparent), transparent);
+  --shadow-2: 0 2px 6px light-dark(color-mix(in oklab, var(--accent-ink) 22%, transparent), oklch(0 0 0 / 0.3)), 0 6px 14px light-dark(color-mix(in oklab, var(--accent-ink) 12%, transparent), oklch(0 0 0 / 0.2));
+  --shadow-3: 0 8px 22px light-dark(color-mix(in oklab, var(--accent-ink) 30%, transparent), oklch(0 0 0 / 0.5));
   --dur: 150ms;
   --dur-m: 250ms;
   --dur-l: 400ms;
