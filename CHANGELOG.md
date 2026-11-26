@@ -4,6 +4,8 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+- **Rule COLOR-02 removed** (owner, decision 70): the contrast test and the `@contrast` lines of `tokens.css` are gone; the look decides.
+
 ## 0.4.0-alpha.2 (towards 0.4.0, in progress: steps 2 and 3 of `docs/DESIGN-0.4.md`)
 
 - **Breaking, markup: `field({ type: 'select' })` makes a `dropdown()`** (a button, our own list, optional search, full keyboard and ARIA) instead of a native `<select>`. Read it through `formValues` as before; code that did `field.querySelector('select')` must use `input[name=...]` (the hidden input that fires `change`) or the `.value` of the dropdown element. New `dropdown({ name, value, options, search, label, placeholder, onchange })`; the list is a sheet from below on a phone. `.select` (native) stays for hand-written markup and gets the new look.

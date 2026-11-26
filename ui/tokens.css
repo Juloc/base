@@ -13,54 +13,9 @@
  * Light and dark come from light-dark(): the first value is light, the second dark.
  * The browser picks by color-scheme; <html data-scheme="light|dark"> (set by boot.js from the person's choice) overrides the device.
  *
- * Colours are written as oklch(lightness chroma hue). Lightness is what makes contrast, and it is fixed here per role (the tone steps of Material 3:
- * tone T is about L = (T + 16) / 116), so every hue passes. The lines "@contrast A B N" below are read by a test (ContrastTests): colour A on colour B
- * reaches at least N:1 in light and in dark, for every accent hue and for a set of accent colours (COLOR-02). The test evaluates the formulas below itself,
- * so keep them to the forms it knows: oklch(L C H), oklch(from var(--token) L C H) and color(from var(--token) xyz-d65 X Y Z) with numbers, l, c, h, x, y, z, min(), max(), clamp(), calc(); light-dark(); var(--token).
- * Add a line when you add a pair that carries text or a control.
- * Glass (semi-transparent surfaces) is made from the solid ones, so the pairs of the solid surfaces stand for it; where transparency is
- * switched off (prefers-reduced-transparency) the glass is the solid surface itself.
+ * Colours are written as oklch(lightness chroma hue); lightness is fixed per role (the tone steps of Material 3: tone T is about L = (T + 16) / 116).
+ * Glass (semi-transparent surfaces) is made from the solid ones; where transparency is switched off (prefers-reduced-transparency) the glass is the solid surface itself.
  *
- * @contrast text bg 4.5
- * @contrast text surface 4.5
- * @contrast text surface-1 4.5
- * @contrast text surface-2 4.5
- * @contrast text surface-3 4.5
- * @contrast text surface-4 4.5
- * @contrast text-2 bg 4.5
- * @contrast text-2 surface 4.5
- * @contrast text-2 surface-1 4.5
- * @contrast text-2 surface-2 4.5
- * @contrast text-2 surface-3 4.5
- * @contrast text-2 surface-4 4.5
- * @contrast accent-ink bg 4.5
- * @contrast accent-ink surface 4.5
- * @contrast accent-ink surface-2 4.5
- * @contrast accent-ink surface-4 3
- * @contrast on-accent accent 4.5
- * @contrast on-accent-soft accent-soft 4.5
- * @contrast on-secondary-soft secondary-soft 4.5
- * @contrast on-tertiary-soft tertiary-soft 4.5
- * @contrast text accent-soft 4.5
- * @contrast danger bg 4.5
- * @contrast danger surface 4.5
- * @contrast danger surface-2 4.5
- * @contrast danger surface-4 3
- * @contrast on-danger danger 4.5
- * @contrast on-danger-soft danger-soft 4.5
- * @contrast ok bg 4.5
- * @contrast ok surface 4.5
- * @contrast on-ok-soft ok-soft 4.5
- * @contrast on-warn-soft warn-soft 4.5
- * @contrast line-strong bg 3
- * @contrast line-strong surface 3
- * @contrast line-strong surface-2 3
- * @contrast line-strong surface-4 3
- * @contrast accent-ink surface-3 3
- * @contrast accent-ink secondary-soft 3
- * @contrast text seg-on 4.5
- * @contrast text-2 seg-track 4.5
- * @contrast text seg-track 4.5
  * ===================================================================== */
 /* the default hue is that of JulOS (its seed colour #9a67ea): an app that sets none looks like JulOS */
 :root {
