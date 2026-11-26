@@ -4,6 +4,10 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.3.5
+
+- **CODE-02 allows `DuckDB.NET.Data`** (with its native library) for logs and statistics an app keeps in bulk; nothing else changes, the base itself does not use it. `RuleFileTests.Only_the_allowed_packages_are_referenced` now checks that an app uses only allowed packages and the base exactly its own three.
+
 ## 0.3.4
 
 - **A body limit the endpoint declares** (SEC-04): `.WithMaxBody(bytes)` on an endpoint or a group, for uploads under paths with ids. Applied by the guard behind a session only (declared length and while reading); more than 0 and at most 1 GiB, else the start is refused. `LargeBodyPaths` and endpoints without the declaration behave as before.

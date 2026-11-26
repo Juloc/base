@@ -33,10 +33,12 @@ public partial class RuleFileTests
     [Fact]
     public void Only_the_allowed_packages_are_referenced()
     {
-        string[] allowed = ["Npgsql", "Konscious.Security.Cryptography.Argon2", "Microsoft.IdentityModel.JsonWebTokens"];
+        // CODE-02: what an app may reference; the base itself uses the first three (DuckDB is for apps that keep logs and statistics)
+        string[] allowed = ["Npgsql", "Konscious.Security.Cryptography.Argon2", "Microsoft.IdentityModel.JsonWebTokens", "DuckDB.NET.Data"];
+        string[] baseUses = ["Npgsql", "Konscious.Security.Cryptography.Argon2", "Microsoft.IdentityModel.JsonWebTokens"];
         var used = Files(["src", "samples"], "*.csproj").SelectMany(f => Regex.Matches(File.ReadAllText(f), "<PackageReference Include=\"([^\"]+)\"").Select(m => m.Groups[1].Value)).Distinct().ToArray();
         Assert.Empty(used.Except(allowed));
-        Assert.Equal(allowed.Order(), used.Order());
+        Assert.Equal(baseUses.Order(), used.Order());
     }
 
     [Fact]
