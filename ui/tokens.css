@@ -123,6 +123,7 @@
   --shadow-2: 0 2px 6px light-dark(color-mix(in oklab, var(--accent-ink) 22%, transparent), oklch(0 0 0 / 0.3)), 0 6px 14px light-dark(color-mix(in oklab, var(--accent-ink) 12%, transparent), oklch(0 0 0 / 0.2));
   --shadow-field: 0 1px 2px color-mix(in oklab, var(--text) 6%, transparent), 0 2px 8px -4px color-mix(in oklab, var(--text) 10%, transparent);       /* fields, the chosen part of a segmented choice */
   --shadow-float: 0 10px 30px -10px color-mix(in oklab, var(--text) 32%, transparent), 0 0 0 1px color-mix(in oklab, var(--text) 5%, transparent);     /* what floats: the menu pill, the bars, the open list of a dropdown */
+  --shadow-card: 0 1px 2px color-mix(in oklab, var(--text) 5%, transparent), 0 8px 24px -12px color-mix(in oklab, var(--text) 14%, transparent), 0 0 0 1px light-dark(transparent, color-mix(in oklab, var(--text) 9%, transparent));     /* a white panel: table, chart, number box, folding card (0.4) */
   --ring: 0 0 0 4px color-mix(in oklab, var(--accent-ink) 24%, transparent);     /* the soft focus ring of a field */
   --shadow-3: 0 8px 22px light-dark(color-mix(in oklab, var(--accent-ink) 30%, transparent), oklch(0 0 0 / 0.5));
   --dur: 150ms;

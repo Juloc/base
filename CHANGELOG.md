@@ -4,7 +4,15 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.0-alpha.3 (towards 0.4.0, in progress: steps 4 and 5 of `docs/DESIGN-0.4.md`)
+
+New file `ui/parts.js` (import from `/base/parts.js`) holds the pieces of pages; `swipeFade()` is in `base.js`.
+
 - **Rules COLOR-02 and A11Y-01 removed** (owner, decisions 70 and 71): the contrast test and the `@contrast` lines of `tokens.css` are gone; the look decides.
+- **New: `table({ label, columns, rows | groups, actions, active, detail, selection, onRowClick, empty })`**: a white panel, small grey head, 50 px rows, hair lines, one action column (at most one tonal text button, quiet icon buttons, the switch last), rows that fold open (several at once), a tree (`children`, fine lines) and folding `groups` (count, `+`, menu, group switch that greys the rows), selection with check boxes driving `selectionBar()`. Real table wide; two-line rows on a phone (switch or main action at the right, the rest in a menu; selection by a "Select" button or a long press). Returns `{ el, set, flash, selected, clearSelection, destroy }`.
+- **New: `tabs()`, `chips()`, `numberBox()`, `numberStrip()`, `ring()`, `foldCard()`, `timeline()`, `liveFeed()`, `chart()` (stacked area, SVG, legend that hides a series, dark box on hover and tap, keyboard), `flash()` (event in place), `swipeFade()`.** Rows of tabs, chips and number boxes swipe sideways on a phone. New classes `.panel` (white card, radius 22) and `.tabbar`, token `--shadow-card`, icons `pause` and `play`, texts `table.*`, `chart.*`, `feed.*`, `timeline.*`, `ring.of`.
+- **Breaking, look: `.capsule` is now the white tab bar** (radius 14, light shadow, chosen item soft) and swipes on a phone; **`.chip` is white with a light shadow and soft when chosen** (no outline). Hand-written `.table` markup keeps working. An app with its own CSS for the old capsule or chip outlines should drop it.
+- Rule numbers of removed rules are not reused (`RulebookTests` now asks only that numbers grow).
 
 ## 0.4.0-alpha.2 (towards 0.4.0, in progress: steps 2 and 3 of `docs/DESIGN-0.4.md`)
 

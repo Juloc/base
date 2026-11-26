@@ -219,6 +219,10 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
               <a class="capsule-item" href="#capsules">Read</a>
               <a class="capsule-item" href="#capsules">Listen</a>
             </nav>
+            <div class="tabbar" role="tablist" aria-label="Plain markup">
+              <button class="tabbar-item" type="button" role="tab" aria-selected="true">One</button>
+              <button class="tabbar-item" type="button" role="tab" aria-selected="false">Two</button>
+            </div>
             <div class="chips">
               <button class="chip on" type="button" aria-pressed="true"><span data-icon="check"></span>Action</button>
               <button class="chip" type="button" aria-pressed="false">Comedy</button>
@@ -273,6 +277,14 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         </div>
       </section>
 
+      <section class="cat-item" id="panel">
+        <h2 class="h1">Panel</h2>
+        <p class="muted">The white card of 0.4 (radius 22, a soft shadow, <code class="mono">--shadow-card</code>): what the table, the chart, the feed and the folding card are made of. Use it for a block of your own that stands beside them.</p>
+        <div class="cat-demo">
+          <div class="panel pad"><p class="small">A panel holds anything; <code class="mono">.pad</code> gives it padding.</p></div>
+        </div>
+      </section>
+
       <section class="cat-item" id="lists">
         <h2 class="h1">List</h2>
         <p class="muted">Rows of at least 52 px: a lead, a title, one line below, an end. A whole row may be a link. Lists come in pages (LIST-01) and say something useful when empty (LIST-02).</p>
@@ -315,9 +327,58 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         </div>
       </section>
 
+      <section class="cat-item wide" id="tables-rich">
+        <h2 class="h1">Table() and the tree</h2>
+        <p class="muted"><code class="mono">table({ label, columns, rows | groups, actions, active, detail, selection })</code> (<code class="mono">/base/parts.js</code>) makes a white table: a small grey head, 50 px rows, one action column at the right (at most one tonal text button, then quiet icon buttons; the switch is always last). Wide it is a real table; on a phone every row has two lines, the switch or the main action stays at the right and the other actions move into a menu. A row folds open to a detail (several at once); rows with <code class="mono">children</code> fold as a tree with fine lines; <code class="mono">groups</code> have a head with the count, <code class="mono">+</code>, <code class="mono">&#8942;</code> and a switch that greys every row below. Check boxes drive the selection bar; on a phone press "Select" or hold a row.</p>
+        <div class="cat-demo" data-run="tableFold" data-inline></div>
+        <div class="cat-demo" data-run="tableTree" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="tabs">
+        <h2 class="h1">Tabs and chips</h2>
+        <p class="muted"><code class="mono">tabs()</code> is a white bar with the chosen tab soft (for switching what a page shows, also for periods with <code class="mono">size: 's'</code>); <code class="mono">capsule()</code> has the same look for links to places; <code class="mono">chips()</code> is a row of filters. On a phone each is one row you swipe sideways, with a soft edge where there is more.</p>
+        <div class="cat-demo" data-run="tabs" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="numbers">
+        <h2 class="h1">Number box</h2>
+        <p class="muted"><code class="mono">numberBox({ icon, value, label, change })</code>: a tonal icon square, a big number, a small label, an optional change (an arrow and a text). <code class="mono">numberStrip()</code> lays them in a grid; on a phone it is a strip you swipe. <code class="mono">ring(value, max, state)</code> is a ring with a number for days left.</p>
+        <div class="cat-demo" data-run="numbers" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="chart">
+        <h2 class="h1">Chart</h2>
+        <p class="muted"><code class="mono">chart({ title, series, data })</code>: a stacked area chart in SVG without a library. Smooth layers with a thin line in the colour of the card between them, three faint guide lines, the axis below. Click a name in the legend to hide that series; hover (or tap, or use the arrow keys) for a dark box with every value. The colours are given by the app, any CSS colour. A sentence that sums the chart up is there for a screen reader.</p>
+        <div class="cat-demo" data-run="chart" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="feed">
+        <h2 class="h1">Live feed</h2>
+        <p class="muted"><code class="mono">liveFeed({ title, max })</code>: rows arrive at the top with <code class="mono">add()</code> without anything being rebuilt, each with a colour dot; the button pauses it (the rows wait and are counted) and resumes it. No toast for such events.</p>
+        <div class="cat-demo" data-run="feed" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="timeline">
+        <h2 class="h1">Timeline</h2>
+        <p class="muted"><code class="mono">timeline({ days })</code>: day headings, cards on a line, each with a round node that is green, amber or raspberry (and says it in words for a screen reader).</p>
+        <div class="cat-demo" data-run="timeline" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="foldcard">
+        <h2 class="h1">Folding card</h2>
+        <p class="muted"><code class="mono">foldCard({ title, sub, lead, actions, body })</code>: a card whose head opens its body (the body can be made on first opening). The head is a button with <code class="mono">aria-expanded</code>; actions sit beside it.</p>
+        <div class="cat-demo" data-run="foldCard" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="flash">
+        <h2 class="h1">Event in place</h2>
+        <p class="muted"><code class="mono">flash(element)</code>: the row or card lights up briefly in the soft accent. Use it for what happens on the page (a new request, a renewed certificate) instead of a toast; toasts stay for "saved" and the failure of an action. With reduced motion it is a still tint that goes away.</p>
+        <div class="cat-demo" data-run="flash" data-inline></div>
+      </section>
+
       <section class="cat-item" id="badges">
         <h2 class="h1">Badge and notice</h2>
-        <p class="muted">A badge marks a state in a word. A notice is a message that stays in the page; colour is never the only signal, there is always an icon or a word (A11Y-01).</p>
+        <p class="muted">A badge marks a state in a word. A notice is a message that stays in the page.</p>
         <div class="cat-demo">
           <div class="cluster">
             <span class="badge">Neutral</span>
@@ -440,7 +501,7 @@ router({ '/': listPage, '/notes/:id': notePage, '/settings': settingsPage }, fra
 
       <section class="cat-item" id="icons">
         <h2 class="h1">Icons</h2>
-        <p class="muted">One file, one style (KIT-01): <code class="mono">icon('name')</code> in JavaScript, <code class="mono">&lt;span data-icon="name"&gt;</code> in markup. An icon alone on a button needs an <code class="mono">aria-label</code> (A11Y-01).</p>
+        <p class="muted">One file, one style (KIT-01): <code class="mono">icon('name')</code> in JavaScript, <code class="mono">&lt;span data-icon="name"&gt;</code> in markup. Give an icon alone on a button an <code class="mono">aria-label</code>.</p>
         <div class="cat-demo on-surface" data-nocode><div class="icon-grid" id="cat-icons"></div></div>
       </section>
 

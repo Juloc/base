@@ -10,6 +10,7 @@
  *   field, passwordField, submit, showErrors   forms with errors at the fields (FORM-01, FORM-02)
  *   dropdown, switchField, segmented, choiceTiles   the choosing controls of the family
  *   actionBar, selectionBar, floatBar   the bars above the content; navBadge  a dot or a count on a place of the menu
+ *   swipeFade               the soft edge of a row you swipe sideways
  *   emptyState, loading, skeleton, notice, badge
  *   shell, router           the frame of the app (menu, head, person menu) and the pages inside it
  * The catalogue (/base/catalog.html) shows each of them with the code.
@@ -548,13 +549,24 @@ export function choiceTiles({ name, label, value, options, onchange }) {
   }));
 }
 
+/** Makes a row that overflows sideways show a soft edge where there is more (class more-left, more-right on the element). */
+export function swipeFade(el) {
+  const update = () => {
+    el.classList.toggle('more-left', el.scrollLeft > 4);
+    el.classList.toggle('more-right', el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  };
+  el.addEventListener('scroll', update, { passive: true });
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(update).observe(el);
+  update();
+  return el;
+}
 /**
  * A group of places in a capsule, for the head of a page or above a list: links, the current one a filled pill inside the capsule.
  * items: [{ label, href, icon?, current? }]. Choices that are not places are a segmented() (the same look).
  */
 export function capsule({ label, items }) {
-  return h('nav', { class: 'capsule', 'aria-label': label }, items.map((i) =>
-    h('a', { class: 'capsule-item', href: i.href, 'aria-current': i.current ? 'page' : null }, i.icon ? icon(i.icon) : null, i.label)));
+  return swipeFade(h('nav', { class: 'capsule swipe', 'aria-label': label }, items.map((i) =>
+    h('a', { class: 'capsule-item', href: i.href, 'aria-current': i.current ? 'page' : null }, i.icon ? icon(i.icon) : null, i.label))));
 }
 
 /**

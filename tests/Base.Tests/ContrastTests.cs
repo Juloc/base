@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Base.Tests;
 
-/// <summary>Touch targets (MOBILE-01). The contrast checks of the colour tokens (COLOR-02) were removed on the owner's word, see decision 70.</summary>
+/// <summary>Touch targets (MOBILE-01). The contrast checks of the colour tokens were removed on the owner's word, see decision 70.</summary>
 public class ContrastTests
 {
     [Fact]

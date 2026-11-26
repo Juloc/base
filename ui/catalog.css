@@ -47,3 +47,4 @@
 .look-sheet::before { content: ""; position: absolute; left: 50%; top: 8px; width: 32px; height: 4px; margin-left: -16px; border-radius: 2px; background: var(--line-strong); opacity: 0.6; }
 .look-gradient { height: 120px; border-radius: var(--r-l); background: var(--page-bg); border: 1px solid var(--line); display: grid; place-items: center; }
 .cat-demo .shell-tabs { position: static; margin-inline: 0; }
+@media (min-width: 900px) { .cat-item.wide .cat-pair { grid-template-columns: minmax(0, 1fr); } }

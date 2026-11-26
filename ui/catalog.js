@@ -1,6 +1,7 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
-import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, ApiError } from './base.js';
+import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
+import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash } from './parts.js';
 import { GLYPHS } from './icons.js';
 
 /* ---------- the examples that are JavaScript: the source shown is the function itself ---------- */
@@ -96,6 +97,90 @@ const demos = {
     navBadge('/demo-1', true);
     navBadge('/demo-3', 3);
     return pill;
+  },
+  tableFold() {
+    const hosts = [
+      { id: 1, name: 'app.example.com', target: '192.0.2.10:8080', state: 'Active', on: true, note: 'Certificate until 12 Mar. Last change by an administrator.' },
+      { id: 2, name: 'blog.example.org', target: '192.0.2.11:2368', state: 'Waiting', on: true, note: 'Waits for the DNS record to appear.' },
+      { id: 3, name: 'files.example.net', target: '192.0.2.12:9000', state: 'Active', on: false, note: 'Switched off; kept but not served.' },
+    ];
+    const t = table({
+      label: 'Hosts',
+      rows: hosts,
+      columns: [{ key: 'name', label: 'Name', render: (r) => h('b', { text: r.name }) }, { key: 'target', label: 'Target', render: (r) => h('span', { class: 'mono', text: r.target }) }, { key: 'state', label: 'State', render: (r) => badge(r.state, r.state === 'Active' ? 'ok' : '') }],
+      actions: (r) => [{ label: 'Renew', kind: 'main', run: () => { toast('Renewed ' + r.name, { kind: 'ok' }); t.flash(r.id); } }, { label: 'Edit', icon: 'edit', run: () => toast('Edit ' + r.name) }, { label: 'Delete', icon: 'trash', kind: 'danger', run: () => toast('Delete ' + r.name) }],
+      active: { label: 'Active', get: (r) => r.on, set: async (r, on) => { r.on = on; t.set({ rows: hosts }); } },
+      detail: (r) => h('p', { class: 'muted', text: r.note }),
+      selection: { actions: [{ label: 'Delete', icon: 'trash', kind: 'danger', run: (rows, tb) => { toast(rows.length + ' deleted'); tb.clearSelection(); } }] },
+    });
+    return t.el;
+  },
+  tableTree() {
+    const t = table({
+      label: 'Routes by domain',
+      columns: [{ key: 'name', label: 'Path' }, { key: 'target', label: 'Target', render: (r) => h('span', { class: 'mono', text: r.target }) }],
+      groups: [
+        { id: 'a', title: 'example.com', count: 3, onAdd: () => toast('Add a route'), menu: [{ label: 'Rename', icon: 'edit', run: () => toast('Rename') }], active: true, onActive: (on) => toast(on ? 'Domain on' : 'Domain off'),
+          rows: [{ id: 'a1', name: '/', target: '192.0.2.10:8080' }, { id: 'a2', name: '/api', target: '192.0.2.10:9000', children: [{ id: 'a21', name: '/api/v1', target: '192.0.2.10:9001' }, { id: 'a22', name: '/api/v2', target: '192.0.2.10:9002' }] }, { id: 'a3', name: '/docs', target: '192.0.2.13:80' }] },
+        { id: 'b', title: 'example.org', count: 1, onAdd: () => toast('Add a route'), active: false, rows: [{ id: 'b1', name: '/', target: '192.0.2.14:3000' }] },
+      ],
+      actions: () => [{ label: 'Edit', icon: 'edit', run: () => toast('Edit') }],
+    });
+    return t.el;
+  },
+  tabs() {
+    const out = h('p', { class: 'muted', text: 'Chosen: week · all' });
+    const state = { period: 'week', kind: 'all' };
+    const show = () => { out.textContent = `Chosen: ${state.period} · ${state.kind}`; };
+    return h('div', { class: 'stack' },
+      tabs({ label: 'Sections', value: 'rules', items: [{ value: 'rules', label: 'Rules', icon: 'list' }, { value: 'blocks', label: 'Blocked', count: 12 }, { value: 'log', label: 'Log' }, { value: 'settings', label: 'Settings' }], onchange: (v) => toast(v) }),
+      tabs({ label: 'Period', size: 's', value: 'week', items: [['hour', '1 hour'], ['day', '24 hours'], ['week', '7 days'], ['month', '30 days']].map(([value, label]) => ({ value, label })), onchange: (v) => { state.period = v; show(); } }),
+      chips({ label: 'Kind', value: 'all', items: [['all', 'All'], ['ok', 'Success'], ['redirect', 'Redirects'], ['client', 'Client errors'], ['server', 'Server errors'], ['bots', 'Bots']].map(([value, label]) => ({ value, label })), onchange: (v) => { state.kind = v; show(); } }),
+      out);
+  },
+  numbers() {
+    return h('div', { class: 'stack' },
+      numberStrip([
+        numberBox({ icon: 'activity', value: 18420, label: 'Requests', change: { text: '12 %', dir: 'up', tone: 'ok' } }),
+        numberBox({ icon: 'shield', value: 37, label: 'Blocked', change: { text: '5 %', dir: 'down' } }),
+        numberBox({ icon: 'alert', value: 4, label: 'Errors', change: { text: '2', dir: 'up', tone: 'danger' } }),
+        numberBox({ icon: 'clock', value: '48 ms', label: 'Median time' }),
+      ], 'Today'),
+      h('div', { class: 'cluster' }, ring(21, 30, '', { label: '21 of 30 days left' }), ring(9, 30, 'warn'), ring(2, 30, 'danger'), ring(30, 30, 'ok', { text: 'OK', label: 'valid' })));
+  },
+  chart() {
+    const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0') + ':00');
+    const wave = (i, k) => Math.round(40 + 30 * Math.sin(i / 3.2 + k) + (i * 7 % 11) * k);
+    const data = hours.map((label, i) => ({ label, ok: wave(i, 1) + 30, redirect: wave(i, 2) / 3, client: (i * 5 % 7) + 1, server: i % 9 === 0 ? 6 : 0 }));
+    const c = chart({ title: 'Requests per hour', data,
+      series: [{ key: 'ok', label: 'Success', color: 'oklch(0.78 0.12 209)' }, { key: 'redirect', label: 'Redirects', color: 'oklch(0.9 0.05 209)' }, { key: 'client', label: 'Client errors', color: 'oklch(0.85 0.12 80)' }, { key: 'server', label: 'Server errors', color: 'oklch(0.6 0.2 5)' }] });
+    return c.el;
+  },
+  feed() {
+    const f = liveFeed({ title: 'Live', max: 8 });
+    const rows = [['GET', '/index.html', 200, 'ok', 'info'], ['GET', '/missing', 404, 'warn', 'warn'], ['POST', '/api/login', 500, 'danger', 'danger'], ['GET', '/logo.svg', 304, 'muted', 'muted']];
+    let n = 0;
+    const add = () => { const [m, p, s, , tone] = rows[n++ % rows.length]; f.add({ title: h('span', null, h('b', { text: m + ' ' }), p), sub: 'app.example.com', time: new Date().toLocaleTimeString(), meta: String(s), tone, dotLabel: String(s) }); };
+    add(); add(); add();
+    const timer = setInterval(() => { if (!f.el.isConnected) clearInterval(timer); else add(); }, 2000);
+    return f.el;
+  },
+  timeline() {
+    return timeline({ label: 'Changes', days: [
+      { label: 'Today', items: [
+        { state: 'ok', title: 'Certificate renewed', time: '09:12', meta: 'app.example.com' },
+        { state: 'warn', title: 'Renewal retried', time: '03:00', meta: 'blog.example.org', body: 'The provider answered slowly; the second try worked.' }] },
+      { label: 'Yesterday', items: [{ state: 'danger', title: 'Record could not be set', time: '22:40', meta: 'files.example.net', body: 'The token of the provider was refused.' }] },
+    ] });
+  },
+  foldCard() {
+    return h('div', { class: 'stack' },
+      foldCard({ title: 'example.com', sub: 'Certificate until 12 March', lead: ring(21, 30), actions: [h('button', { class: 'btn mini', type: 'button', text: 'Renew', onclick: () => toast('Renewed', { kind: 'ok' }) })], body: () => h('p', { class: 'muted', text: 'Made when the card is opened the first time.' }) }),
+      foldCard({ title: 'example.org', sub: 'Opened to begin with', open: true, body: h('p', { class: 'muted', text: 'Any node can be the body.' }) }));
+  },
+  flash() {
+    const box = h('div', { class: 'panel stack' }, h('p', { class: 'muted', text: 'Something happened here.' }));
+    return h('div', { class: 'stack' }, h('button', { class: 'btn', type: 'button', text: 'Light it up', onclick: () => flash(box) }), box);
   },
   form() {
     // stands in for a request: the server answers with the fields that are wrong

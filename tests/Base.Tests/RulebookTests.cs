@@ -27,9 +27,9 @@ public partial class RulebookTests
         Assert.All(rules, r => Assert.Contains("*Why:*", r.Text));
         // every line that looks like a rule is one (a typo in the format would silently drop it)
         Assert.Equal(Regex.Matches(Repo.Read("docs", "RULES.md"), @"^- \*\*", RegexOptions.Multiline).Count, rules.Count);
-        // within an area the numbers run 01, 02, 03 ... without a gap
+        // within an area the numbers only grow: a removed rule leaves a gap and its number is never used again (decisions 70 and 71)
         foreach (var area in rules.GroupBy(r => r.Id.Split('-')[0]))
-            Assert.Equal(Enumerable.Range(1, area.Count()).Select(n => $"{area.Key}-{n:00}"), area.Select(r => r.Id));
+            Assert.Equal(area.Select(r => r.Id).Order(), area.Select(r => r.Id));
     }
 
     [Fact]
