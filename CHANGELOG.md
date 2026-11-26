@@ -4,7 +4,7 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
-- **Rule COLOR-02 removed** (owner, decision 70): the contrast test and the `@contrast` lines of `tokens.css` are gone; the look decides.
+- **Rules COLOR-02 and A11Y-01 removed** (owner, decisions 70 and 71): the contrast test and the `@contrast` lines of `tokens.css` are gone; the look decides.
 
 ## 0.4.0-alpha.2 (towards 0.4.0, in progress: steps 2 and 3 of `docs/DESIGN-0.4.md`)
 

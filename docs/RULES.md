@@ -100,7 +100,6 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 
 ## A11Y: accessibility
 
-- **A11Y-01 (MUST)** A button that shows only an icon has an `aria-label`; colour is never the only signal (a state also has a word or an icon). *Why:* not everybody sees the icon or the colour.
 - **A11Y-02 (MUST)** Everything works with the keyboard, the focus is always visible, and motion stops for people who ask their device for less of it (`prefers-reduced-motion`). *Why:* not everybody uses a mouse, and for some people motion is a real problem. *Test:* `RuleFileTests.Focus_is_visible_and_motion_can_be_switched_off`
 
 ## I18N: languages
