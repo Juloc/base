@@ -4,7 +4,7 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
-## 0.4.1 (not released yet)
+## 0.4.1 (2026-11-27)
 
 Fixes found after 0.4.0. Nothing an app must change.
 
