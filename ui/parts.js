@@ -253,11 +253,17 @@ function layerPath(top, bottom) {
   for (let i = b1.length - 1; i >= 0; i--) { const s = b1[i], from = bottom[i]; d += `C${num(s[2])} ${num(s[3])} ${num(s[0])} ${num(s[1])} ${num(from[0])} ${num(from[1])}`; }
   return d + 'Z';
 }
-function niceMax(v) {
-  if (v <= 0) return 4;
-  const e = 10 ** Math.floor(Math.log10(v));
-  for (const m of [1, 2, 4, 5, 8, 10]) if (m * e >= v) return m * e;
-  return 10 * e;
+// The top of the scale: four equal steps, each a round number (1 to 10 times a power of ten, in round steps); whole numbers when the data are whole (counts), so no guide reads "1.5".
+function niceMax(v, whole) {
+  if (!(v > 0)) return 4;
+  const raw = v / 4;
+  const e = 10 ** Math.floor(Math.log10(raw));
+  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) {
+    const step = m * e;
+    if (step < raw || (whole && !Number.isInteger(step))) continue;
+    return 4 * step;
+  }
+  return 4 * 10 * e;
 }
 
 /**
@@ -304,7 +310,8 @@ export function chart({ title, series, data, format = (n) => fmtNumber(n), actio
     hideTip();
     summary.textContent = n ? t('chart.summary', { title: title || '', n, from: points[0].label, to: points[n - 1].label, series: series.map((s) => t('chart.series', { name: s.label, total: format(points.reduce((a, p) => a + (Number(p[s.key]) || 0), 0)), peak: format(Math.max(...points.map((p) => Number(p[s.key]) || 0))) })).join(' ') }) : t('chart.empty');
     if (!n) return;
-    const top = niceMax(Math.max(...points.map((p) => total(p, list))));
+    const whole = points.every((p) => list.every((x) => Number.isInteger(Number(p[x.key]) || 0)));
+    const top = niceMax(Math.max(...points.map((p) => total(p, list))), whole);
     const xs = points.map((_, i) => (n === 1 ? 50 : (i / (n - 1)) * 100));
     for (const g of [25, 50, 75]) {
       svgEl.append(sv('line', { class: 'ch-guide', x1: 0, x2: 100, y1: 100 - g, y2: 100 - g }));
