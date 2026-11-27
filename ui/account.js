@@ -30,7 +30,7 @@ export function appearanceCard() {
 export function securityCard(me) {
   const left = h('span', { class: 'row-sub', text: '' });
   api('GET', '/api/auth/sessions').then((r) => { left.textContent = tp('account.recoveryLeft', r.recoveryLeft); }).catch(() => {});
-  const row = (ic, title, sub, label, run) => h('li', null, h('div', { class: 'row' },
+  const row = (ic, title, sub, label, run) => h('li', null, h('div', { class: 'row wrap' },
     h('span', { class: 'row-lead' }, icon(ic)),
     h('div', { class: 'row-main' }, h('span', { class: 'row-title', text: title }), typeof sub === 'string' ? h('span', { class: 'row-sub', text: sub }) : sub),
     h('button', { class: 'btn outline', type: 'button', text: label, onclick: run })));

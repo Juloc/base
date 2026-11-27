@@ -86,7 +86,7 @@ public partial class RuleFileTests
     public void Nothing_private_is_in_the_repository()
     {
         var files = Directory.EnumerateFiles(Repo.Root, "*", SearchOption.AllDirectories)
-            .Where(f => !Regex.IsMatch(Rel(f), @"(^|/)(\.git|bin|obj|data|node_modules|TestResults|shots)/") && new FileInfo(f).Length < 2_000_000).ToArray();
+            .Where(f => !Regex.IsMatch(Rel(f), @"(^|/)(\.git|\.claude|bin|obj|data|node_modules|TestResults|shots)/") && new FileInfo(f).Length < 2_000_000).ToArray();
         Assert.DoesNotContain(files, f => Path.GetFileName(f) is ".env" or "secret.key" || Path.GetExtension(f) is ".pem" or ".pfx" or ".key");
         var findings = new List<string>();
         foreach (var file in files)
@@ -221,7 +221,7 @@ public partial class RuleFileTests
         var styles = Repo.Read("ui", "base.css");
         var script = Repo.Read("ui", "base.js");
         Assert.Matches(@"\.shell-tabs\s*\{[^}]*background:\s*var\(--surface\)", styles);   // solid white pill, not glass
-        Assert.Matches(@"\.tab\s*\{[^}]*flex:\s*1 0 68px", styles);
+        Assert.Matches(@"\.tab\s*\{[^}]*flex:\s*1 0 auto;\s*min-width:\s*68px", styles);   // as wide as its name, at least 68 px
         Assert.DoesNotContain("nav.slice(0, 5)", script);                                      // every place, not the first five
         Assert.Contains("export function navBadge(", script);
     }

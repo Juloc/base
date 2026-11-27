@@ -1,7 +1,7 @@
 /* =====================================================================
  * The one script of the look (CODE-06: plain JavaScript modules, no build step, no framework).
  * What it gives an app:
- *   h, icon, svg            build DOM without innerHTML (SEC-05)
+ *   h, replace, icon, svg   build DOM without innerHTML (SEC-05); replace() swaps children with the rules of h()
  *   api, ApiError, errorText talk to the own server (adds the header the guard asks for, turns error codes into text)
  *   theme, prefs            light or dark, and the person's settings on the server
  *   toast                   a short message that goes away by itself
@@ -45,6 +45,14 @@ function add(el, children) {
     if (Array.isArray(c)) add(el, c);
     else el.append(c.nodeType ? c : document.createTextNode(String(c)));
   }
+}
+
+/** Replaces the children of el by kids, with the rules of h(): null, undefined and false are left out, arrays are flattened.
+ *  Use it instead of el.replaceChildren(), which writes "null" as text for a child that is null. Returns el. */
+export function replace(el, ...kids) {
+  el.replaceChildren();
+  add(el, kids);
+  return el;
 }
 
 /** Turns SVG markup that this code made itself (an icon, a QR code) into a node. The only place that parses markup; never give it text from a person or a server. */
