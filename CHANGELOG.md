@@ -4,6 +4,12 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.1 (not released yet)
+
+Fixes found after 0.4.0. Nothing an app must change.
+
+- **Fix, behaviour: only one dialog at a time** (DIALOG-01 text changed, decision 81). The page behind a dialog stays usable, so the button that opened it could be pressed again and opened one dialog more each time. Now a dialog opened from the page closes the open one, the same button again only brings the open one forward (what was typed stays), and a dialog opened from inside a dialog (the question before deleting) stands above it. Code that opened two dialogs from the page on purpose gets only the second.
+
 ## 0.4.0 (2026-11-27)
 
 Design 0.4 complete (`docs/DESIGN-0.4.md`, steps 1 to 7). An app taking 0.4.0 from 0.3.x reads the alpha entries below for what is **Breaking**.

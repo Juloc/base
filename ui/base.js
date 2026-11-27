@@ -5,7 +5,7 @@
  *   api, ApiError, errorText talk to the own server (adds the header the guard asks for, turns error codes into text)
  *   theme, prefs            light or dark, and the person's settings on the server
  *   toast                   a short message that goes away by itself
- *   openDialog, confirmDialog, closeDialogs  a big window that does not block the page; a sheet on a phone; closes when the page changes (DIALOG-01)
+ *   openDialog, confirmDialog, closeDialogs  a big window that does not block the page, one at a time; a sheet on a phone; closes when the page changes (DIALOG-01)
  *   openMenu                a small menu at a button
  *   field, passwordField, submit, showErrors   forms with errors at the fields (FORM-01, FORM-02)
  *   dropdown, switchField, segmented, choiceTiles   the choosing controls of the family
@@ -177,6 +177,10 @@ export function toast(text, { kind = 'info', action, timeout } = {}) {
 const FOCUSABLE = 'input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 const openDialogs = new Set();
 const openLists = new Set();         // the open lists of dropdowns: they close with the page, too
+// What the person last pressed or typed into. Safari does not focus a button on click, so the focus alone does not tell what opened a dialog.
+let lastPress = null;
+addEventListener('pointerdown', (e) => { lastPress = e.target; }, true);
+addEventListener('keydown', (e) => { lastPress = e.target; }, true);
 
 /** Closes every open dialog and dropdown list. The router does it when the page changes; an app may call it before it navigates by other means. */
 export function closeDialogs() {
@@ -195,12 +199,27 @@ export function closeDialogs() {
  *  size     's' (480 px: a question), 'm' (720 px, the default), 'l' (940 px, tables and two columns); wide: true is 'l'
  *  onClose  called once when it is closed, however that happened
  * Escape and the close button close it; the focus goes into the dialog and back to where it was (DIALOG-01).
+ * One at a time (DIALOG-01): opened from the page, it replaces an open dialog; the button that opened the open one, pressed again,
+ * only brings that one forward (nothing typed is lost; the new dialog is not made and its onClose runs at once). Opened from inside
+ * an open dialog (the question before deleting), it stands above that one.
  * Returns { el, body, close() }.
  */
 export function openDialog({ title, body, actions = [], onClose, wide = false, size }) {
   const opener = document.activeElement;
+  const trigger = pressed(opener && opener !== document.body ? opener : lastPress);
+  const fromDialog = !!trigger && [...openDialogs].some((d) => d.el.contains(trigger));
+  if (!fromDialog) {
+    const same = trigger && [...openDialogs].find((d) => d.trigger === trigger);
+    if (same) {
+      const field = same.body.querySelector(FOCUSABLE) || same.el.querySelector(FOCUSABLE);
+      if (field) field.focus();
+      if (onClose) onClose();
+      return same;
+    }
+    for (const d of [...openDialogs]) d.close();
+  }
   const titleId = nextId('dlg');
-  const dialog = { el: null, body: null, close };
+  const dialog = { el: null, body: null, close, trigger };
   const bodyEl = h('div', { class: 'dialog-body' });
   const head = h('div', { class: 'dialog-head' },
     h('h2', { class: 'dialog-title', id: titleId, text: title }),
@@ -241,6 +260,12 @@ export function openDialog({ title, body, actions = [], onClose, wide = false, s
   const first = bodyEl.querySelector(FOCUSABLE) || (foot && foot.querySelector(FOCUSABLE)) || el.querySelector(FOCUSABLE);
   if (first) first.focus();
   return dialog;
+}
+
+/** The control a press landed on (the button around an icon, the row around a cell); nothing for the page itself. */
+function pressed(node) {
+  if (!(node instanceof Element) || node === document.body || node === document.documentElement) return null;
+  return node.closest('button, a[href], [role=button], [tabindex], tr, li') || node;
 }
 
 /** Lets a window be moved by its head with mouse or finger (only where it is a window, not a sheet). */
