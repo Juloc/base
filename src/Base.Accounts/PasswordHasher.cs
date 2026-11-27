@@ -1,3 +1,4 @@
+using System.Runtime;
 using System.Security.Cryptography;
 using System.Text;
 using Konscious.Security.Cryptography;
@@ -63,6 +64,17 @@ public sealed class PasswordHasher
                 return argon.GetBytes(length);
             });
         }
-        finally { Gate.Release(); }
+        finally
+        {
+            // the 64 MiB of the computation are garbage now; with no other computation running, give them back at once: an idle app makes no new
+            // garbage, so without this the next collection (and the memory) would wait for the next burst of work (measured on caddy: +63 MB after one sign-in, kept)
+            if (Gate.Release() == 2) GiveBack();
+        }
+    }
+
+    private static void GiveBack()
+    {
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
     }
 }
