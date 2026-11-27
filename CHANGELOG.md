@@ -12,6 +12,7 @@ Design 0.4 complete (`docs/DESIGN-0.4.md`, steps 1 to 7). An app taking 0.4.0 fr
 - **Fix:** the quiet text button of the sign-in card (`.quiet`) no longer styles a `.btn.quiet` row button: the row buttons of a table or card head had negative margins and overlapped.
 - **Fix:** `chart()` scales in four round steps and, for counts, in whole numbers (no axis reads "2, 1, 1" any more).
 - **Fix:** a number box's label wraps in a narrow box instead of being cut.
+- **New: `IdleTrim`** (registered by `AddBase`, nothing to do for an app): once a minute it looks at how much memory was asked for; after a burst of work (8 MB or more) followed by a quiet minute it runs one compacting collection and returns free pages to the system. An idle app no longer keeps the garbage of its last work.
 - **Fix:** after a password check (Argon2, 64 MiB) the memory is given back at once when no other check runs; before, an idle app kept it until its next burst of work (measured on caddy: +63 MB after one sign-in).
 
 ## 0.4.0-alpha.4 (towards 0.4.0, in progress: step 6 of `docs/DESIGN-0.4.md`)

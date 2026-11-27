@@ -41,6 +41,7 @@ public static class BaseApp
         services.AddSingleton(TimeProvider.System);
         services.AddBaseAccounts(options.Name, SecretBox.ResolveKey(cfg["BASE_SECRET_KEY"], cfg["BASE_DATA"] ?? "data"), cfg["BASE_SETUP_CODE"], options.Roles);
         services.AddSingleton<HealthState>();
+        services.AddHostedService<IdleTrim>();   // memory back after work, once the app is quiet (0.4)
         services.AddSingleton<RateLimit>();
         services.AddBaseHub();
         services.AddSingleton(new SettingRules([.. SettingRules.OfTheBase, .. options.Settings]));
