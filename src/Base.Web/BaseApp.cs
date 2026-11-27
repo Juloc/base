@@ -126,7 +126,8 @@ public static class BaseApp
             }
             catch (Exception) { /* database not reachable: ok = false */ }
             var status = !dbOk ? "down" : state.Degraded ? "degraded" : "ok";
-            return Results.Json(new Health(dbOk, dbOk, info.Id, info.Version, info.BaseVersion, status, AppInfo.ContractVersion, clock.GetUtcNow()), statusCode: dbOk ? 200 : 503);
+            return Results.Json(new Health(dbOk, dbOk, info.Id, info.Version, info.BaseVersion, status, AppInfo.ContractVersion,
+                clock.GetUtcNow().UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture)), statusCode: dbOk ? 200 : 503);
         });
         app.MapAbout(info, options);
         app.MapPwa(info, options, app.Services.GetRequiredService<UiFiles>());

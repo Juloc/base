@@ -70,6 +70,7 @@ public class AboutTests
         Assert.Equal(1, ok.GetProperty("contract").GetInt32());
         Assert.True(ok.GetProperty("ok").GetBoolean());            // the first fields of the base stay
         Assert.Equal("startapp", ok.GetProperty("app").GetString());
+        Assert.Matches(@"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$", ok.GetProperty("time").GetString());   // UTC with Z, whole seconds (contract, section 1)
         Assert.True(DateTimeOffset.TryParse(ok.GetProperty("time").GetString(), out var time));
         Assert.InRange((DateTimeOffset.UtcNow - time).TotalMinutes, -1, 1);
 

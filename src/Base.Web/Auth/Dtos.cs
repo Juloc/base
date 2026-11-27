@@ -1,7 +1,7 @@
 namespace Base.Web.Auth;
 
 /// <summary>ok/db/app/version/base are the first answer of the base and stay; status, contract and time are the contract of the family (CONTRACT-01).</summary>
-public sealed record Health(bool Ok, bool Db, string App, string Version, string Base, string Status, int Contract, DateTimeOffset Time);
+public sealed record Health(bool Ok, bool Db, string App, string Version, string Base, string Status, int Contract, string Time);
 /// <summary>What an app says about itself without a session (CONTRACT-02): fixed fields, nothing private.</summary>
 public sealed record About(int Contract, string Id, string Name, Base.Core.Localized Description, string Version, string Base, string Icon, int AccentHue, string Start, Base.Accounts.AppRole[] Roles);
 public sealed record AppDto(string Id, string Name, string Version, string? Commit, string Base);
