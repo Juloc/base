@@ -4,6 +4,15 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.0 (2026-11-27)
+
+Design 0.4 complete (`docs/DESIGN-0.4.md`, steps 1 to 7). An app taking 0.4.0 from 0.3.x reads the alpha entries below for what is **Breaking**.
+
+- **Step 7, memory defaults:** the start app's `Dockerfile` (and so every app made by `scripts/new-app.sh`) sets the workstation collector without a background thread, conserve memory, a 192 MB heap ceiling, a small first generation and no dynamic PGO (`DOTNET_gcServer=0 DOTNET_gcConcurrent=0 DOTNET_GCConserveMemory=7 DOTNET_GCHeapHardLimit=0xC000000 DOTNET_GCgen0size=0x400000 DOTNET_TieredPGO=0`). Measured on caddy. An existing app copies the line into its own `Dockerfile`.
+- **Fix:** the quiet text button of the sign-in card (`.quiet`) no longer styles a `.btn.quiet` row button: the row buttons of a table or card head had negative margins and overlapped.
+- **Fix:** `chart()` scales in four round steps and, for counts, in whole numbers (no axis reads "2, 1, 1" any more).
+- **Fix:** a number box's label wraps in a narrow box instead of being cut.
+
 ## 0.4.0-alpha.4 (towards 0.4.0, in progress: step 6 of `docs/DESIGN-0.4.md`)
 
 New file `ui/gate.js` (import from `/base/gate.js`): the card of the door. New in `base.js`: `pwa()`. New in the C# base: `Pwa` (manifest, icons, service worker).

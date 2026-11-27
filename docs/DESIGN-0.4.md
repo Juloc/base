@@ -55,7 +55,7 @@ Released as **0.4.0**, marked **Breaking** where an app's markup or look changes
 - **Sign-in, first setup, invitation:** one white card in the middle (radius 28), app mark, title, one line; "Mit dem Hub anmelden" as a neutral button above "oder mit eigenem Konto"; fields with placeholders; the main button in the soft style; language and theme as quiet text buttons at the bottom. An app sets only name, line and colour. A small API for apps with pages of their own around a sign-in (caddy's gate): the same card with a target box ("danach geht es direkt dorthin"), and a state card (spinner, "Hier nicht erlaubt", "Link abgelaufen" with one clear button).
 - **PWA base:** installable (manifest from `BaseAppOptions`: name, short name, colour, icon), an icon and a splash per app, the theme colour from the app's accent, an offline shell (the shell loads, data says "offline" in words), updates without stale files (the shell list of SEC-08, a cache name per version).
 
-## Step 7: memory defaults (after caddy measured them)
+## Step 7: memory defaults (built in 0.4.0)
 
 - The .NET settings for little memory (workstation GC, conserve memory, a heap limit) in the start app's Dockerfile and in `templates/`, once caddy shows they hold (target: an idle app below 80 MB).
 
