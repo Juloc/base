@@ -9,6 +9,13 @@ what apps rely on; such changes are marked **Breaking**.
 Fixes found after 0.4.0. Nothing an app must change.
 
 - **Fix, behaviour: only one dialog at a time** (DIALOG-01 text changed, decision 81). The page behind a dialog stays usable, so the button that opened it could be pressed again and opened one dialog more each time. Now a dialog opened from the page closes the open one, the same button again only brings the open one forward (what was typed stays), and a dialog opened from inside a dialog (the question before deleting) stands above it. Code that opened two dialogs from the page on purpose gets only the second.
+- **Rule, DATA-03 and SEC-03: shared rows** (decision 82). Another person reaches a person's row only through an explicit share (which row or list, which person, read or read and change, which an app may narrow; deleting and sharing stay with the owner); a row made on another person's row belongs to its maker and is hidden from the other owner (a reservation), unless the app's rules make it part of the shared row (a booking on a shared account); an app that shares tests both directions. No code in the base yet: finance builds the share first, the base takes it over with the second app (wishlist).
+- **Contract fix: `time` in `/api/health` is UTC to the whole second with `Z`** (`2026-11-23T08:15:00Z`), as `docs/CONTRACT.md` says; before it had seven decimals and `+00:00`. CONTRACT-01 text says so. A reader that parsed the old form still parses this.
+- **New: `replace(el, ...kids)`** in `base.js`: swaps the children with the rules of `h()` (null, undefined and false left out, arrays flattened). `el.replaceChildren(a, null)` writes "null" as text; use `replace` where a child may be missing.
+- **German: "du" everywhere.** Ten texts of the invitation, the people, the hub and their errors said "Sie"; they say "du" now like the rest.
+- **Look, phone menu:** a place's name in the pill is no longer cut at 64 px ("Einstellun…"); a place is as wide as its name (68 to 120 px). **Settings card:** the rows of "Konto und Sicherheit" wrap their text instead of cutting it, and on a narrow phone the button moves to a line of its own (`.row.wrap`, new and usable by apps).
+- **Start app, Compose:** the init step gets a `tmpfs` at `/var/lib/postgresql`, so it no longer leaves an empty anonymous volume behind at every start (the `postgres` image declares one). An existing app copies the three lines into its `docker-compose.yml`.
+- **`scripts/new-app.sh --color '#rrggbb'`:** an app can be made with a colour instead of a hue (writes `--accent-color` and `AccentColor`, and its hue as `AccentHue`). It now reminds to write the app's `Description`.
 
 ## 0.4.0 (2026-11-27)
 

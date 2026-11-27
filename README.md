@@ -34,7 +34,7 @@ Open `http://localhost:8080`, enter the setup code from the log, create the firs
 (a list of things to remember: list, detail, form, settings) by what the app is for, and keep the pattern. The parts of the interface
 with their code are at `/base/catalog.html` of every running app.
 
-`--accent` is the colour of the app as an angle on the colour wheel (0 to 359); `--title "..."` the name people see.
+`--accent` is the colour of the app as an angle on the colour wheel (0 to 359), or `--color '#00e5ff'` a colour itself (written as `--accent-color` and `AccentColor`); `--title "..."` the name people see. Then write what the app is for in `Description` of `Program.cs`: the sign-in card, `/api/about` and the manifest show it.
 
 ## Installable: manifest, icons, offline (0.4)
 

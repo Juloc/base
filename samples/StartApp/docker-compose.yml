@@ -27,6 +27,9 @@ services:
         chmod 400 /vol/db-secret/password
     volumes:
       - data:/vol
+    # the image declares a volume for PostgreSQL's data; without this every run would leave an empty anonymous volume behind
+    tmpfs:
+      - /var/lib/postgresql
     security_opt:
       - no-new-privileges:true
     cap_drop:
