@@ -9,6 +9,7 @@ what apps rely on; such changes are marked **Breaking**.
 Fixes found after 0.4.0. Nothing an app must change.
 
 - **Fix, behaviour: only one dialog at a time** (DIALOG-01 text changed, decision 81). The page behind a dialog stays usable, so the button that opened it could be pressed again and opened one dialog more each time. Now a dialog opened from the page closes the open one, the same button again only brings the open one forward (what was typed stays), and a dialog opened from inside a dialog (the question before deleting) stands above it. Code that opened two dialogs from the page on purpose gets only the second.
+- **Start app: the list shows the parts of 0.4** (`samples/StartApp/wwwroot`), so new apps copy them: the list is a `table()` (title as a link, state, changed; "Abhaken" as the row's main action, "Wieder öffnen" a quiet one; the whole row opens the entry), the filter is `chips()` ("Alle", "Nur offene", the same setting as before), and "Neuer Eintrag" sits in the `actionBar()` at the bottom, as in caddy: one bar per page, made again when the page is drawn, closed when the page changes. Existing apps are not touched; an app that wants the pattern copies it from `app.js`.
 
 ## 0.4.0 (2026-11-27)
 
