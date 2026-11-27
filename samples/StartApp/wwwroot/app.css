@@ -1,13 +1,9 @@
 /* The app's own styles. The look comes from /base/base.css; here stands only what is special to this app.
- * The colour of the app is this ONE variable (COLOR-01): an angle on the colour wheel, 0 to 360. */
+ * The colour of the app is ONE variable (COLOR-01): --accent-hue (an angle on the colour wheel, 0 to 360) or --accent-color (any colour, e.g. #00e5ff). */
 :root { --accent-hue: 299; }
 
-/* the round button in front of an entry: ticks it off */
-.tick { display: grid; place-items: center; width: var(--touch); height: var(--touch); margin-left: calc(var(--s2) * -1); flex: none; border: 0; background: none; border-radius: var(--r-full); color: var(--text-2); }
-.tick:hover { background: var(--surface-2); }
-.tick .icon { width: 24px; height: 24px; }
-.tick[aria-pressed="true"] { color: var(--accent); }
-.row.item { padding-block: 0; }
-.row.item .row-main { align-self: stretch; justify-content: center; padding-block: var(--s2); text-decoration: none; color: inherit; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); }
 .toolbar .field { flex: 1 1 240px; }
+/* the title of a row is a link (keyboard, a new tab); it reads as the row's name, not as a link in a text */
+.table .t-text a { color: inherit; text-decoration: none; }
+@media (hover: hover) { .table .t-text a:hover { text-decoration: underline; } }
