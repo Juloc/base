@@ -23,6 +23,10 @@ WORKDIR /app
 COPY --from=build /app .
 # BASE_DATA: the folder for the server's own key file; a volume in the Compose file, so it survives an update (AUTH-04)
 ENV ASPNETCORE_HTTP_PORTS=8080 BASE_DATA=/data
+# Little memory (0.4, measured on caddy: an idle app around 50-65 MB of its own memory): the workstation collector without a background thread,
+# conserve memory, a hard heap ceiling of 192 MB (an app that needs more raises it here, with the reason in its DECISIONS.md), a small first generation,
+# no dynamic profile-guided optimisation (it keeps extra code and counters for a CPU gain an admin app does not need).
+ENV DOTNET_gcServer=0 DOTNET_gcConcurrent=0 DOTNET_GCConserveMemory=7 DOTNET_GCHeapHardLimit=0xC000000 DOTNET_GCgen0size=0x400000 DOTNET_TieredPGO=0
 RUN mkdir /data && chown $APP_UID /data
 USER $APP_UID
 EXPOSE 8080
