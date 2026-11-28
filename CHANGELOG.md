@@ -4,6 +4,11 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.2 (not released yet)
+
+- **Look: pages use the whole width on a wide screen** (decision 83, the owner's word). `.page` and `.page-head` have no limit any more and the main area keeps only a margin (no column of 920 px in the middle); tables and grids grow with the screen. `.page.narrow` (640 px) stays for forms and a detail with text. The token `--content-w` is gone: an app that used it for its own limit gets no limit (it should drop the rule, or keep one of its own on purpose).
+- **New: `.page.columns`**, cards side by side on a wide screen (columns of at least 440 px, at most two; a card is never split; one column on a phone). The start app's settings page uses it instead of `.page.narrow.stack.l`; an app copies that one class.
+
 ## 0.4.1 (2026-11-27)
 
 Fixes found after 0.4.0. Nothing an app must change.

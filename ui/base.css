@@ -62,8 +62,11 @@ img, svg { display: block; max-width: 100%; }
 .end { justify-content: flex-end; }
 .center { align-items: center; text-align: center; }
 .grow { flex: 1 1 auto; min-width: 0; }
-.page { width: 100%; max-width: var(--content-w); }
-.page.narrow { max-width: 640px; }
+.page { width: 100%; }               /* no width limit (0.4.2, owner): lists, tables and grids use the whole screen with a margin */
+.page.narrow { max-width: 640px; }    /* forms, a detail with text: lines stay readable */
+/* cards side by side on a wide screen (the settings page): as many columns of at least 440 px as fit, at most two; a card is never split */
+.page.columns { display: block; columns: 440px 2; column-gap: var(--s5); }
+.page.columns > * { break-inside: avoid; margin-bottom: var(--s5); }
 .section-title { font: 700 var(--text-m)/1.35 var(--font); color: var(--text); letter-spacing: -0.1px; padding-inline: var(--s1); }
 
 /* ---------- shell: side menu (wide), head, content, bottom bar (phone) ---------- */
@@ -89,7 +92,7 @@ img, svg { display: block; max-width: 100%; }
 .shell-head.scrolled .shell-title { display: block; }
 
 /* the head of a page, in the page: a big title, a second line, the main action at the right (the start page of JulOS) */
-.page-head { display: flex; align-items: center; gap: var(--s3); max-width: var(--content-w); margin: var(--s2) var(--s1) var(--s4); }
+.page-head { display: flex; align-items: center; gap: var(--s3); margin: var(--s2) var(--s1) var(--s4); }
 .page-head-text { flex: 1 1 auto; min-width: 0; }
 .page-title { font: 700 var(--text-xl)/1.2 var(--font); letter-spacing: -0.4px; }
 .page-sub { margin-top: var(--s1); color: var(--text-2); font-size: var(--text-s); }
@@ -167,7 +170,7 @@ body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--t
   /* on a wide screen the page has no bar: the side list carries the app, the head of the page the title (and the way back) */
   .shell-head { display: none; }
   .page-back { display: block; }
-  .shell-main { padding-inline: max(var(--s6), calc((100% - var(--content-w)) / 2)); padding-top: var(--s5); padding-bottom: var(--s7); }
+  .shell-main { padding-inline: var(--s6); padding-top: var(--s5); padding-bottom: var(--s7); }
   body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--s7) + 72px); }
   .page-head { margin-inline: 0; }
   .shell-tabs { display: none; }

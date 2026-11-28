@@ -149,7 +149,7 @@ function run(me) {
         onchange: (e) => prefs.set('items.hideDone', e.target.checked).catch((err) => toast(errorText(err), { kind: 'danger' })) }));
     return {
       title: t('settings.title'),
-      body: h('div', { class: 'page narrow stack l' }, appearanceCard(), own, securityCard(me), devicesCard(), historyCard(),
+      body: h('div', { class: 'page columns' }, appearanceCard(), own, securityCard(me), devicesCard(), historyCard(),
         me.roles.includes('admin') ? peopleCard(me) : null, me.roles.includes('admin') ? hubCard(me) : null,
         me.roles.includes('admin') ? installationCard() : null, aboutCard(me)),
     };

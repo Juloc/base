@@ -116,7 +116,6 @@
   --head-h: 56px;
   --tabs-h: 64px;                /* the menu pill on a phone */
   --input-h: 48px;               /* fields and dropdowns (0.4): taller than a button, and the same on a wide screen */
-  --content-w: 920px;
 
   /* ---- elevation: tone and a fine edge first; the tinted shadow only in light, in dark the edge carries (as in Jularr) ---- */
   --shadow-1: 0 1px 2px light-dark(color-mix(in oklab, var(--accent-ink) 22%, transparent), transparent), 0 1px 3px light-dark(color-mix(in oklab, var(--accent-ink) 12%, transparent), transparent);
