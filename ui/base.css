@@ -157,6 +157,17 @@ body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--t
 .nav-foot { padding-top: var(--s2); border-top: 1px solid var(--glass-edge); }
 
 .avatar { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: var(--r-full); background: var(--accent-soft); color: var(--on-accent-soft); font: 500 var(--text-s)/1 var(--font); text-transform: uppercase; }
+/* avatar() (0.4.5): a picture, a symbol on its category colour or an initial; 32 px in the menu, .av-row 40 px, .av-head 64 px. Round unless .av-square */
+.avatar.av-row { width: 40px; height: 40px; font: 600 var(--text-m)/1 var(--font); }
+.avatar.av-head { width: 64px; height: 64px; font: 600 26px/1 var(--font); }
+.avatar.av-square { border-radius: 28%; }
+.avatar.av-image { overflow: hidden; background: var(--surface-2); }
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.avatar .icon { width: 55%; height: 55%; }
+.avatar.av-row .icon { width: 22px; height: 22px; }
+/* one list, one shape (decision 88): table({ shape }) and dayList({ shape }) set it for every mark inside */
+.marks-round :is(.avatar, .cat-mark, .tick) { border-radius: 50%; }
+.marks-square :is(.avatar, .cat-mark, .tick) { border-radius: 28%; }
 .person { display: flex; align-items: center; gap: var(--s3); min-height: var(--touch); width: 100%; padding: var(--s1) var(--s2); border: 0; background: none; border-radius: var(--r-full); text-align: left; }
 .person:hover { background: color-mix(in oklab, var(--text) 8%, transparent); }
 .person-name { flex: 1 1 auto; min-width: 0; font: 500 var(--text-s)/1.3 var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

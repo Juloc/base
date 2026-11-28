@@ -7,6 +7,7 @@
  *   liveFeed        rows that arrive at the top without anything being rebuilt; pause and resume
  *   timeline        day headings and cards on a line with a round state node
  *   ring            a ring with a number (days left)
+ *   avatar          a round mark for a row or a head: a picture, else a symbol on its category colour, else the initial
  *   foldCard        a card whose head opens its body
  *   flash           a row or card lights up briefly: an event in place (no toast for events)
  *   swipeFade       the soft edge where a row you swipe has more (the menu pill uses the same)
@@ -95,6 +96,39 @@ export function chips({ label, items, value, multiple = false, onchange }) {
   el.get = () => (multiple ? [...current] : current);
   paint();
   swipeFade(el);
+  return el;
+}
+
+/* ---------- avatar ---------- */
+
+const catClass = (cat) => (cat === undefined || cat === null || cat === '' ? '' : /^cat-\d$/.test(String(cat)) ? String(cat) : `cat-${Number(cat) % 10}`);
+const initialOf = (name) => {
+  const text = String(name || '').trim();
+  if (!text) return '';
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) for (const { segment } of new Intl.Segmenter().segment(text)) return segment;
+  return [...text][0];
+};
+/**
+ * A round mark for who or what a row is about (0.4.5): a merchant, a person, an account. In this order it shows
+ *   image   a picture (a URL the app serves), if it loads;
+ *   icon    else a symbol of icons.js on the soft colour of its category (cat: 0 to 9 or 'cat-3', the --cat-N colours);
+ *   name    else the initial of the name (on the category's colour when there is one, else on the soft accent).
+ * { name, image?, icon?, cat?, size: 's' (32 px, the menu) | 'row' (40 px, default) | 'head' (64 px, the head of a page or dialog), shape: 'round' (default) | 'square', label? }.
+ * Without label it is decoration beside the name (hidden from a screen reader); with label it is an image with that name.
+ * One list never mixes shapes (decision 88): table({ shape }) and dayList({ shape }) set the shape of every mark inside them.
+ */
+export function avatar({ name = '', image, icon: symbol, cat, size = 'row', shape = 'round', label } = {}) {
+  const el = h('span', { class: `avatar${size === 'row' || size === 'head' ? ' av-' + size : ''}${shape === 'square' ? ' av-square' : ''}`, role: label ? 'img' : null, 'aria-label': label || null, 'aria-hidden': label ? null : 'true' });
+  const fallback = () => {
+    el.classList.remove('av-image');
+    const c = catClass(cat);
+    if (c) el.classList.add(c, 'cat-soft');
+    el.replaceChildren(symbol ? icon(symbol) : initialOf(name));
+  };
+  if (image) {
+    el.classList.add('av-image');
+    el.append(h('img', { src: image, alt: '', loading: 'lazy', decoding: 'async', onerror: fallback }));
+  } else fallback();
   return el;
 }
 

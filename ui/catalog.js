@@ -1,7 +1,7 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
 import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
-import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash } from './parts.js';
+import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash, avatar } from './parts.js';
 import { authCard, stateCard } from './gate.js';
 import { GLYPHS } from './icons.js';
 
@@ -128,6 +128,19 @@ const demos = {
       actions: () => [{ label: 'Edit', icon: 'edit', run: () => toast('Edit') }],
     });
     return t.el;
+  },
+  avatars() {
+    const picture = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#2f6f5e"/><circle cx="20" cy="16" r="7" fill="#f4e3c1"/><rect x="8" y="26" width="24" height="14" rx="7" fill="#f4e3c1"/></svg>');
+    const row = (mark, name, what) => h('div', { class: 'row' }, mark, h('div', { class: 'row-main' }, h('b', { text: name }), h('span', { class: 'muted small', text: what })));
+    return h('div', { class: 'stack' },
+      h('div', { class: 'list' },
+        row(avatar({ name: 'Corner bakery', image: picture }), 'Corner bakery', 'a picture the person chose'),
+        row(avatar({ name: 'Market Hall', icon: 'cart', cat: 0 }), 'Market Hall', 'no picture: the category symbol on its colour'),
+        row(avatar({ name: 'Bike shop', image: '/missing-logo.png', icon: 'tag', cat: 5 }), 'Bike shop', 'the picture did not load: the symbol'),
+        row(avatar({ name: 'Zora Example' }), 'Zora Example', 'no picture, no symbol: the initial'),
+        row(avatar({ name: 'Ölmühle', cat: 3 }), 'Ölmühle', 'an initial on a category colour')),
+      h('div', { class: 'cluster' }, avatar({ name: 'Ada', size: 's' }), avatar({ name: 'Ada' }), avatar({ name: 'Ada', size: 'head', icon: 'bank', cat: 4, label: 'Bank account' }),
+        avatar({ name: 'Ada', shape: 'square', icon: 'card', cat: 6 }), avatar({ name: 'Ada', size: 'head', shape: 'square', image: picture })));
   },
   tableRoom() {
     const people = [

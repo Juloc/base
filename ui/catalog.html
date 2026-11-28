@@ -345,6 +345,12 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         <div class="cat-demo" data-run="tableRoom" data-inline></div>
       </section>
 
+      <section class="cat-item" id="avatar">
+        <h2 class="h1">Avatar</h2>
+        <p class="muted"><code class="mono">avatar({ name, image, icon, cat, size, shape, label })</code> (<code class="mono">/base/parts.js</code>, 0.4.5) is the mark of who or what a row is about: a picture if it loads, else a symbol on the soft colour of its category (<code class="mono">cat: 0</code> … <code class="mono">9</code>), else the initial. Sizes: <code class="mono">'s'</code> 32 px (the menu), <code class="mono">'row'</code> 40 px, <code class="mono">'head'</code> 64 px. Round by default; <code class="mono">shape: 'square'</code> is a rounded square. One list never mixes the two: <code class="mono">table({ shape })</code> and <code class="mono">dayList({ shape })</code> give every mark inside them one shape. Without <code class="mono">label</code> it is decoration beside the name.</p>
+        <div class="cat-demo" data-run="avatars" data-inline></div>
+      </section>
+
       <section class="cat-item wide" id="tabs">
         <h2 class="h1">Tabs and chips</h2>
         <p class="muted"><code class="mono">tabs()</code> is a white bar with the chosen tab soft (for switching what a page shows, also for periods with <code class="mono">size: 's'</code>); <code class="mono">capsule()</code> has the same look for links to places; <code class="mono">chips()</code> is a row of filters. On a phone each is one row you swipe sideways, with a soft edge where there is more.</p>
