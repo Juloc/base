@@ -69,18 +69,18 @@
 
   /* ---- categories (0.4.4, decision 87): ten calm colours for things an app sorts into kinds (a dot, a chip, a series of a chart), the same in every app and not
    * tied to the accent. Ordered so that neighbours differ (chart() takes them in this order when the app gives no colour). Distinct from each other in both schemes
-   * (oklab distance at least 0.095), but ten colours cannot all be told apart by everyone: a category also has its name and, where there is room, its icon.
+   * (oklab distance at least 0.10, and 0.10 from the raspberry of --danger), but ten colours cannot all be told apart by everyone: a category also has its name and, where there is room, its icon.
    * Its soft surface and text come from a formula, not twenty more tokens: class="cat-3 cat-soft" (base.css). ---- */
-  --cat-0: light-dark(oklch(0.57 0.13 258), oklch(0.70 0.12 258));     /* blue */
-  --cat-1: light-dark(oklch(0.77 0.14 78), oklch(0.83 0.12 78));       /* amber */
-  --cat-2: light-dark(oklch(0.60 0.12 152), oklch(0.70 0.12 152));     /* green */
-  --cat-3: light-dark(oklch(0.74 0.11 350), oklch(0.83 0.09 350));     /* rose */
-  --cat-4: light-dark(oklch(0.67 0.10 195), oklch(0.82 0.09 195));     /* teal */
-  --cat-5: light-dark(oklch(0.66 0.14 46), oklch(0.73 0.12 45));       /* orange */
-  --cat-6: light-dark(oklch(0.55 0.12 305), oklch(0.70 0.12 305));     /* purple */
-  --cat-7: light-dark(oklch(0.70 0.13 125), oklch(0.86 0.12 125));     /* lime */
-  --cat-8: light-dark(oklch(0.55 0.15 20), oklch(0.66 0.14 20));       /* coral red */
-  --cat-9: light-dark(oklch(0.53 0.06 55), oklch(0.64 0.05 55));       /* brown */
+  --cat-0: light-dark(oklch(0.54 0.15 258), oklch(0.70 0.14 258));     /* blue */
+  --cat-1: light-dark(oklch(0.68 0.14 84), oklch(0.84 0.14 90));       /* amber */
+  --cat-2: light-dark(oklch(0.56 0.14 152), oklch(0.70 0.15 152));     /* green */
+  --cat-3: light-dark(oklch(0.60 0.17 340), oklch(0.71 0.16 334));     /* rose */
+  --cat-4: light-dark(oklch(0.60 0.10 200), oklch(0.80 0.11 198));     /* teal */
+  --cat-5: light-dark(oklch(0.64 0.16 48), oklch(0.74 0.15 52));       /* orange */
+  --cat-6: light-dark(oklch(0.49 0.15 300), oklch(0.66 0.15 298));     /* purple */
+  --cat-7: light-dark(oklch(0.64 0.155 126), oklch(0.88 0.16 128));    /* lime */
+  --cat-8: light-dark(oklch(0.47 0.13 30), oklch(0.60 0.13 30));       /* brick */
+  --cat-9: light-dark(oklch(0.56 0.06 75), oklch(0.70 0.05 75));       /* brown */
 
   /* ---- glass: tinted, clearly translucent surfaces with a fine light edge, over the gradient of the page ---- */
   --glass: color-mix(in oklab, var(--surface) 56%, transparent);
