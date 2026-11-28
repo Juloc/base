@@ -149,6 +149,16 @@ const demos = {
       ], 'Today'),
       h('div', { class: 'cluster' }, ring(21, 30, '', { label: '21 of 30 days left' }), ring(9, 30, 'warn'), ring(2, 30, 'danger'), ring(30, 30, 'ok', { text: 'OK', label: 'valid' })));
   },
+  checks() {
+    const some = h('input', { type: 'checkbox', 'aria-label': 'All rows' });
+    some.indeterminate = true;                                  // set from code only: the head of a table when some rows are chosen
+    return h('div', { class: 'stack' },
+      h('label', { class: 'check' }, h('input', { type: 'checkbox' }), h('span', { text: 'Off' })),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: true }), h('span', { text: 'On' })),
+      h('label', { class: 'check' }, some, h('span', { text: 'Some (indeterminate)' })),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: true, disabled: true }), h('span', { text: 'On, cannot be changed' })),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', disabled: true }), h('span', { text: 'Off, cannot be changed' })));
+  },
   chart() {
     const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0') + ':00');
     const wave = (i, k) => Math.round(40 + 30 * Math.sin(i / 3.2 + k) + (i * 7 % 11) * k);

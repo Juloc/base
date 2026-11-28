@@ -4,6 +4,12 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.4 (not released yet)
+
+Three parts the finance app asked for; `table()` and `chart()` use the first two themselves.
+
+- **Look: an own check box** (decision 85). `.check input` and `.t-check` (the table's selection) are no longer the browser's box: a 22 px box drawn by the base on a real `<input type="checkbox">`, a 44 px target (MOBILE-01), filled with `--accent-ink` and a tick when on, a dash when `indeterminate` (the head of a table when some rows are chosen), the focus ring of the other controls, greyed when disabled, system colours in forced colours. The markup stays the same; an app that styled `.check input` itself (size, `accent-color`) should drop that rule. **Breaking, look:** the table's check box grows from 18 to 22 px.
+
 ## 0.4.3 (2026-11-28)
 
 - **Breaking, Compose: the file is minimal** (OPS-01 and OPS-02 changed, decision 84, the owner's rule). Two services (`app`, `db`), two named volumes (`data` for the key file, `db` for the database), per service only `build`/`image`, `restart`, `ports`, `environment` (with `TZ: Europe/Berlin`), `volumes`, `depends_on`. No init container, no password file, no `security_opt`, `cap_drop`, `tmpfs` or `healthcheck` in the file; the database password is a fixed value (`app`), because the database has no port. The health check moved into the `Dockerfile` (`HEALTHCHECK ... health`); user and data folder were there already. `scripts/check-app.sh` warns about hardening and health check blocks in an app's Compose file and allows two volumes.
