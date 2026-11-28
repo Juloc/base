@@ -746,13 +746,15 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .table.rich :is(th, td):first-child { padding-left: 20px; }
 .table.rich :is(th, td):last-child { padding-right: 20px; }
 .table.rich tr.t-row.clickable { cursor: pointer; }
+.table.rich tr.t-row.t-child > td { background: var(--t-tint); }
 .table.rich tr.t-row:hover > td { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+.table.rich tr.t-row.t-child:hover > td { background: color-mix(in oklab, var(--accent) 7%, var(--t-tint)); }
 .table.rich tr.t-row.opened > td, .table.rich tr.t-detail > td { background: var(--surface-1); }
 .table.rich tr.t-row.selected > td { background: var(--accent-soft); }
 .table.rich tr.t-detail > td { height: auto; border-top: 0; padding: 4px 20px 18px 56px; white-space: normal; }
 .table.rich tr.t-detail[hidden] { display: none; }
 .table.rich tr.t-row.off > td:not(.c-act):not(.c-active):not(.c-sel) { opacity: 0.45; }
-.table.rich tr.t-group > td { height: 50px; padding: 0 12px 0 14px; background: var(--surface-1); border-top: 0; }
+.table.rich tr.t-group > td { height: 50px; padding: 0 12px 0 20px; background: var(--surface-1); border-top: 0; }
 .table.rich tr.t-group:not(:first-child) > td { border-top: 8px solid var(--surface); }
 .table.rich tr.t-group.off .t-gname, .table.rich tr.t-group.off .t-gcount { opacity: 0.45; }
 .table.rich tr.t-group + tr.t-row > td, .table.rich tr.t-detail + tr.t-row > td { border-top-color: var(--hair); }
@@ -767,11 +769,23 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .t-fold .icon { width: 18px; height: 18px; transition: transform var(--dur) var(--ease); }
 .t-fold[aria-expanded="false"] .icon { transform: rotate(-90deg); }
 .t-fold:focus-visible { outline: 2px solid var(--accent-ink); }
-/* tree lines: one 22 px cell per level; the last is a branch (mid or end), the ones before are the lines that go on (pass) or not (blank) */
-.t-ln { position: relative; flex: none; align-self: stretch; width: 22px; }
-.t-ln.pass::before, .t-ln.mid::before, .t-ln.end::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; border-left: 1.5px solid color-mix(in oklab, var(--text) 14%, transparent); }
-.t-ln.end::before { bottom: 50%; }
-.t-ln.mid::after, .t-ln.end::after { content: ""; position: absolute; left: 10px; top: 50%; width: 10px; border-top: 1.5px solid color-mix(in oklab, var(--text) 14%, transparent); }
+/* the tree (0.4.5, decision 90): one cell of --t-step per level. A rounded rail in --accent-soft runs down a level, a round node in --accent sits where a row
+ * branches off it, and the rail goes on from the fold button of an open row; child rows are tinted. A rail cell reaches --t-down into the next row, so it has
+ * no gap between rows (that row always has the rail at the same place, and its node is drawn above it). */
+.table-panel { --t-step: 28px; --t-rail: 5px; --t-down: 24px; --t-stub: 34px; --t-tint: color-mix(in oklab, var(--accent-soft) 25%, var(--surface)); }
+.t-ln { position: relative; flex: none; align-self: stretch; width: var(--t-step); }
+.t-ln:is(.pass, .mid, .end)::before { content: ""; position: absolute; left: calc(50% - var(--t-rail) / 2); width: var(--t-rail); top: -1px; bottom: calc(var(--t-down) * -1); background: var(--accent-soft); pointer-events: none; }
+.t-ln.end::before { bottom: calc(50% - var(--t-rail) / 2); border-radius: 0 0 var(--t-rail) var(--t-rail); }
+.t-ln:is(.mid, .end)::after { content: ""; position: absolute; z-index: 1; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent); pointer-events: none; }
+.t-ln:is(.mid, .end) { background: linear-gradient(var(--accent-soft) 0 0) right center / 50% var(--t-rail) no-repeat; }     /* the branch from the node to the row */
+.t-fold-gap { position: relative; }
+.t-ln:is(.mid, .end) + .t-fold-gap::before { content: ""; position: absolute; left: 0; top: calc(50% - var(--t-rail) / 2); width: 12px; height: var(--t-rail); border-radius: 0 var(--t-rail) var(--t-rail) 0; background: var(--accent-soft); }
+.t-fold { position: relative; }
+.t-open .t-fold::after { content: ""; position: absolute; left: calc(50% - var(--t-rail) / 2); top: calc(100% + 2px); width: var(--t-rail); height: var(--t-stub); border-radius: var(--t-rail) var(--t-rail) 0 0; background: var(--accent-soft); pointer-events: none; }
+.t-group.t-open .t-fold::after { display: none; }      /* the rows of a group begin their own rail: the head moves when a selection column shows */
+tr.t-group + tr.t-row .t-ln:first-child::before { top: 6px; border-radius: var(--t-rail) var(--t-rail) 0 0; }
+tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rail); }
+.table.rich tr.t-detail { position: relative; z-index: 2; }
 .table.rich .c-sel { width: 44px; padding-right: 0; }
 .table.rich .c-act { width: 1%; text-align: right; }
 .t-acts, .t-acts-m { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
@@ -784,6 +798,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .table-empty .empty { border: 0; background: none; box-shadow: none; }
 @media (max-width: 639px) {
   .table-wrap { overflow: visible; }
+  .table.rich { --t-down: 38px; --t-stub: 44px; }     /* two-line rows are taller and padded: the rail reaches further */
   .table.rich, .table.rich tbody { display: block; }
   .table.rich thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .table.rich tr { display: block; }
@@ -791,6 +806,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .table.rich tr.t-row:first-child, .table.rich tr.t-group + tr.t-row { border-top: 0; }
   .table.rich tr.t-row > td { display: block; height: auto; padding: 0; border: 0; background: none !important; }
   .table.rich tr.t-row:hover { background: none; }
+  .table.rich tr.t-row.t-child { background: var(--t-tint); }
   .table.rich tr.t-row.opened, .table.rich tr.t-row.selected { background: var(--surface-1); }
   .table.rich tr.t-row.selected { background: var(--accent-soft); }
   .table.rich tr.t-row.off { opacity: 1; }
@@ -798,8 +814,8 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .table.rich td.c-title { grid-area: title; min-width: 0; white-space: normal; }
   .t-name { min-height: 0; }
   .t-text { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .table.rich .t-sub-m { display: flex; flex-wrap: nowrap; gap: 0 8px; margin-left: calc(var(--depth, 0) * 22px); font-size: var(--text-xs); color: var(--text-2); overflow: hidden; white-space: nowrap; }
-  .has-folds .t-sub-m { margin-left: calc(var(--depth, 0) * 22px + 34px); }
+  .table.rich .t-sub-m { display: flex; flex-wrap: nowrap; gap: 0 8px; margin-left: calc(var(--depth, 0) * var(--t-step)); font-size: var(--text-xs); color: var(--text-2); overflow: hidden; white-space: nowrap; }
+  .has-folds .table.rich .t-sub-m { margin-left: calc(var(--depth, 0) * var(--t-step) + 34px); }     /* under the text, not under the fold button (wrong since 0.4: the rule lost to the one above) */
   .t-sub-m > span:not(:first-child)::before { content: "·"; margin-right: 8px; }
   .table.rich tr.t-row > td.c-sel { grid-area: ck; display: none; width: auto; margin-right: 12px; }
   .table-panel.selecting tr.t-row > td.c-sel { display: block; }
@@ -809,7 +825,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .t-acts-m { display: inline-flex; }
   .table.rich tr.t-row.off > td:not(.c-act):not(.c-active):not(.c-sel) { opacity: 0.45; }
   .table.rich tr.t-detail > td { padding: 4px 14px 14px; }
-  .table.rich tr.t-group > td { padding: 0 8px 0 10px; display: block; }
+  .table.rich tr.t-group > td { padding: 0 8px 0 14px; display: block; }
   .table.rich tr.t-group:not(:first-child) > td { border-top: 8px solid var(--surface); }
   .table-tools { display: flex; justify-content: flex-end; padding: 10px 14px 6px; }
   .has-select tr.t-row { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -819,6 +835,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .panel, .number-box, .timeline-card, .tabbar, .chip { border: 1px solid CanvasText; }
   .tabbar-item[aria-selected="true"], .chip[aria-pressed="true"] { outline: 2px solid Highlight; }
   .ch-layer { stroke: Canvas; }
+  .t-ln::before, .t-ln::after, .t-fold::after, .t-fold-gap::before { background: CanvasText; }
 }
 
 /* ---------- categories (0.4.4, decision 87): class="cat-0" ... "cat-9" names the colour (--cat), the parts below use it ---------- */

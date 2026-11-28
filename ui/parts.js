@@ -373,7 +373,7 @@ export function chart({ title, series, data, format = (n) => fmtNumber(n), actio
  * with the switch or the main action at the right and the rest in a menu.
  *   label       what the table is (for a screen reader)
  *   columns     [{ key, label, render?(row) -> node or text, align?: 'end', phone?: 'title' | 'sub' | 'hide' }]; the first column is the title on a phone, the others the second line (or hidden)
- *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree (indented, with fine lines)
+ *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree: a rounded rail per level, a round node where a row branches off it, child rows tinted (0.4.5)
  *   groups      [{ id, title, count?, rows, onAdd?(g), addLabel?, menu?: [openMenu items] or (g) => items, active?: boolean, onActive?(on, g), activeLabel? }]  folding groups with a head; an inactive group greys its rows
  *   rowKey      (row) => key, default row.id
  *   actions     (row) => [{ label, icon?, kind?: 'main' | 'danger', run(row, button) }]   the action column: at most one 'main' (a tonal text button), the others quiet icon buttons
@@ -449,7 +449,7 @@ export function table(options) {
     const canFold = kids || !!detail;
     const off = ctx.off || (active && !active.get(row));
     const clickable = !!(onRowClick || (detail && !kids) || selection);
-    const tr = h('tr', { class: `t-row${off ? ' off' : ''}${selected.has(key) ? ' selected' : ''}${isOpen && !kids ? ' opened' : ''}${clickable && (onRowClick || detail) ? ' clickable' : ''}`, dataset: { key } });
+    const tr = h('tr', { class: `t-row${off ? ' off' : ''}${selected.has(key) ? ' selected' : ''}${isOpen && !kids ? ' opened' : ''}${clickable && (onRowClick || detail) ? ' clickable' : ''}${ctx.child ? ' t-child' : ''}${kids && !folded ? ' t-open' : ''}`, dataset: { key } });
     tr.style.setProperty('--depth', ctx.lines.length);
     if (selection) tr.append(h('td', { class: 'c-sel' }, h('input', { class: 't-check', type: 'checkbox', checked: selected.has(key), 'aria-label': t('table.selectRow'), dataset: { focus: key + '|check' }, onchange: () => toggleSelected(key) })));
     const sub = columns.filter((c, i) => phoneOf(c, i) === 'sub');
@@ -478,7 +478,7 @@ export function table(options) {
       dtr._row = row;
       out.push(dtr);
     }
-    if (kids && !folded) row.children.forEach((child, i) => addRow(out, child, { off, lines: [...ctx.lines.slice(0, -1), ctx.lines.length ? (ctx.last ? 'blank' : 'pass') : null, i === row.children.length - 1 ? 'end' : 'mid'].filter(Boolean), last: i === row.children.length - 1 }));
+    if (kids && !folded) row.children.forEach((child, i) => addRow(out, child, { off, lines: [...ctx.lines.slice(0, -1), ctx.lines.length ? (ctx.last ? 'blank' : 'pass') : null, i === row.children.length - 1 ? 'end' : 'mid'].filter(Boolean), last: i === row.children.length - 1, child: true }));
   }
   function addRows(out, list, ctx) {
     list.forEach((row, i) => addRow(out, row, { off: ctx.off, lines: ctx.root ? [] : [ctx.in ? (i === list.length - 1 ? 'end' : 'mid') : null].filter(Boolean), last: i === list.length - 1 }));
@@ -487,7 +487,7 @@ export function table(options) {
     const key = 'g:' + g.id, folded = shut.has(key), off = g.active === false;
     const menuItems = typeof g.menu === 'function' ? g.menu(g) : g.menu;
     const sw = g.active === undefined ? null : h('label', { class: 'switch t-switch' }, h('input', { type: 'checkbox', role: 'switch', checked: g.active, 'aria-label': g.activeLabel || g.title, onchange: (e) => g.onActive && g.onActive(e.currentTarget.checked, g) }), h('span', { class: 'switch-track' }));
-    out.push(h('tr', { class: `t-group${off ? ' off' : ''}`, dataset: { key } }, h('td', { colspan: colCount }, h('div', { class: 't-ghead' },
+    out.push(h('tr', { class: `t-group${off ? ' off' : ''}${!folded && g.rows.length ? ' t-open' : ''}`, dataset: { key } }, h('td', { colspan: colCount }, h('div', { class: 't-ghead' },
       h('button', { class: 't-fold', type: 'button', 'aria-expanded': String(!folded), 'aria-label': (folded ? t('table.open') : t('table.close')) + ': ' + (typeof g.title === 'string' ? g.title : ''), dataset: { focus: key + '|fold' }, onclick: () => toggleFold(key, true) }, icon('down')),
       h('span', { class: 't-gname' }, content(g.title)), g.count !== undefined ? h('span', { class: 't-gcount', text: String(g.count) }) : null, h('span', { class: 'grow' }),
       g.onAdd ? h('button', { class: 'btn mini quiet icon-only', type: 'button', 'aria-label': g.addLabel || t('table.add'), onclick: () => g.onAdd(g) }, icon('plus')) : null,

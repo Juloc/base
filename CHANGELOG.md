@@ -7,6 +7,7 @@ what apps rely on; such changes are marked **Breaking**.
 ## 0.4.5 (not released yet)
 
 - **Fix: an app's own icon and worker win** (found by caddy; wrong since 0.4.0). A file in the app's `wwwroot` with the name of one the base makes (`/icon.svg`, `/icon-maskable.svg`, the PNG icons, `/manifest.webmanifest`, `/sw.js`) is now served instead of the made one; until now the base's endpoint always answered first. What the app does not bring is still made by the base. An app with only its own `icon.svg` gets it in the tab and the menu; for the installed app (PNGs, apple-touch) it brings the PNGs too, because the base draws those from `Icon` and cannot read an SVG.
+- **Look: a clearer tree in `table()`** (decision 90, caddy's wish). The hairlines (`.t-ln`) became a rounded rail of 5 px in `--accent-soft` with a round node in `--accent` where a row branches off and a short branch to it; the rail goes on from the fold button of an open row; child rows (class `t-child`) are tinted with a quarter of `--accent-soft`. The same on a phone. One level is 28 px instead of 22 (the width of the fold button, so the rail starts under it); the head of a group starts at 20 px like the rows. Markup and API are unchanged; an app that styled `.t-ln` itself should drop that rule.
 
 ## 0.4.4 (2026-11-28)
 

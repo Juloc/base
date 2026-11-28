@@ -129,6 +129,20 @@ const demos = {
     });
     return t.el;
   },
+  tableTreeDeep() {
+    const t = table({
+      label: 'Folders',
+      columns: [{ key: 'name', label: 'Name' }, { key: 'size', label: 'Size', align: 'end' }],
+      rows: [
+        { id: 'd', name: 'Documents', size: '3 files', children: [
+          { id: 'd1', name: 'Invoices', size: '2 files', children: [{ id: 'd11', name: 'January.pdf', size: '84 kB' }, { id: 'd12', name: 'February.pdf', size: '91 kB' }] },
+          { id: 'd2', name: 'Contract.pdf', size: '210 kB' }] },
+        { id: 'p', name: 'Photos', size: '1 file', children: [{ id: 'p1', name: 'Garden.jpg', size: '2.4 MB' }] },
+        { id: 'n', name: 'Notes.txt', size: '2 kB' },
+      ],
+    });
+    return t.el;
+  },
   tabs() {
     const out = h('p', { class: 'muted', text: 'Chosen: week · all' });
     const state = { period: 'week', kind: 'all' };
