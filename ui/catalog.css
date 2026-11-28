@@ -49,7 +49,7 @@
 .cat-demo .shell-tabs { position: static; margin-inline: 0; }
 @media (min-width: 900px) { .cat-item.wide .cat-pair { grid-template-columns: minmax(0, 1fr); } }
 /* the category colours */
-.cat-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--s4) var(--s3); }
+.cat-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s4) var(--s3); }
 .cat-cat { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
 .cat-cat-name { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
 .cat-strip { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
