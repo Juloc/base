@@ -118,6 +118,9 @@ internal sealed class TestApp(TestDb db, bool https = false) : WebApplicationFac
     /// <summary>Changes the app's <see cref="Base.Web.BaseAppOptions"/> for one test (for example <c>Embeddable</c>).</summary>
     public Func<Base.Web.BaseAppOptions, Base.Web.BaseAppOptions>? Options { get; init; }
 
+    /// <summary>Another folder as the app's <c>wwwroot</c> for one test (for example an app with its own <c>icon.svg</c>).</summary>
+    public string? WebRoot { get; init; }
+
     public HttpClient Http() => CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false, AllowAutoRedirect = false, BaseAddress = new Uri(Origin) });
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -126,6 +129,7 @@ internal sealed class TestApp(TestDb db, bool https = false) : WebApplicationFac
         builder.UseSetting("BASE_SETUP_CODE", SetupCode);
         builder.UseSetting("BASE_SECRET_KEY", Key);
         builder.ConfigureServices(s => s.AddTransient<IStartupFilter, LoopbackFilter>());
+        if (WebRoot is { } root) builder.UseWebRoot(root);
         if (Options is { } change)
             builder.ConfigureTestServices(s =>
             {

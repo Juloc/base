@@ -4,6 +4,10 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.5 (not released yet)
+
+- **Fix: an app's own icon and worker win** (found by caddy; wrong since 0.4.0). A file in the app's `wwwroot` with the name of one the base makes (`/icon.svg`, `/icon-maskable.svg`, the PNG icons, `/manifest.webmanifest`, `/sw.js`) is now served instead of the made one; until now the base's endpoint always answered first. What the app does not bring is still made by the base. An app with only its own `icon.svg` gets it in the tab and the menu; for the installed app (PNGs, apple-touch) it brings the PNGs too, because the base draws those from `Icon` and cannot read an SVG.
+
 ## 0.4.4 (2026-11-28)
 
 Three parts the finance app asked for (`table()` and `chart()` use the first two themselves), and the window of the hub.

@@ -10,7 +10,8 @@ namespace Base.Web;
 /// <summary>
 /// The installable frame of every app, made from <see cref="BaseAppOptions"/> and served by the base (0.4): <c>/manifest.webmanifest</c>, the icons
 /// (<c>/icon.svg</c>, <c>/icon-maskable.svg</c>, PNGs for 192, 512, maskable 512 and the apple-touch-icon) and <c>/sw.js</c>. A file of the same name in the
-/// app's own <c>wwwroot</c> wins (the static files come first), so an app with its own artwork or worker keeps it. Anonymous, nothing private in any of them.
+/// app's own <c>wwwroot</c> wins: the base then maps no endpoint for that path, so the static files serve it (an endpoint would be chosen before them).
+/// An app with its own artwork or worker keeps it. Anonymous, nothing private in any of them.
 /// </summary>
 internal static class Pwa
 {
@@ -44,7 +45,8 @@ internal static class Pwa
             ["/apple-touch-icon.png"] = ("image/png", new(() => Raster.Png(180, glyph, bg, fg, Raster.Kind.Apple))),
             ["/sw.js"] = ("text/javascript; charset=utf-8", new(() => Encoding.UTF8.GetBytes(ServiceWorker(info, options)))),
         };
-        foreach (var (path, (type, bytes)) in files)
+        var own = app.ServiceProvider.GetRequiredService<IWebHostEnvironment>().WebRootFileProvider;
+        foreach (var (path, (type, bytes)) in files.Where(f => !own.GetFileInfo(f.Key).Exists))
             app.MapGet(path, (HttpContext ctx) =>
             {
                 var data = bytes.Value;

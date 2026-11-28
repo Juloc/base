@@ -49,6 +49,27 @@ public class PwaTests
     }
 
     [Fact]
+    public async Task A_file_of_the_same_name_in_the_apps_wwwroot_wins_over_the_made_one()
+    {
+        var root = Directory.CreateTempSubdirectory("base-webroot-");
+        try
+        {
+            const string own = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"><!-- the app's own artwork --></svg>";
+            File.WriteAllText(Path.Combine(root.FullName, "icon.svg"), own);
+            File.WriteAllText(Path.Combine(root.FullName, "sw.js"), "// the app's own worker");
+            await using var db = await TestDb.CreateAsync();
+            await using var app = new TestApp(db) { WebRoot = root.FullName };
+            var c = app.Http();
+            Assert.Equal(own, await c.GetStringAsync("/icon.svg"));
+            Assert.Equal("// the app's own worker", await c.GetStringAsync("/sw.js"));
+            // what the app does not bring is still made by the base
+            Assert.DoesNotContain("own artwork", await c.GetStringAsync("/icon-maskable.svg"));
+            Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/manifest.webmanifest")).StatusCode);
+        }
+        finally { root.Delete(recursive: true); }
+    }
+
+    [Fact]
     public async Task The_png_icons_are_real_pictures_of_the_right_size_with_the_mark_drawn()
     {
         await using var db = await TestDb.CreateAsync();
