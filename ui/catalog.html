@@ -90,6 +90,12 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         </div>
       </section>
 
+      <section class="cat-item wide" id="categories">
+        <h2 class="h1">Category colours</h2>
+        <p class="muted">Ten calm colours for things an app sorts into kinds (a category of spending, a kind of event): <code class="mono">--cat-0</code> to <code class="mono">--cat-9</code>, the same in every app and not tied to the accent (decision 86). Neighbours differ, so take them in order; <code class="mono">chart()</code> does that when a series has no colour. <code class="mono">class="cat-3"</code> names the colour for what is inside: <code class="mono">.cat-dot</code> is a dot before a name, <code class="mono">.cat-soft</code> the soft surface with its text (on a chip, a badge or the icon square <code class="mono">.cat-mark</code>). A colour never stands alone: a category also has its name and, where there is room, its icon.</p>
+        <div class="cat-demo on-surface" data-run="categories" data-inline></div>
+      </section>
+
       <section class="cat-item" id="type">
         <h2 class="h1">Type and spacing</h2>
         <p class="muted">The font stack of JulOS (no web font) in the sizes of the Material 3 scale; spacing in steps of 4 px; six radii.</p>
@@ -349,8 +355,9 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item wide" id="chart">
         <h2 class="h1">Chart</h2>
-        <p class="muted"><code class="mono">chart({ title, series, data })</code>: a stacked area chart in SVG without a library. Smooth layers with a thin line in the colour of the card between them, three faint guide lines, the axis below. Click a name in the legend to hide that series; hover (or tap, or use the arrow keys) for a dark box with every value. The colours are given by the app, any CSS colour. A sentence that sums the chart up is there for a screen reader.</p>
+        <p class="muted"><code class="mono">chart({ title, series, data })</code>: a stacked area chart in SVG without a library. Smooth layers with a thin line in the colour of the card between them, three faint guide lines, the axis below. Click a name in the legend to hide that series; hover (or tap, or use the arrow keys) for a dark box with every value. The colours are given by the app (any CSS colour); a series without one takes the category colours in order (<code class="mono">--cat-0</code>, <code class="mono">--cat-1</code>, …), as in the second example. A sentence that sums the chart up is there for a screen reader.</p>
         <div class="cat-demo" data-run="chart" data-inline></div>
+        <div class="cat-demo" data-run="chartCategories" data-inline></div>
       </section>
 
       <section class="cat-item wide" id="feed">

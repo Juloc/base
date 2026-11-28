@@ -819,6 +819,16 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .ch-layer { stroke: Canvas; }
 }
 
+/* ---------- categories (0.4.4, decision 86): class="cat-0" ... "cat-9" names the colour (--cat), the parts below use it ---------- */
+.cat-0 { --cat: var(--cat-0); } .cat-1 { --cat: var(--cat-1); } .cat-2 { --cat: var(--cat-2); } .cat-3 { --cat: var(--cat-3); } .cat-4 { --cat: var(--cat-4); }
+.cat-5 { --cat: var(--cat-5); } .cat-6 { --cat: var(--cat-6); } .cat-7 { --cat: var(--cat-7); } .cat-8 { --cat: var(--cat-8); } .cat-9 { --cat: var(--cat-9); }
+/* a dot before a name */
+.cat-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--cat, var(--text-2)); vertical-align: middle; }
+/* the soft surface of a category and its text: a chip, a badge, an icon square (.cat-mark). The text is the colour mixed with the text colour, so it reads in both schemes */
+.cat-soft, .chip.cat-soft, .badge.cat-soft { border-color: transparent; background: color-mix(in oklab, var(--cat, var(--text-2)) 18%, var(--surface)); color: color-mix(in oklab, var(--cat, var(--text-2)) 48%, var(--text)); }
+.cat-mark { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: var(--r-m); }
+.cat-mark .icon { width: 20px; height: 20px; }
+
 /* ---------- forced colours: the system takes over the colours; what colour carried, a line or an outline carries ---------- */
 @media (forced-colors: active) {
   body::before { display: none; }
@@ -827,6 +837,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .switch-track { border: 1px solid ButtonText; }
   .nav-badge { border: 1px solid ButtonText; }
   .switch input:checked + .switch-track::after { background: Highlight; }
+  .cat-dot { border: 1px solid CanvasText; }
   .check input::before, .t-check::before { border-color: ButtonText; background: Canvas; }
   .check input:checked::before, .t-check:checked::before, .check input:indeterminate::before, .t-check:indeterminate::before { border-color: Highlight; background: Highlight; }
   .check input:checked::after, .t-check:checked::after, .check input:indeterminate::after, .t-check:indeterminate::after { border-color: HighlightText; }

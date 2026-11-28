@@ -159,6 +159,22 @@ const demos = {
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: true, disabled: true }), h('span', { text: 'On, cannot be changed' })),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', disabled: true }), h('span', { text: 'Off, cannot be changed' })));
   },
+  categories() {
+    const kinds = [['cat-0', 'cart', 'Groceries'], ['cat-1', 'fork', 'Eating out'], ['cat-2', 'house-loan', 'Home'], ['cat-3', 'gift', 'Presents'], ['cat-4', 'car', 'Transport'],
+      ['cat-5', 'shirt', 'Clothes'], ['cat-6', 'ticket', 'Leisure'], ['cat-7', 'pill', 'Health'], ['cat-8', 'heart', 'Donations'], ['cat-9', 'tag', 'Other']];
+    const strip = h('div', { class: 'cat-strip', 'aria-hidden': 'true' }, kinds.map(([cat]) => h('i', { class: cat })));
+    return h('div', { class: 'stack' }, strip, h('div', { class: 'cat-cats' }, kinds.map(([cat, ic, name]) => h('div', { class: `cat-cat ${cat}` },
+      h('span', { class: 'cat-mark cat-soft' }, icon(ic)),
+      h('span', { class: 'cat-cat-name' }, h('span', { class: 'cat-dot' }), name),
+      h('span', { class: 'chip cat-soft' }, icon(ic), name),
+      h('code', { class: 'mono small', text: '--' + cat })))));
+  },
+  chartCategories() {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const kinds = ['Groceries', 'Eating out', 'Home', 'Presents', 'Transport', 'Clothes', 'Leisure', 'Health', 'Donations', 'Other'];
+    const data = months.map((label, m) => Object.fromEntries([['label', label], ...kinds.map((k, i) => [k, Math.round(40 + 25 * Math.sin(m / 2 + i) + (m * (i + 3)) % 17)])]));
+    return chart({ title: 'Spending by category', data, format: (n) => n + ' €', series: kinds.map((k) => ({ key: k, label: k })) }).el;     // no colours: --cat-0, --cat-1, ...
+  },
   chart() {
     const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0') + ':00');
     const wave = (i, k) => Math.round(40 + 30 * Math.sin(i / 3.2 + k) + (i * 7 % 11) * k);
