@@ -1,24 +1,26 @@
 #!/usr/bin/env bash
 # Makes a new app from the base: a copy of the base (base/) and of the start project, with its own name, namespace and colour.
 #
-#   scripts/new-app.sh <name> <target folder> [--accent <hue 0-359> | --color <#rrggbb>] [--title "Name people see"]
+#   scripts/new-app.sh <name> <target folder> [--accent <hue 0-359> | --color <#rrggbb>] [--title "Name people see"] [--head]
 #
 #   name     short technical name: lower case, digits, dash (it names the Compose project, the cookie, the repository)
 #   target   a folder that does not exist yet or is empty
 #   --accent the colour of the app as an angle on the colour wheel (COLOR-01), default 299
 #   --color  the colour of the app as a colour (#rrggbb, since 0.4.0): written as --accent-color and AccentColor; AccentHue becomes its hue
+#   --head   make it from this working tree as it is, unreleased changes included (to try them); by default from the newest release (tag v*)
 #
 # Afterwards: cd <target> && docker compose up -d --build, open http://localhost:8080, read the setup code with docker compose logs app.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 name="${1:-}"; target="${2:-}"; shift $(( $# >= 2 ? 2 : $# ))
-accent=299; color=""; title=""
+accent=299; color=""; title=""; source_mode=release
 while [ $# -gt 0 ]; do
   case "$1" in
     --accent) accent="${2:-}"; shift 2 ;;
     --color) color="$(tr 'A-F' 'a-f' <<< "${2:-}")"; shift 2 ;;
     --title) title="${2:-}"; shift 2 ;;
+    --head) source_mode=head; shift ;;
     *) fail "unknown argument: $1" ;;
   esac
 done
@@ -47,11 +49,12 @@ done
 [ -n "$title" ] || title="$words"
 [[ "$title" != *[\"\\\&\|\<\>]* ]] || fail "--title must not contain quotes, backslash, &, | or angle brackets"
 [ "$ns" != "Base" ] || fail "the name 'base' is taken"
-version="$(tr -d '[:space:]' < "$BASE_ROOT/VERSION")"
+use_source "$source_mode"
+version="$(tr -d '[:space:]' < "$BASE_SRC/VERSION")"
 
 mkdir -p "$target"
 target="$(cd "$target" && pwd)"
-start="$BASE_ROOT/samples/StartApp"
+start="$BASE_SRC/samples/StartApp"
 app="$target/src/$ns"
 
 # 1. the base
@@ -75,17 +78,17 @@ fi
 sed -e 's|^#   docker build -f .*|#   docker build .|' -e "s|samples/StartApp|src/$ns|g" -e 's|^ARG BASE_DIR=\.$|ARG BASE_DIR=base|' -e "s/StartApp/$ns/g" "$start/Dockerfile" > "$target/Dockerfile"
 sed -e '/^    build:$/,/^      dockerfile: .*$/c\    build: .' "$start/docker-compose.yml" > "$target/docker-compose.yml"
 rename_in "$target/docker-compose.yml"
-cp "$BASE_ROOT/global.json" "$BASE_ROOT/.gitignore" "$BASE_ROOT/.dockerignore" "$target/"
-grep -v -e 'xunit' -e 'Mvc.Testing' "$BASE_ROOT/Directory.Packages.props" > "$target/Directory.Packages.props"
+cp "$BASE_SRC/global.json" "$BASE_SRC/.gitignore" "$BASE_SRC/.dockerignore" "$target/"
+grep -v -e 'xunit' -e 'Mvc.Testing' "$BASE_SRC/Directory.Packages.props" > "$target/Directory.Packages.props"
 render() { sed -e "s|{{NAME}}|$name|g" -e "s|{{NS}}|$ns|g" -e "s|{{TITLE}}|$title|g" -e "s|{{BASE_VERSION}}|$version|g" -e "s|{{ACCENT}}|$accent|g" "$1" > "$2"; }
-render "$BASE_ROOT/templates/CLAUDE.app.md" "$target/CLAUDE.md"
-render "$BASE_ROOT/templates/app/AGENTS.md" "$target/AGENTS.md"
-render "$BASE_ROOT/templates/app/README.md" "$target/README.md"
-render "$BASE_ROOT/templates/app/CHANGELOG.md" "$target/CHANGELOG.md"
-render "$BASE_ROOT/templates/app/Directory.Build.props" "$target/Directory.Build.props"
-render "$BASE_ROOT/templates/app/app.slnx" "$target/$ns.slnx"
+render "$BASE_SRC/templates/CLAUDE.app.md" "$target/CLAUDE.md"
+render "$BASE_SRC/templates/app/AGENTS.md" "$target/AGENTS.md"
+render "$BASE_SRC/templates/app/README.md" "$target/README.md"
+render "$BASE_SRC/templates/app/CHANGELOG.md" "$target/CHANGELOG.md"
+render "$BASE_SRC/templates/app/Directory.Build.props" "$target/Directory.Build.props"
+render "$BASE_SRC/templates/app/app.slnx" "$target/$ns.slnx"
 mkdir -p "$target/.github/workflows"
-render "$BASE_ROOT/templates/app/build.yml" "$target/.github/workflows/build.yml"
+render "$BASE_SRC/templates/app/build.yml" "$target/.github/workflows/build.yml"
 
 echo "Made $title ($name) in $target from base $version."
 echo "  cd $target && docker compose up -d --build"

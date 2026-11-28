@@ -53,13 +53,13 @@ An app is a PWA without writing a file: the base serves `/manifest.webmanifest`,
 scripts/check-app.sh ../notes
 ```
 
-shows whether the app's copy of the base was edited there, how far it is behind this repository, and a few rules it can check from the files.
+shows whether the app's copy of the base was edited there, how far it is behind the newest release of the base, and a few rules it can check from the files.
 
 ```bash
 scripts/sync-base.sh ../notes
 ```
 
-renews the copy. Read [CHANGELOG.md](CHANGELOG.md) first; then build and look at the app.
+renews the copy from the newest release (the tag `v*` with the highest version), never from what is still being built on `main`. Read [CHANGELOG.md](CHANGELOG.md) first; then build and look at the app. `new-app.sh` makes an app from that release too. To try something not yet released in an app, all three take `--head`: the working tree as it is; sync again after the release.
 
 ## Work on the base
 
