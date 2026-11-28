@@ -3,7 +3,7 @@
 The shared base of the app family: every new app is made from this repository. Short list; if a rule does not help, delete it.
 
 1. **The rulebook is [docs/RULES.md](docs/RULES.md).** Rules have numbers (`AUTH-03`); cite them in comments and reviews. A change that touches a rule changes the rule, its test and the code in one commit.
-2. **Into the base goes only what two apps need** (CODE-07). Build a thing in a real app first, then move it here. Later steps (passkeys, a hub sign-in, the AI client) are not built ahead.
+2. **Parts of the look are built here first; server parts go into the base when two apps need them** (CODE-07, the owner's rule of 2026-11-28). A component of the interface an app asks for is made in `ui/` with its catalogue entry, not in the app. A server part is built in a real app first, then moved here. Later steps (passkeys, the AI client) are not built ahead.
 3. **Own code, few packages** (CODE-02, CODE-03): Npgsql, Argon2 and Microsoft's token library, nothing else without changing the rule. Never write cryptography, password hashing, WebAuthn or TLS.
 4. **No build step in the browser** (CODE-06), **plain SQL with numbered migrations** (DATA-01, DATA-02), **settings in the app** (OPS-03), **a Compose file without variables** (OPS-02).
 5. **Nothing private in the repository or its history** (SEC-06): no domain names, real addresses, host names, keys, tokens, passwords or personal paths; examples use `192.0.2.x` and `example.com`. Look at `git diff` before every push.

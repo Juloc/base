@@ -7,7 +7,7 @@ How to read it:
 - A rule has a **number that never changes** (`AUTH-03`). Code comments, reviews and the agent rules of every repository cite the number. A rule that is dropped keeps its number as "withdrawn"; a number is never used again.
 - The level says how binding it is: **MUST** (Muss: no exception without changing the rulebook), **SHOULD** (Soll: the normal case; a deviation is written down with its reason in the app's `docs/DECISIONS.md`), **MAY** (Kann: allowed and prepared, not required).
 - *Why* is one sentence. *Test* names the test in `tests/Base.Tests` that checks the rule (`Class.Method`); a test (`RulebookTests`) makes sure every test named here exists. *Check* means `scripts/check-app.sh` looks at it in an app. A rule without either is checked by review and by looking at the running app.
-- Only rules the base itself keeps are in here. A rule is added when the second app needs it, not before.
+- Only rules the base itself keeps are in here. A rule is added when the second app needs it, not before (a part of the look is built in the base at once, CODE-07).
 
 The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DIALOG, COLOR, MOBILE, A11Y, I18N, KIT, TEST.
 
@@ -19,7 +19,7 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 - **CODE-04 (SHOULD)** A failure that can be expected (wrong input, not found, not allowed) is returned as `Result` with an `Error` that has a stable code; exceptions are for bugs and outages. *Why:* the caller sees every way a call can end, and the browser can translate the code. *Test:* `CoreTests.A_result_carries_a_value_or_an_error_never_both`, `HttpTests.Errors_have_one_shape_with_a_code_and_the_wrong_fields`
 - **CODE-05 (MUST)** Code takes the time from a `TimeProvider`, never from `DateTime.Now` or `DateTimeOffset.UtcNow`. *Why:* everything with a deadline (lockout, codes, sessions) can be tested without waiting. *Test:* `RuleFileTests.No_code_asks_the_system_clock_directly`
 - **CODE-06 (MUST)** The browser side has no build step: plain CSS and JavaScript modules served as written; no npm, no bundler, no framework, nothing loaded from another server. *Why:* what is in the repository is what runs, in ten years too. *Test:* `RuleFileTests.The_browser_side_has_no_build_step_and_no_foreign_origin` *Check:* yes
-- **CODE-07 (MUST)** The base reaches an app as a copy in its folder `base/` (made by `scripts/new-app.sh`, renewed by `scripts/sync-base.sh`) with its version in the files. Nothing in `base/` is edited in the app; into the base goes only what two apps need. *Why:* every app builds alone, and one look shows which base it runs and whether it drifted. *Check:* yes (also run in CI on a freshly made app)
+- **CODE-07 (MUST)** The base reaches an app as a copy in its folder `base/` (made by `scripts/new-app.sh`, renewed by `scripts/sync-base.sh`) with its version in the files. Nothing in `base/` is edited in the app. A part of the look (a component of `ui/`) is built in the base from the start, with its catalogue entry; a server part goes into the base when two apps need it. *Why:* every app builds alone, and one look shows which base it runs and whether it drifted. *Check:* yes (also run in CI on a freshly made app)
 
 ## DATA: PostgreSQL
 

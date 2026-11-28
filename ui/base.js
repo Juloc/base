@@ -797,7 +797,7 @@ export function shell({ app, nav, person, menu = [], onSignOut }) {
     h('span', { class: 'avatar', text: initial }), h('span', { class: 'person-name', text: person.name }), icon('more'));
   const link = (cls, n, inner) => h('a', { class: cls, href: n.href, dataset: { nav: n.href } }, inner);
   const navItem = (n) => link('nav-item', n, [icon(n.icon), h('span', { text: n.label })]);
-  const brand = (cls) => h('a', { class: cls, href: nav[0] ? nav[0].href : '#/' }, h('span', { class: 'brand-mark' }, icon(app.icon || 'grid')), h('span', { text: app.name }));
+  const brand = (cls) => h('a', { class: cls, href: nav[0] ? nav[0].href : '#/' }, h('span', { class: 'brand-mark' }, h('img', { src: '/icon.svg', alt: '' })), h('span', { text: app.name }));
   const foot = nav.filter((n) => n.foot);
   const side = h('aside', { class: 'shell-side' },
     brand('brand'),
