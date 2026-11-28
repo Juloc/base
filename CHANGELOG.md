@@ -9,6 +9,7 @@ what apps rely on; such changes are marked **Breaking**.
 Three parts the finance app asked for; `table()` and `chart()` use the first two themselves.
 
 - **Look: an own check box** (decision 85). `.check input` and `.t-check` (the table's selection) are no longer the browser's box: a 22 px box drawn by the base on a real `<input type="checkbox">`, a 44 px target (MOBILE-01), filled with `--accent-ink` and a tick when on, a dash when `indeterminate` (the head of a table when some rows are chosen), the focus ring of the other controls, greyed when disabled, system colours in forced colours. The markup stays the same; an app that styled `.check input` itself (size, `accent-color`) should drop that rule. **Breaking, look:** the table's check box grows from 18 to 22 px.
+- **New: 35 icons** for everyday money: `cart fork coffee flame drop wifi car fuel plug parking bus plane bag shirt pill heart paw child school ticket bank receipt gift piggy coins debt briefcase arrows refund tag wallet card safe chart house-loan`. Same grid and stroke as the rest; only the shapes the PNG renderer of the app icon reads (decision 77).
 
 ## 0.4.3 (2026-11-28)
 
