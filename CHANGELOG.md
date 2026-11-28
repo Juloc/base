@@ -4,7 +4,7 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
-## 0.4.2 (not released yet)
+## 0.4.2 (2026-11-28)
 
 - **Look: pages use the whole width on a wide screen** (decision 83, the owner's word). `.page` and `.page-head` have no limit any more and the main area keeps only a margin (no column of 920 px in the middle); tables and grids grow with the screen. `.page.narrow` (640 px) stays for forms and a detail with text. The token `--content-w` is gone: an app that used it for its own limit gets no limit (it should drop the rule, or keep one of its own on purpose).
 - **Fix, look: a colour without chroma gives surfaces without a tint.** The page, surfaces, text and lines took a fixed chroma in the accent's hue, so a grey or black accent (`--accent-color: #272727`, also `light-dark(#272727, #e8e8e8)`) made pink surfaces (the hue of grey is about 24). They now take at most the accent's own chroma (`min(c, ...)`, as the soft tokens did already); a coloured accent looks exactly as before.
