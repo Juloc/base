@@ -7,6 +7,7 @@ what apps rely on; such changes are marked **Breaking**.
 ## 0.4.2 (not released yet)
 
 - **Look: pages use the whole width on a wide screen** (decision 83, the owner's word). `.page` and `.page-head` have no limit any more and the main area keeps only a margin (no column of 920 px in the middle); tables and grids grow with the screen. `.page.narrow` (640 px) stays for forms and a detail with text. The token `--content-w` is gone: an app that used it for its own limit gets no limit (it should drop the rule, or keep one of its own on purpose).
+- **Fix, look: a colour without chroma gives surfaces without a tint.** The page, surfaces, text and lines took a fixed chroma in the accent's hue, so a grey or black accent (`--accent-color: #272727`, also `light-dark(#272727, #e8e8e8)`) made pink surfaces (the hue of grey is about 24). They now take at most the accent's own chroma (`min(c, ...)`, as the soft tokens did already); a coloured accent looks exactly as before.
 - **New: `.page.columns`**, cards side by side on a wide screen (columns of at least 440 px, at most two; a card is never split; one column on a phone). The start app's settings page uses it instead of `.page.narrow.stack.l`; an app copies that one class.
 
 ## 0.4.1 (2026-11-27)

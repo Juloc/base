@@ -26,16 +26,16 @@
   --accent-base: var(--accent-color, var(--accent-from-hue));
 
   /* ---- surfaces: the tonal containers of Material 3, from the page (bg) over the lowest (surface, cards) to the highest (surface-4, filled fields); tinted by the hue of the accent ---- */
-  --bg: light-dark(oklch(from var(--accent-base) 0.983 0.008 h), oklch(from var(--accent-base) 0.165 0.02 h));
-  --surface: light-dark(oklch(from var(--accent-base) 1 0 h), oklch(from var(--accent-base) 0.205 0.022 h));
-  --surface-1: light-dark(oklch(from var(--accent-base) 0.966 0.012 h), oklch(from var(--accent-base) 0.225 0.024 h));
-  --surface-2: light-dark(oklch(from var(--accent-base) 0.948 0.016 h), oklch(from var(--accent-base) 0.245 0.026 h));
-  --surface-3: light-dark(oklch(from var(--accent-base) 0.931 0.018 h), oklch(from var(--accent-base) 0.275 0.028 h));
-  --surface-4: light-dark(oklch(from var(--accent-base) 0.914 0.02 h), oklch(from var(--accent-base) 0.305 0.03 h));
-  --text: light-dark(oklch(from var(--accent-base) 0.224 0.02 h), oklch(from var(--accent-base) 0.94 0.01 h));
-  --text-2: light-dark(oklch(from var(--accent-base) 0.397 0.03 h), oklch(from var(--accent-base) 0.78 0.03 h));
-  --line: light-dark(oklch(from var(--accent-base) 0.828 0.03 h), oklch(from var(--accent-base) 0.34 0.035 h));
-  --line-strong: light-dark(oklch(from var(--accent-base) 0.569 0.03 h), oklch(from var(--accent-base) 0.62 0.03 h));
+  --bg: light-dark(oklch(from var(--accent-base) 0.983 min(c, 0.008) h), oklch(from var(--accent-base) 0.165 min(c, 0.02) h));
+  --surface: light-dark(oklch(from var(--accent-base) 1 0 h), oklch(from var(--accent-base) 0.205 min(c, 0.022) h));
+  --surface-1: light-dark(oklch(from var(--accent-base) 0.966 min(c, 0.012) h), oklch(from var(--accent-base) 0.225 min(c, 0.024) h));
+  --surface-2: light-dark(oklch(from var(--accent-base) 0.948 min(c, 0.016) h), oklch(from var(--accent-base) 0.245 min(c, 0.026) h));
+  --surface-3: light-dark(oklch(from var(--accent-base) 0.931 min(c, 0.018) h), oklch(from var(--accent-base) 0.275 min(c, 0.028) h));
+  --surface-4: light-dark(oklch(from var(--accent-base) 0.914 min(c, 0.02) h), oklch(from var(--accent-base) 0.305 min(c, 0.03) h));
+  --text: light-dark(oklch(from var(--accent-base) 0.224 min(c, 0.02) h), oklch(from var(--accent-base) 0.94 min(c, 0.01) h));
+  --text-2: light-dark(oklch(from var(--accent-base) 0.397 min(c, 0.03) h), oklch(from var(--accent-base) 0.78 min(c, 0.03) h));
+  --line: light-dark(oklch(from var(--accent-base) 0.828 min(c, 0.03) h), oklch(from var(--accent-base) 0.34 min(c, 0.035) h));
+  --line-strong: light-dark(oklch(from var(--accent-base) 0.569 min(c, 0.03) h), oklch(from var(--accent-base) 0.62 min(c, 0.03) h));
   --hair: color-mix(in oklab, var(--text) 7%, transparent);     /* the fine line between rows of a card, a list or a table */
   --edge: color-mix(in oklab, var(--text) 10%, transparent);    /* the faint edge of a field, a dropdown and a bar (0.4, decision 66) */
   --seg-track: var(--surface-2);    /* the track of a segmented choice */
