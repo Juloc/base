@@ -372,7 +372,9 @@ export function chart({ title, series, data, format = (n) => fmtNumber(n), actio
  * A table (0.4): a white panel, a small grey head, 50 px rows with fine lines. Wide it is a real table; on a phone every row is two lines (the name, below it the other columns)
  * with the switch or the main action at the right and the rest in a menu.
  *   label       what the table is (for a screen reader)
- *   columns     [{ key, label, render?(row) -> node or text, align?: 'end', phone?: 'title' | 'sub' | 'hide' }]; the first column is the title on a phone, the others the second line (or hidden)
+ *   columns     [{ key, label, render?(row) -> node or text, align?: 'end', phone?: 'title' | 'sub' | 'hide', from?: 'm' | 'l' | 'xl' }]; the first column is the title on a phone, the others the second line (or hidden).
+ *               The layout follows the width of the table's own panel, not of the window (a container query, 0.4.5): below 640 px the rows have two lines,
+ *               and a column with from shows only from 800 ('m'), 1000 ('l') or 1200 px ('xl'); on two-line rows phone decides instead.
  *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree: a rounded rail per level, a round node where a row branches off it, child rows tinted (0.4.5)
  *   groups      [{ id, title, count?, rows, onAdd?(g), addLabel?, menu?: [openMenu items] or (g) => items, active?: boolean, onActive?(on, g), activeLabel? }]  folding groups with a head; an inactive group greys its rows
  *   rowKey      (row) => key, default row.id
@@ -390,6 +392,7 @@ export function table(options) {
   const open = new Set(), shut = new Set(), selected = new Set();
   let selecting = false, bar = null, byKey = new Map();
   const phoneOf = (c, i) => c.phone || (i === 0 ? 'title' : 'sub');
+  const fromOf = (c) => (['m', 'l', 'xl'].includes(c.from) ? 't-from-' + c.from : '');
   const colCount = (selection ? 1 : 0) + columns.length + (actions ? 1 : 0) + (active ? 1 : 0);
   const hasKids = (r) => Array.isArray(r.children) && r.children.length > 0;
   const deepKids = (r) => hasKids(r) || (Array.isArray(r.children) && r.children.some(deepKids));
@@ -402,7 +405,7 @@ export function table(options) {
   } });
   const head = h('tr', null,
     selection ? h('th', { class: 'c-sel', scope: 'col' }, selectAll) : null,
-    columns.map((c, i) => h('th', { scope: 'col', class: `${i === 0 ? 'c-title' : ''} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' ? 'm-hide' : ''}`.trim(), text: c.label })),
+    columns.map((c, i) => h('th', { scope: 'col', class: `${i === 0 ? 'c-title' : ''} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' ? 'm-hide' : ''} ${i === 0 ? '' : fromOf(c)}`.trim(), text: c.label })),
     actions ? h('th', { class: 'c-act', scope: 'col' }, h('span', { class: 'sr-only', text: t('table.actions') })) : null,
     active ? h('th', { class: 'c-active', scope: 'col', text: active.label || t('table.active') }) : null);
   const tbody = h('tbody');
@@ -454,7 +457,7 @@ export function table(options) {
     if (selection) tr.append(h('td', { class: 'c-sel' }, h('input', { class: 't-check', type: 'checkbox', checked: selected.has(key), 'aria-label': t('table.selectRow'), dataset: { focus: key + '|check' }, onchange: () => toggleSelected(key) })));
     const sub = columns.filter((c, i) => phoneOf(c, i) === 'sub');
     columns.forEach((c, i) => {
-      const td = h('td', { class: `${i === 0 ? 'c-title' : 'c-col'} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' || phoneOf(c, i) === 'sub' ? 'm-hide' : ''}`.trim() });
+      const td = h('td', { class: `${i === 0 ? 'c-title' : 'c-col'} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' || phoneOf(c, i) === 'sub' ? 'm-hide' : ''} ${i === 0 ? '' : fromOf(c)}`.trim() });
       if (i === 0) {
         const name = h('div', { class: 't-name' }, ctx.lines.map((l) => h('span', { class: `t-ln ${l}`, 'aria-hidden': 'true' })));
         if (canFold) {
@@ -553,7 +556,7 @@ export function table(options) {
     });
     tr.addEventListener('pointermove', (e) => { if (Math.hypot(e.clientX - x, e.clientY - y) > 8) stop(); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) tr.addEventListener(ev, stop);
-    tr.addEventListener('contextmenu', (e) => { if (selection && e.pointerType !== 'mouse' && matchMedia('(max-width: 639px)').matches) e.preventDefault(); });
+    tr.addEventListener('contextmenu', (e) => { if (selection && e.pointerType !== 'mouse' && el.clientWidth < 640) e.preventDefault(); });     // two-line rows (the container query)
   }
 
   function render({ focus } = {}) {

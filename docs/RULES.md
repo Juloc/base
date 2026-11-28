@@ -96,7 +96,7 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 ## MOBILE: phones
 
 - **MOBILE-01 (MUST)** Everything a finger presses is at least 44 px high and wide. *Why:* smaller targets are missed. *Test:* `ContrastTests.The_touch_target_is_at_least_44_px`
-- **MOBILE-02 (MUST)** A page is designed for the phone first and gains on wide screens; nothing scrolls sideways (a table turns into cards). Every page is looked at in 375 px width before it is called done. *Why:* the phone is where the apps are used most, and it is the harder case.
+- **MOBILE-02 (MUST)** A page is designed for the phone first and gains on wide screens; nothing scrolls sideways (a table turns into two-line rows when its own room is narrow, a container query). Every page is looked at in 375 px width before it is called done. *Why:* the phone is where the apps are used most, and it is the harder case.
 
 ## A11Y: accessibility
 

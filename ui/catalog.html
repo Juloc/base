@@ -340,6 +340,9 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         <div class="cat-demo" data-run="tableFold" data-inline></div>
         <div class="cat-demo" data-run="tableTree" data-inline></div>
         <div class="cat-demo" data-run="tableTreeDeep" data-inline></div>
+        <h3 class="h3">Columns by the table's own width</h3>
+        <p class="muted">Since 0.4.5 the layout follows the width of the table's own panel (a container query), not the window: a table beside a card or in a dialog gets the layout of the room it has. Below 640 px the rows have two lines; a column with <code class="mono">from: 'm'</code>, <code class="mono">'l'</code> or <code class="mono">'xl'</code> shows only from 800, 1000 or 1200 px of that width. Drag the corner of the box.</p>
+        <div class="cat-demo" data-run="tableRoom" data-inline></div>
       </section>
 
       <section class="cat-item wide" id="tabs">

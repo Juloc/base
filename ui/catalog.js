@@ -129,6 +129,25 @@ const demos = {
     });
     return t.el;
   },
+  tableRoom() {
+    const people = [
+      { id: 1, name: 'Ada Example', mail: 'ada@example.com', role: 'Admin', team: 'Platform', seen: 'today' },
+      { id: 2, name: 'Ben Example', mail: 'ben@example.org', role: 'Member', team: 'Design', seen: 'yesterday' },
+      { id: 3, name: 'Cleo Example', mail: 'cleo@example.net', role: 'Member', team: 'Support', seen: '3 days ago' },
+    ];
+    const t = table({
+      label: 'People',
+      rows: people,
+      columns: [
+        { key: 'name', label: 'Name', render: (r) => h('b', { text: r.name }) },
+        { key: 'mail', label: 'Mail' },
+        { key: 'role', label: 'Role' },
+        { key: 'team', label: 'Team', from: 'm', phone: 'hide' },     // from 800 px of the table's own width
+        { key: 'seen', label: 'Last seen', from: 'l', phone: 'hide' }, // from 1000 px
+      ],
+    });
+    return h('div', { class: 'cat-resize' }, t.el);                 // drag the corner: the columns follow the box, not the window
+  },
   tableTreeDeep() {
     const t = table({
       label: 'Folders',

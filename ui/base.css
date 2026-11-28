@@ -796,7 +796,14 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
 .t-sub-m { display: none; }
 .table-tools { display: none; }
 .table-empty .empty { border: 0; background: none; box-shadow: none; }
-@media (max-width: 639px) {
+/* which layout and which columns: by the width of the table's own panel (a container query, 0.4.5, decision 91), not of the window,
+ * so a table beside another card or in a dialog is laid out for the room it has. Below 640 px rows have two lines; a column with from: 'm' | 'l' | 'xl'
+ * shows only from 800, 1000 or 1200 px of the panel's width. */
+.table-panel { container: t-table / inline-size; }
+@container t-table (max-width: 799px) { .table.rich .t-from-m { display: none; } }
+@container t-table (max-width: 999px) { .table.rich .t-from-l { display: none; } }
+@container t-table (max-width: 1199px) { .table.rich .t-from-xl { display: none; } }
+@container t-table (max-width: 639px) {
   .table-wrap { overflow: visible; }
   .table.rich { --t-down: 38px; --t-stub: 44px; }     /* two-line rows are taller and padded: the rail reaches further */
   .table.rich, .table.rich tbody { display: block; }
