@@ -336,9 +336,22 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
 
       <section class="cat-item wide" id="tables-rich">
         <h2 class="h1">Table() and the tree</h2>
-        <p class="muted"><code class="mono">table({ label, columns, rows | groups, actions, active, detail, selection })</code> (<code class="mono">/base/parts.js</code>) makes a white table: a small grey head, 50 px rows, one action column at the right (at most one tonal text button, then quiet icon buttons; the switch is always last). Wide it is a real table; on a phone every row has two lines, the switch or the main action stays at the right and the other actions move into a menu. A row folds open to a detail (several at once); rows with <code class="mono">children</code> fold as a tree with fine lines; <code class="mono">groups</code> have a head with the count, <code class="mono">+</code>, <code class="mono">&#8942;</code> and a switch that greys every row below. Check boxes drive the selection bar; on a phone press "Select" or hold a row.</p>
+        <p class="muted"><code class="mono">table({ label, columns, rows | groups, actions, active, detail, selection })</code> (<code class="mono">/base/parts.js</code>) makes a white table: a small grey head, 50 px rows, one action column at the right (at most one tonal text button, then quiet icon buttons; the switch is always last). Wide it is a real table; on a phone every row has two lines, the switch or the main action stays at the right and the other actions move into a menu. A row folds open to a detail (several at once); rows with <code class="mono">children</code> fold as a tree (0.4.5): a rounded rail per level in <code class="mono">--accent-soft</code>, a round node in <code class="mono">--accent</code> where a row branches off, the rail going on from the fold button of an open row, and child rows tinted with a quarter of <code class="mono">--accent-soft</code>, the same on a phone; <code class="mono">groups</code> have a head with the count, <code class="mono">+</code>, <code class="mono">&#8942;</code> and a switch that greys every row below. Check boxes drive the selection bar; on a phone press "Select" or hold a row.</p>
         <div class="cat-demo" data-run="tableFold" data-inline></div>
         <div class="cat-demo" data-run="tableTree" data-inline></div>
+        <div class="cat-demo" data-run="tableTreeDeep" data-inline></div>
+        <h3 class="h3">Choosing only after "Select"</h3>
+        <p class="muted">With <code class="mono">selection: { mode: 'button' }</code> (0.4.5) the rows are plain until "Select" turns choosing on (or a long press on a phone, or <code class="mono">choose(true)</code> from the app). Then a row's tap ticks it and the selection bar takes the place of the action bar. Esc, "Done", the × of the bar or unticking the last row turn it off. <code class="mono">button: false</code> leaves the button out for an app that puts "Select" into its own bar. With <code class="mono">shape: 'round'</code> the tick is round like the avatars.</p>
+        <div class="cat-demo" data-run="tableChoose" data-inline></div>
+        <h3 class="h3">Columns by the table's own width</h3>
+        <p class="muted">Since 0.4.5 the layout follows the width of the table's own panel (a container query), not the window: a table beside a card or in a dialog gets the layout of the room it has. Below 640 px the rows have two lines; a column with <code class="mono">from: 'm'</code>, <code class="mono">'l'</code> or <code class="mono">'xl'</code> shows only from 800, 1000 or 1200 px of that width. Drag the corner of the box.</p>
+        <div class="cat-demo" data-run="tableRoom" data-inline></div>
+      </section>
+
+      <section class="cat-item" id="avatar">
+        <h2 class="h1">Avatar</h2>
+        <p class="muted"><code class="mono">avatar({ name, image, icon, cat, size, shape, label })</code> (<code class="mono">/base/parts.js</code>, 0.4.5) is the mark of who or what a row is about: a picture if it loads, else a symbol on the soft colour of its category (<code class="mono">cat: 0</code> … <code class="mono">9</code>), else the initial. Sizes: <code class="mono">'s'</code> 32 px (the menu), <code class="mono">'row'</code> 40 px, <code class="mono">'head'</code> 64 px. Round by default; <code class="mono">shape: 'square'</code> is a rounded square. One list never mixes the two: <code class="mono">table({ shape })</code> and <code class="mono">dayList({ shape })</code> give every mark inside them one shape. Without <code class="mono">label</code> it is decoration beside the name.</p>
+        <div class="cat-demo" data-run="avatars" data-inline></div>
       </section>
 
       <section class="cat-item wide" id="tabs">
@@ -370,6 +383,12 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         <h2 class="h1">Timeline</h2>
         <p class="muted"><code class="mono">timeline({ days })</code>: day headings, cards on a line, each with a round node that is green, amber or raspberry (and says it in words for a screen reader).</p>
         <div class="cat-demo" data-run="timeline" data-inline></div>
+      </section>
+
+      <section class="cat-item wide" id="daylist">
+        <h2 class="h1">Day list (endless)</h2>
+        <p class="muted"><code class="mono">dayList({ label, load, day, row, dayValue, selection, shape })</code> (0.4.5) is the endless list by day: a white card per day whose band (the date, and at the right a value such as the day's sum or the balance at its end) sticks flush under the top bar while the day is read, turns to glass and is pushed away by the next day. Scrolling down loads older days, scrolling up newer ones; the page keeps its place when rows come in above. <code class="mono">load({ dir, cursor, limit })</code> answers like a list of the server, <code class="mono">{ items, next }</code>. With <code class="mono">selection</code>, "Select" turns choosing on: the round tick takes the place of the avatar and a tap ticks a row. Expected rows (<code class="mono">quiet</code>) are in italics. The example has 30 days back and 10 ahead.</p>
+        <div class="cat-demo" data-run="dayList" data-inline></div>
       </section>
 
       <section class="cat-item wide" id="foldcard">

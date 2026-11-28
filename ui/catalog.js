@@ -1,9 +1,10 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
 import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
-import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash } from './parts.js';
+import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash, avatar, dayList, dayKey } from './parts.js';
 import { authCard, stateCard } from './gate.js';
 import { GLYPHS } from './icons.js';
+import { fmtNumber } from './i18n.js';
 
 /* ---------- the examples that are JavaScript: the source shown is the function itself ---------- */
 const demos = {
@@ -129,6 +130,72 @@ const demos = {
     });
     return t.el;
   },
+  avatars() {
+    const picture = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#2f6f5e"/><circle cx="20" cy="16" r="7" fill="#f4e3c1"/><rect x="8" y="26" width="24" height="14" rx="7" fill="#f4e3c1"/></svg>');
+    const row = (mark, name, what) => h('div', { class: 'row' }, mark, h('div', { class: 'row-main' }, h('b', { text: name }), h('span', { class: 'muted small', text: what })));
+    return h('div', { class: 'stack' },
+      h('div', { class: 'list' },
+        row(avatar({ name: 'Corner bakery', image: picture }), 'Corner bakery', 'a picture the person chose'),
+        row(avatar({ name: 'Market Hall', icon: 'cart', cat: 0 }), 'Market Hall', 'no picture: the category symbol on its colour'),
+        row(avatar({ name: 'Bike shop', image: '/missing-logo.png', icon: 'tag', cat: 5 }), 'Bike shop', 'the picture did not load: the symbol'),
+        row(avatar({ name: 'Zora Example' }), 'Zora Example', 'no picture, no symbol: the initial'),
+        row(avatar({ name: 'Ölmühle', cat: 3 }), 'Ölmühle', 'an initial on a category colour')),
+      h('div', { class: 'cluster' }, avatar({ name: 'Ada', size: 's' }), avatar({ name: 'Ada' }), avatar({ name: 'Ada', size: 'head', icon: 'bank', cat: 4, label: 'Bank account' }),
+        avatar({ name: 'Ada', shape: 'square', icon: 'card', cat: 6 }), avatar({ name: 'Ada', size: 'head', shape: 'square', image: picture })));
+  },
+  tableChoose() {
+    const rows = [
+      { id: 1, who: 'Market Hall', what: 'Groceries', icon: 'cart', cat: 0, amount: '−42.80 €' },
+      { id: 2, who: 'Corner Café', what: 'Eating out', icon: 'coffee', cat: 1, amount: '−6.40 €' },
+      { id: 3, who: 'Example Energy', what: 'Home', icon: 'plug', cat: 2, amount: '−58.00 €' },
+      { id: 4, who: 'Zora Example', what: 'Transfer', amount: '+120.00 €' },
+    ];
+    const t = table({
+      label: 'Bookings',
+      rows,
+      shape: 'round',                                   // round marks: the avatars and the tick
+      columns: [
+        { key: 'who', label: 'Who', render: (r) => h('span', { class: 'cluster' }, avatar({ name: r.who, icon: r.icon, cat: r.cat }), h('b', { text: r.who })) },
+        { key: 'what', label: 'Category' },
+        { key: 'amount', label: 'Amount', align: 'end' },
+      ],
+      selection: { mode: 'button', actions: [{ label: 'Category', icon: 'tag', run: (picked) => toast(picked.length + ' to sort') }, { label: 'Delete', icon: 'trash', kind: 'danger', run: (picked, tb) => { toast(picked.length + ' deleted'); tb.clearSelection(); } }] },
+    });
+    return t.el;
+  },
+  tableRoom() {
+    const people = [
+      { id: 1, name: 'Ada Example', mail: 'ada@example.com', role: 'Admin', team: 'Platform', seen: 'today' },
+      { id: 2, name: 'Ben Example', mail: 'ben@example.org', role: 'Member', team: 'Design', seen: 'yesterday' },
+      { id: 3, name: 'Cleo Example', mail: 'cleo@example.net', role: 'Member', team: 'Support', seen: '3 days ago' },
+    ];
+    const t = table({
+      label: 'People',
+      rows: people,
+      columns: [
+        { key: 'name', label: 'Name', render: (r) => h('b', { text: r.name }) },
+        { key: 'mail', label: 'Mail' },
+        { key: 'role', label: 'Role' },
+        { key: 'team', label: 'Team', from: 'm', phone: 'hide' },     // from 800 px of the table's own width
+        { key: 'seen', label: 'Last seen', from: 'l', phone: 'hide' }, // from 1000 px
+      ],
+    });
+    return h('div', { class: 'cat-resize' }, t.el);                 // drag the corner: the columns follow the box, not the window
+  },
+  tableTreeDeep() {
+    const t = table({
+      label: 'Folders',
+      columns: [{ key: 'name', label: 'Name' }, { key: 'size', label: 'Size', align: 'end' }],
+      rows: [
+        { id: 'd', name: 'Documents', size: '3 files', children: [
+          { id: 'd1', name: 'Invoices', size: '2 files', children: [{ id: 'd11', name: 'January.pdf', size: '84 kB' }, { id: 'd12', name: 'February.pdf', size: '91 kB' }] },
+          { id: 'd2', name: 'Contract.pdf', size: '210 kB' }] },
+        { id: 'p', name: 'Photos', size: '1 file', children: [{ id: 'p1', name: 'Garden.jpg', size: '2.4 MB' }] },
+        { id: 'n', name: 'Notes.txt', size: '2 kB' },
+      ],
+    });
+    return t.el;
+  },
   tabs() {
     const out = h('p', { class: 'muted', text: 'Chosen: week · all' });
     const state = { period: 'week', kind: 'all' };
@@ -199,6 +266,37 @@ const demos = {
         { state: 'warn', title: 'Renewal retried', time: '03:00', meta: 'blog.example.org', body: 'The provider answered slowly; the second try worked.' }] },
       { label: 'Yesterday', items: [{ state: 'danger', title: 'Record could not be set', time: '22:40', meta: 'files.example.net', body: 'The token of the provider was refused.' }] },
     ] });
+  },
+  dayList() {
+    // a made-up account: a few bookings per day, 30 days back and 10 ahead; a real app asks its server (GET /api/bookings?dir=older&cursor=...)
+    const shops = [['Market Hall', 'cart', 0, 'Groceries'], ['Corner Café', 'coffee', 1, 'Eating out'], ['Example Energy', 'plug', 2, 'Home'], ['City Transit', 'bus', 4, 'Transport'], ['Zora Example', null, null, 'Transfer']];
+    const bookingsOf = (offset) => Array.from({ length: (((offset * 7 + 11) % 4) + 4) % 4 }, (_, n) => {
+      const [who, symbol, cat, what] = shops[(offset * 3 + n * 2 + 150) % shops.length];
+      const date = new Date(); date.setDate(date.getDate() + offset); date.setHours(18 - n * 3, 0, 0, 0);
+      return { id: `${offset}.${n}`, who, symbol, cat, what, at: date, cents: who === 'Zora Example' ? 12000 : -((offset * 37 + n * 113 + 9999) % 9000 + 250), planned: offset > 0 };
+    });
+    const load = async ({ dir, cursor }) => {
+      await new Promise((done) => setTimeout(done, 400));
+      let offset = cursor !== null ? Number(cursor) : dir === 'older' ? 0 : 1, items = [];
+      while (items.length < 12 && offset >= -30 && offset <= 10) {
+        const day = bookingsOf(offset);
+        items.push(...(dir === 'older' ? day : day.reverse()));                   // older: newest first; newer: oldest first
+        offset += dir === 'older' ? -1 : 1;
+      }
+      return { items, next: offset >= -30 && offset <= 10 ? String(offset) : null };
+    };
+    const euro = (cents) => (cents > 0 ? '+' : '') + fmtNumber(cents / 100, 2) + ' €';
+    const list = dayList({
+      label: 'Bookings',
+      load,
+      day: (b) => dayKey(b.at),
+      row: (b) => ({ lead: avatar({ name: b.who, icon: b.symbol, cat: b.cat }), title: b.who, sub: b.planned ? b.what + ' · expected' : b.what, value: euro(b.cents), quiet: b.planned }),
+      dayValue: (items) => euro(items.reduce((sum, b) => sum + b.cents, 0)),
+      onRowClick: (b) => toast(b.who),
+      selection: { actions: [{ label: 'Category', icon: 'tag', run: (picked) => toast(picked.length + ' to sort') }] },
+      top: () => document.querySelector('.cat-head').offsetHeight,           // the catalogue's own bar; in an app the shell's bar is found by itself
+    });
+    return list.el;
   },
   foldCard() {
     return h('div', { class: 'stack' },

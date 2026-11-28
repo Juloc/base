@@ -5,16 +5,18 @@
  *   numberBox, numberStrip   a tonal icon, a big number, a label, an optional change; the strip is a row you swipe on a phone
  *   chart           a stacked area chart in SVG, a legend that hides a series, a dark box with every value on hover and on tap
  *   liveFeed        rows that arrive at the top without anything being rebuilt; pause and resume
- *   timeline        day headings and cards on a line with a round state node
+ *   timeline        day headings and cards on a line with a round state node (a short history)
+ *   dayList         the endless list by day: a card per day with a band that sticks under the top bar, loading older and newer pages
  *   ring            a ring with a number (days left)
+ *   avatar          a round mark for a row or a head: a picture, else a symbol on its category colour, else the initial
  *   foldCard        a card whose head opens its body
  *   flash           a row or card lights up briefly: an event in place (no toast for events)
  *   swipeFade       the soft edge where a row you swipe has more (the menu pill uses the same)
  * Everything is built with h() (SEC-05) and styled by base.css (CODE-06); colours of a chart are given by the app.
  * The catalogue (/base/catalog.html) shows each of them with the code.
  * ===================================================================== */
-import { h, icon, swipeFade, openMenu, selectionBar, emptyState, toast, errorText, ApiError } from './base.js';
-import { t, fmtNumber } from './i18n.js';
+import { h, icon, swipeFade, openMenu, selectionBar, emptyState, loading, toast, errorText, ApiError } from './base.js';
+import { t, fmtNumber, locale } from './i18n.js';
 
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let uid = 0;
@@ -98,6 +100,39 @@ export function chips({ label, items, value, multiple = false, onchange }) {
   return el;
 }
 
+/* ---------- avatar ---------- */
+
+const catClass = (cat) => (cat === undefined || cat === null || cat === '' ? '' : /^cat-\d$/.test(String(cat)) ? String(cat) : `cat-${Number(cat) % 10}`);
+const initialOf = (name) => {
+  const text = String(name || '').trim();
+  if (!text) return '';
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) for (const { segment } of new Intl.Segmenter().segment(text)) return segment;
+  return [...text][0];
+};
+/**
+ * A round mark for who or what a row is about (0.4.5): a merchant, a person, an account. In this order it shows
+ *   image   a picture (a URL the app serves), if it loads;
+ *   icon    else a symbol of icons.js on the soft colour of its category (cat: 0 to 9 or 'cat-3', the --cat-N colours);
+ *   name    else the initial of the name (on the category's colour when there is one, else on the soft accent).
+ * { name, image?, icon?, cat?, size: 's' (32 px, the menu) | 'row' (40 px, default) | 'head' (64 px, the head of a page or dialog), shape: 'round' (default) | 'square', label? }.
+ * Without label it is decoration beside the name (hidden from a screen reader); with label it is an image with that name.
+ * One list never mixes shapes (decision 88): table({ shape }) and dayList({ shape }) set the shape of every mark inside them.
+ */
+export function avatar({ name = '', image, icon: symbol, cat, size = 'row', shape = 'round', label } = {}) {
+  const el = h('span', { class: `avatar${size === 'row' || size === 'head' ? ' av-' + size : ''}${shape === 'square' ? ' av-square' : ''}`, role: label ? 'img' : null, 'aria-label': label || null, 'aria-hidden': label ? null : 'true' });
+  const fallback = () => {
+    el.classList.remove('av-image');
+    const c = catClass(cat);
+    if (c) el.classList.add(c, 'cat-soft');
+    el.replaceChildren(symbol ? icon(symbol) : initialOf(name));
+  };
+  if (image) {
+    el.classList.add('av-image');
+    el.append(h('img', { src: image, alt: '', loading: 'lazy', decoding: 'async', onerror: fallback }));
+  } else fallback();
+  return el;
+}
+
 /* ---------- number box, ring ---------- */
 
 /**
@@ -175,6 +210,290 @@ export function timeline({ days, label }) {
             it.meta ? h('div', { class: 'timeline-meta' }, content(it.meta)) : null,
             it.body ? h('div', { class: 'timeline-body' }, content(it.body)) : null));
       })))));
+}
+
+/* ---------- day list: the endless list by day ---------- */
+
+/** The key of a day in local time, 'YYYY-MM-DD' (what dayList() groups by): dayKey(new Date()) is today. */
+export function dayKey(date = new Date()) {
+  const d = date instanceof Date ? date : new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function dayLabelOf(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const date = new Date(y, m - 1, d), today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((date - today) / 86400000);
+  if (diff === 0) return t('day.today');
+  if (diff === -1) return t('day.yesterday');
+  if (diff === 1) return t('day.tomorrow');
+  return date.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', ...(y !== today.getFullYear() ? { year: 'numeric' } : {}) });
+}
+
+/**
+ * An endless list by day (0.4.5): every day is a white card whose band (the date at the left, a value at the right, e.g. the day's sum or the balance at its end)
+ * sticks flush under the top bar while the day is read and is pushed away by the next one. It loads more in both directions as one scrolls: older days below,
+ * newer days above (the page keeps its place). Pages come from load(), which answers like a list of the server (Page: { items, next }, LIST-01).
+ *   label      what the list is (for a screen reader)
+ *   load       async ({ dir: 'older' | 'newer', cursor, limit }) => ({ items, next })   'older' gives items newest first, 'newer' oldest first; the first call of each
+ *              direction has cursor null and starts at the anchor the app chooses (today); next is the cursor of the following page, null at the end of that direction
+ *   day        (item) => 'YYYY-MM-DD'   the day an item belongs to (dayKey(date) makes one in local time)
+ *   row        (item) => { lead?, title, sub?, value?, quiet? }   lead is a node (an avatar()); title, sub and value are text or nodes; quiet for what is only expected
+ *   dayValue   (items, day) => text or node   at the right of the band (the items of that day, in the list's order)
+ *   dayLabel   (day) => text   default: Heute, Gestern, Morgen, else the weekday and the date
+ *   rowKey     (item) => key (default item.id);  onRowClick (item) => void
+ *   selection  { actions: [{ label, icon?, kind?, run(items, list) }], button?: boolean }   choosing several only after "Select" (as table() with mode 'button'):
+ *              the tick takes the place of the lead, a tap toggles a row, the selection bar shows; Esc, "Done", the × of the bar or unticking the last row end it
+ *   shape      'round' (default) | 'square'   of every mark in the list (avatars and the tick); one list never mixes them
+ *   empty      { icon?, title, text?, action? }   when both directions are at their end without a row
+ *   limit      the size of a page (default 50);  top  px or () => px where the band sticks (default: under the shell's top bar, 0 when it has none)
+ *   onTopDay   (day) => void   when the day whose band is at the top changes (e.g. to show "Today" when today is out of sight)
+ * Returns { el, reload(), update(item), remove(key), flash(key), scrollToDay(day), selected(), clearSelection(), choose(on), choosing(), destroy() }.
+ * The page scrolls (not a box inside it).
+ */
+export function dayList(options) {
+  const { label, load, day, row, dayValue, dayLabel = dayLabelOf, rowKey = (i) => i.id, onRowClick, selection, shape = 'round', empty, limit = 50, top, onTopDay } = options;
+  const days = new Map();            // day -> { key, items, el, head, value, list }
+  const where = new Map();           // row key -> day
+  const selected = new Set();
+  let choosing = false, bar = null, gen = 0, topDay = null, frame = 0;
+  let state = { older: {}, newer: {} };
+
+  const selectBtn = selection && selection.button !== false ? h('button', { class: 'btn mini', type: 'button', 'aria-pressed': 'false', onclick: () => setChoosing(!choosing) }) : null;
+  const daysEl = h('div', { class: 'day-days' });
+  const edge = { newer: h('div', { class: 'day-edge' }), older: h('div', { class: 'day-edge' }) };
+  const emptyEl = h('div', { class: 'day-empty', hidden: true }, empty ? emptyState(empty) : null);
+  const el = h('section', { class: `day-list marks-${shape === 'square' ? 'square' : 'round'}${selection ? ' has-select' : ''}`, 'aria-label': label },
+    selectBtn ? h('div', { class: 'day-tools' }, selectBtn) : null, edge.newer, daysEl, edge.older, emptyEl);
+
+  /* ---- where the band sticks ---- */
+  const topPx = () => {
+    if (typeof top === 'number') return top;
+    if (typeof top === 'function') return top();
+    const bar = document.querySelector('.shell-head');
+    return bar && getComputedStyle(bar).display !== 'none' ? bar.getBoundingClientRect().height : 0;
+  };
+  let placed = -1;
+  const placeTop = (px = topPx()) => { if (px !== placed) { placed = px; el.style.setProperty('--day-top', px + 'px'); } return px; };
+
+  /* ---- drawing ---- */
+  function rowEl(item) {
+    const key = String(rowKey(item));
+    const r = row(item) || {};
+    const clickable = !!(onRowClick || selection);
+    const inner = [
+      r.lead || selection ? h('span', { class: 'day-lead' + (r.lead ? ' has-mark' : '') }, r.lead || null, selection ? h('span', { class: 'tick', 'aria-hidden': 'true' }) : null) : null,
+      h('span', { class: 'day-text' }, h('span', { class: 'day-title' }, content(r.title)), r.sub ? h('span', { class: 'day-sub' }, content(r.sub)) : null),
+      r.value !== undefined && r.value !== null ? h('span', { class: 'day-amount' }, content(r.value)) : null,
+    ];
+    const body = clickable
+      ? h('button', { class: 'day-row', type: 'button', dataset: { key }, onclick: () => (choosing ? toggle(key) : onRowClick && onRowClick(item)) }, inner)
+      : h('div', { class: 'day-row', dataset: { key } }, inner);
+    if (r.quiet) body.classList.add('day-expected');
+    if (selection) longPress(body, key);
+    const li = h('li', { class: 'day-item', dataset: { key } }, body);
+    li._item = item;
+    paintRow(li);
+    return li;
+  }
+  function paintRow(li) {
+    const b = li.firstElementChild, on = selected.has(li.dataset.key);
+    li.classList.toggle('selected', on);
+    if (b.tagName !== 'BUTTON') return;
+    if (choosing) { b.setAttribute('aria-pressed', String(on)); b.tabIndex = 0; }
+    else { b.removeAttribute('aria-pressed'); b.tabIndex = onRowClick ? 0 : -1; }
+  }
+  function makeDay(key) {
+    const id = nextId('day');
+    const value = h('span', { class: 'day-value' });
+    const name = dayLabel(key);
+    const head = h('h3', { class: 'day-head', id }, h('span', { class: 'day-label' + (key === dayKey() ? ' today' : '') }, name), value);
+    const list = h('ul', { class: 'day-rows' });
+    const d = { key, items: [], head, value, list, el: h('section', { class: 'day' + (key > dayKey() ? ' future' : ''), 'aria-labelledby': id, dataset: { day: key } }, head, list) };
+    days.set(key, d);
+    return d;
+  }
+  function paintDay(d) { if (dayValue) d.value.replaceChildren(content(dayValue(d.items, d.key)) || ''); }
+  // older items are added below (newest first), newer ones above (oldest first); a day that already stands gets the item at its edge
+  function add(items, dir) {
+    const touched = new Set();
+    for (const item of items) {
+      const key = day(item), k = String(rowKey(item));
+      if (where.has(k)) continue;                                  // a row that moved between two pages is not shown twice
+      let d = days.get(key);
+      if (!d) { d = makeDay(key); if (dir === 'older') daysEl.append(d.el); else daysEl.prepend(d.el); }
+      if (dir === 'older') { d.items.push(item); d.list.append(rowEl(item)); } else { d.items.unshift(item); d.list.prepend(rowEl(item)); }
+      where.set(k, key);
+      touched.add(d);
+    }
+    for (const d of touched) paintDay(d);
+  }
+  // what the person reads stays where it is when rows come in above it
+  function keepPlace(change) {
+    const line = topPx();
+    let anchor = null;
+    for (const d of daysEl.children) {
+      if (d.getBoundingClientRect().bottom <= line) continue;
+      anchor = [...d.querySelectorAll('.day-item')].find((li) => li.getBoundingClientRect().bottom > line) || d;
+      break;
+    }
+    const before = anchor ? anchor.getBoundingClientRect().top : 0;
+    change();
+    if (anchor && anchor.isConnected) { const shift = anchor.getBoundingClientRect().top - before; if (shift) window.scrollBy(0, shift); }
+  }
+
+  /* ---- loading in both directions ---- */
+  function paintEdge(dir) {
+    const s = state[dir];
+    edge[dir].replaceChildren(s.busy ? loading() : s.error ? h('div', { class: 'day-error' }, h('span', { text: s.error }), h('button', { class: 'btn mini', type: 'button', onclick: () => more(dir), text: t('common.retry') })) : '');
+  }
+  async function more(dir) {
+    const s = state[dir], mine = gen;
+    if (s.busy || s.done || (dir === 'newer' && !state.older.started)) return;
+    s.busy = true; s.error = null; paintEdge(dir);
+    try {
+      const page = await load({ dir, cursor: s.cursor || null, limit });
+      if (mine !== gen) return;
+      s.started = true;
+      s.cursor = page && page.next ? page.next : null;
+      s.done = !s.cursor;
+      const items = (page && page.items) || [];
+      if (dir === 'newer') keepPlace(() => add(items, dir)); else add(items, dir);
+    } catch (err) {
+      if (mine !== gen) return;
+      if (!(err instanceof ApiError)) { s.busy = false; paintEdge(dir); throw err; }
+      s.error = errorText(err);
+    }
+    s.busy = false;
+    paintEdge(dir);
+    emptyEl.hidden = !(state.older.done && state.newer.done && days.size === 0);
+    if (!s.error && !s.done && s.near) more(dir);                    // still at the edge: one more page
+    if (dir === 'older' && state.newer.near) more('newer');            // the first page is in: now the newer ones may come
+    look();
+  }
+  const watch = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const dir = e.target === edge.newer ? 'newer' : 'older';
+      state[dir].near = e.isIntersecting;
+      if (e.isIntersecting) more(dir);
+    }
+  }, { rootMargin: '900px 0px' });
+
+  /* ---- which band is at the top ---- */
+  function look() {
+    frame = 0;
+    const line = placeTop();                 // the bar may have changed its height (a line that wraps, a search that opens)
+    let current = null;
+    for (const d of days.values()) {
+      const r = d.el.getBoundingClientRect();
+      const stuck = r.top < line - 0.5 && r.bottom > line + d.head.offsetHeight;
+      d.head.classList.toggle('stuck', stuck);
+      if (r.top <= line + 1 && r.bottom > line + 1) current = d.key;
+    }
+    if (current !== topDay) { topDay = current; if (onTopDay) onTopDay(current); }
+  }
+  const onScroll = () => { if (!frame) frame = requestAnimationFrame(look); };
+  const onResize = () => { placeTop(); onScroll(); };
+
+  /* ---- choosing several ---- */
+  const onKey = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && !(e.target.closest && e.target.closest('.menu, .dd-list, .dialog'))) setChoosing(false); };
+  function setChoosing(on) {
+    if (choosing === on) return;
+    choosing = on;
+    el.classList.toggle('selecting', on);
+    if (on) document.addEventListener('keydown', onKey); else { document.removeEventListener('keydown', onKey); selected.clear(); syncBar(); }
+    for (const li of daysEl.querySelectorAll('.day-item')) paintRow(li);
+    if (selectBtn) { selectBtn.textContent = on ? t('table.selectDone') : t('table.select'); selectBtn.setAttribute('aria-pressed', String(on)); }
+  }
+  const itemOf = (k) => { const d = days.get(where.get(k)); return d && d.items.find((i) => String(rowKey(i)) === k); };
+  function syncBar() {
+    const n = selected.size;
+    if (!n) { if (bar) { bar.close(); bar = null; } return; }
+    if (bar) { bar.update({ count: n }); return; }
+    bar = selectionBar({ count: n, actions: selection.actions.map((a) => ({ ...a, run: () => a.run([...selected].map(itemOf).filter(Boolean), api) })), onClear: () => { bar = null; setChoosing(false); } });
+  }
+  function toggle(k) {
+    if (selected.has(k)) selected.delete(k); else selected.add(k);
+    if (!selected.size) { setChoosing(false); return; }
+    const li = daysEl.querySelector(`.day-item[data-key="${CSS.escape(k)}"]`);
+    if (li) paintRow(li);
+    syncBar();
+  }
+  let pressed = false;
+  function longPress(b, k) {
+    let timer = 0, x = 0, y = 0;
+    const stop = () => clearTimeout(timer);
+    b.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      x = e.clientX; y = e.clientY;
+      timer = setTimeout(() => { pressed = true; setChoosing(true); if (!selected.has(k)) toggle(k); if (navigator.vibrate) navigator.vibrate(12); }, 500);
+    });
+    b.addEventListener('pointermove', (e) => { if (Math.hypot(e.clientX - x, e.clientY - y) > 8) stop(); });
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, stop);
+    b.addEventListener('click', (e) => { if (pressed) { pressed = false; e.stopImmediatePropagation(); } }, true);
+    b.addEventListener('contextmenu', (e) => { if (e.pointerType !== 'mouse') e.preventDefault(); });
+  }
+
+  function start() {
+    gen++;
+    days.clear(); where.clear(); selected.clear(); syncBar();
+    daysEl.replaceChildren();
+    state = { older: { near: state.older.near }, newer: { near: state.newer.near } };
+    emptyEl.hidden = true;
+    paintEdge('newer'); paintEdge('older');
+    more('older');
+  }
+  const api = {
+    el,
+    reload: start,
+    update(item) {
+      const k = String(rowKey(item)), d = days.get(where.get(k));
+      if (!d) return;
+      const at = d.items.findIndex((i) => String(rowKey(i)) === k);
+      if (at < 0) return;
+      d.items[at] = item;
+      d.list.querySelector(`.day-item[data-key="${CSS.escape(k)}"]`).replaceWith(rowEl(item));
+      paintDay(d);
+    },
+    remove(key) {
+      const k = String(key), d = days.get(where.get(k));
+      if (!d) return;
+      d.items = d.items.filter((i) => String(rowKey(i)) !== k);
+      where.delete(k); selected.delete(k);
+      d.list.querySelector(`.day-item[data-key="${CSS.escape(k)}"]`)?.remove();
+      if (!d.items.length) { d.el.remove(); days.delete(d.key); } else paintDay(d);
+      if (choosing) { if (!selected.size) setChoosing(false); else syncBar(); }
+      emptyEl.hidden = !(state.older.done && state.newer.done && days.size === 0);
+    },
+    flash(key) { return flash(daysEl.querySelector(`.day-item[data-key="${CSS.escape(String(key))}"] .day-row`)); },
+    scrollToDay(key) {
+      const d = days.get(key);
+      if (!d) return false;
+      window.scrollTo({ top: d.el.getBoundingClientRect().top + window.scrollY - topPx(), behavior: reduceMotion() ? 'auto' : 'smooth' });
+      return true;
+    },
+    selected: () => [...selected].map(itemOf).filter(Boolean),
+    clearSelection() { setChoosing(false); },
+    choose(on = !choosing) { setChoosing(!!on); },
+    choosing: () => choosing,
+    destroy() {
+      watch.disconnect(); if (headWatch) headWatch.disconnect();
+      removeEventListener('scroll', onScroll); removeEventListener('resize', onResize); document.removeEventListener('keydown', onKey);
+      if (bar) { bar.close(); bar = null; }
+      gen++;
+    },
+  };
+  if (selectBtn) selectBtn.textContent = t('table.select');
+  placeTop();
+  const shellHead = document.querySelector('.shell-head');
+  const headWatch = shellHead && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
+  if (headWatch) headWatch.observe(shellHead);
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onResize);
+  watch.observe(edge.newer); watch.observe(edge.older);
+  window.addEventListener('hashchange', api.destroy, { once: true });     // the list belongs to the page: it goes with it
+  start();
+  return api;
 }
 
 /* ---------- live feed ---------- */
@@ -372,24 +691,32 @@ export function chart({ title, series, data, format = (n) => fmtNumber(n), actio
  * A table (0.4): a white panel, a small grey head, 50 px rows with fine lines. Wide it is a real table; on a phone every row is two lines (the name, below it the other columns)
  * with the switch or the main action at the right and the rest in a menu.
  *   label       what the table is (for a screen reader)
- *   columns     [{ key, label, render?(row) -> node or text, align?: 'end', phone?: 'title' | 'sub' | 'hide' }]; the first column is the title on a phone, the others the second line (or hidden)
- *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree (indented, with fine lines)
+ *   columns     [{ key, label, render?(row) -> node or text, align?: 'end', phone?: 'title' | 'sub' | 'hide', from?: 'm' | 'l' | 'xl' }]; the first column is the title on a phone, the others the second line (or hidden).
+ *               The layout follows the width of the table's own panel, not of the window (a container query, 0.4.5): below 640 px the rows have two lines,
+ *               and a column with from shows only from 800 ('m'), 1000 ('l') or 1200 px ('xl'); on two-line rows phone decides instead.
+ *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree: a rounded rail per level, a round node where a row branches off it, child rows tinted (0.4.5)
  *   groups      [{ id, title, count?, rows, onAdd?(g), addLabel?, menu?: [openMenu items] or (g) => items, active?: boolean, onActive?(on, g), activeLabel? }]  folding groups with a head; an inactive group greys its rows
  *   rowKey      (row) => key, default row.id
  *   actions     (row) => [{ label, icon?, kind?: 'main' | 'danger', run(row, button) }]   the action column: at most one 'main' (a tonal text button), the others quiet icon buttons
  *   active      { label?, get(row) -> boolean, set(row, on) -> promise }   the switch of a row, always the last column; a row that is off is greyed
  *   detail      (row) => node   a row folds open to this (several at once); a row with children folds its children instead
- *   selection   { actions: [{ label, icon?, kind?, run(rows, table) }] }   check boxes and the selection bar; on a phone through the "Select" button or a long press
+ *   selection   { actions: [{ label, icon?, kind?, run(rows, table) }], mode?: 'always' | 'button', button?: boolean }   check boxes and the selection bar.
+ *               'always' (default): check boxes on a wide table; on two-line rows through the "Select" button or a long press.
+ *               'button' (0.4.5): plain rows until "Select" (or choose(true), or a long press) turns choosing on; Esc, "Done", clearing the bar or unticking
+ *               the last row turn it off. button: false leaves the button out, for an app that puts its own (e.g. in its bar) and calls choose().
+ *   shape       'round' | 'square'   the shape of every mark in the table (avatars, the category square, the check box), so one list never mixes them
  *   onRowClick  (row) => void   what a click on the row does (instead of folding the detail)
  *   empty       { icon?, title, text?, action? }   what stands in place of the table when there is no row
- * Returns { el, set({ rows?, groups? }), flash(key), selected(), clearSelection(), destroy() }; set() draws again and keeps what is open and what is selected.
+ * Returns { el, set({ rows?, groups? }), flash(key), selected(), clearSelection(), choose(on), choosing(), destroy() }; set() draws again and keeps what is open and what is selected.
  */
 export function table(options) {
-  const { label, columns, rowKey = (r) => r.id, actions, active, detail, selection, onRowClick, empty } = options;
+  const { label, columns, rowKey = (r) => r.id, actions, active, detail, selection, onRowClick, empty, shape } = options;
+  const onDemand = !!selection && selection.mode === 'button';
   let rows = options.rows || [], groups = options.groups || null;
   const open = new Set(), shut = new Set(), selected = new Set();
   let selecting = false, bar = null, byKey = new Map();
   const phoneOf = (c, i) => c.phone || (i === 0 ? 'title' : 'sub');
+  const fromOf = (c) => (['m', 'l', 'xl'].includes(c.from) ? 't-from-' + c.from : '');
   const colCount = (selection ? 1 : 0) + columns.length + (actions ? 1 : 0) + (active ? 1 : 0);
   const hasKids = (r) => Array.isArray(r.children) && r.children.length > 0;
   const deepKids = (r) => hasKids(r) || (Array.isArray(r.children) && r.children.some(deepKids));
@@ -398,23 +725,28 @@ export function table(options) {
 
   const selectAll = h('input', { class: 't-check', type: 'checkbox', 'aria-label': t('table.selectAll'), onchange: (e) => {
     if (e.currentTarget.checked) for (const k of byKey.keys()) selected.add(k); else selected.clear();
+    if (onDemand && !selected.size) { setSelecting(false); return; }
     render(); syncBar();
   } });
   const head = h('tr', null,
     selection ? h('th', { class: 'c-sel', scope: 'col' }, selectAll) : null,
-    columns.map((c, i) => h('th', { scope: 'col', class: `${i === 0 ? 'c-title' : ''} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' ? 'm-hide' : ''}`.trim(), text: c.label })),
+    columns.map((c, i) => h('th', { scope: 'col', class: `${i === 0 ? 'c-title' : ''} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' ? 'm-hide' : ''} ${i === 0 ? '' : fromOf(c)}`.trim(), text: c.label })),
     actions ? h('th', { class: 'c-act', scope: 'col' }, h('span', { class: 'sr-only', text: t('table.actions') })) : null,
     active ? h('th', { class: 'c-active', scope: 'col', text: active.label || t('table.active') }) : null);
   const tbody = h('tbody');
-  const selectBtn = selection ? h('button', { class: 'btn mini', type: 'button', 'aria-pressed': 'false', onclick: () => setSelecting(!selecting) }) : null;
-  const tools = selection ? h('div', { class: 'table-tools' }, selectBtn) : null;
+  const selectBtn = selection && selection.button !== false ? h('button', { class: 'btn mini', type: 'button', 'aria-pressed': 'false', onclick: () => setSelecting(!selecting) }) : null;
+  const tools = selectBtn ? h('div', { class: 'table-tools' }, selectBtn) : null;
   const tableEl = h('table', { class: 'table rich', 'aria-label': label }, h('thead', null, head), tbody);
   const emptyEl = empty ? h('div', { class: 'table-empty', hidden: true }, emptyState(empty)) : null;
-  const el = h('div', { class: 'panel table-panel' + (selection ? ' has-select' : '') }, tools, h('div', { class: 'table-wrap' }, tableEl), emptyEl);
+  const el = h('div', { class: `panel table-panel${selection ? ' has-select' : ''}${onDemand ? ' on-demand' : ''}${shape === 'round' || shape === 'square' ? ' marks-' + shape : ''}` }, tools, h('div', { class: 'table-wrap' }, tableEl), emptyEl);
 
+  // Esc leaves choosing (not when it closes a menu or a list of choices first)
+  const onKey = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && !(e.target.closest && e.target.closest('.menu, .dd-list, .dialog'))) setSelecting(false); };
   function setSelecting(on) {
+    if (selecting === on) return;
     selecting = on;
     el.classList.toggle('selecting', on);
+    if (on) document.addEventListener('keydown', onKey); else document.removeEventListener('keydown', onKey);
     if (!on) { selected.clear(); render(); syncBar(); }
     paintTools();
   }
@@ -433,11 +765,12 @@ export function table(options) {
     bar = selectionBar({
       count: n,
       actions: selection.actions.map((a) => ({ ...a, run: () => a.run([...selected].map((k) => byKey.get(k)).filter(Boolean), api) })),
-      onClear: () => { bar = null; selected.clear(); render(); },
+      onClear: () => { bar = null; selected.clear(); if (onDemand) setSelecting(false); else render(); },
     });
   }
   function toggleSelected(key) {
     if (selected.has(key)) selected.delete(key); else selected.add(key);
+    if (onDemand && !selected.size) { setSelecting(false); return; }     // unticking the last row leaves choosing
     render({ focus: key + '|check' }); syncBar();
   }
 
@@ -449,12 +782,12 @@ export function table(options) {
     const canFold = kids || !!detail;
     const off = ctx.off || (active && !active.get(row));
     const clickable = !!(onRowClick || (detail && !kids) || selection);
-    const tr = h('tr', { class: `t-row${off ? ' off' : ''}${selected.has(key) ? ' selected' : ''}${isOpen && !kids ? ' opened' : ''}${clickable && (onRowClick || detail) ? ' clickable' : ''}`, dataset: { key } });
+    const tr = h('tr', { class: `t-row${off ? ' off' : ''}${selected.has(key) ? ' selected' : ''}${isOpen && !kids ? ' opened' : ''}${clickable && (onRowClick || detail) ? ' clickable' : ''}${ctx.child ? ' t-child' : ''}${kids && !folded ? ' t-open' : ''}`, dataset: { key } });
     tr.style.setProperty('--depth', ctx.lines.length);
     if (selection) tr.append(h('td', { class: 'c-sel' }, h('input', { class: 't-check', type: 'checkbox', checked: selected.has(key), 'aria-label': t('table.selectRow'), dataset: { focus: key + '|check' }, onchange: () => toggleSelected(key) })));
     const sub = columns.filter((c, i) => phoneOf(c, i) === 'sub');
     columns.forEach((c, i) => {
-      const td = h('td', { class: `${i === 0 ? 'c-title' : 'c-col'} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' || phoneOf(c, i) === 'sub' ? 'm-hide' : ''}`.trim() });
+      const td = h('td', { class: `${i === 0 ? 'c-title' : 'c-col'} ${c.align === 'end' ? 'r' : ''} ${phoneOf(c, i) === 'hide' || phoneOf(c, i) === 'sub' ? 'm-hide' : ''} ${i === 0 ? '' : fromOf(c)}`.trim() });
       if (i === 0) {
         const name = h('div', { class: 't-name' }, ctx.lines.map((l) => h('span', { class: `t-ln ${l}`, 'aria-hidden': 'true' })));
         if (canFold) {
@@ -478,7 +811,7 @@ export function table(options) {
       dtr._row = row;
       out.push(dtr);
     }
-    if (kids && !folded) row.children.forEach((child, i) => addRow(out, child, { off, lines: [...ctx.lines.slice(0, -1), ctx.lines.length ? (ctx.last ? 'blank' : 'pass') : null, i === row.children.length - 1 ? 'end' : 'mid'].filter(Boolean), last: i === row.children.length - 1 }));
+    if (kids && !folded) row.children.forEach((child, i) => addRow(out, child, { off, lines: [...ctx.lines.slice(0, -1), ctx.lines.length ? (ctx.last ? 'blank' : 'pass') : null, i === row.children.length - 1 ? 'end' : 'mid'].filter(Boolean), last: i === row.children.length - 1, child: true }));
   }
   function addRows(out, list, ctx) {
     list.forEach((row, i) => addRow(out, row, { off: ctx.off, lines: ctx.root ? [] : [ctx.in ? (i === list.length - 1 ? 'end' : 'mid') : null].filter(Boolean), last: i === list.length - 1 }));
@@ -487,7 +820,7 @@ export function table(options) {
     const key = 'g:' + g.id, folded = shut.has(key), off = g.active === false;
     const menuItems = typeof g.menu === 'function' ? g.menu(g) : g.menu;
     const sw = g.active === undefined ? null : h('label', { class: 'switch t-switch' }, h('input', { type: 'checkbox', role: 'switch', checked: g.active, 'aria-label': g.activeLabel || g.title, onchange: (e) => g.onActive && g.onActive(e.currentTarget.checked, g) }), h('span', { class: 'switch-track' }));
-    out.push(h('tr', { class: `t-group${off ? ' off' : ''}`, dataset: { key } }, h('td', { colspan: colCount }, h('div', { class: 't-ghead' },
+    out.push(h('tr', { class: `t-group${off ? ' off' : ''}${!folded && g.rows.length ? ' t-open' : ''}`, dataset: { key } }, h('td', { colspan: colCount }, h('div', { class: 't-ghead' },
       h('button', { class: 't-fold', type: 'button', 'aria-expanded': String(!folded), 'aria-label': (folded ? t('table.open') : t('table.close')) + ': ' + (typeof g.title === 'string' ? g.title : ''), dataset: { focus: key + '|fold' }, onclick: () => toggleFold(key, true) }, icon('down')),
       h('span', { class: 't-gname' }, content(g.title)), g.count !== undefined ? h('span', { class: 't-gcount', text: String(g.count) }) : null, h('span', { class: 'grow' }),
       g.onAdd ? h('button', { class: 'btn mini quiet icon-only', type: 'button', 'aria-label': g.addLabel || t('table.add'), onclick: () => g.onAdd(g) }, icon('plus')) : null,
@@ -549,11 +882,11 @@ export function table(options) {
     tr.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'touch' || e.target.closest('button, a, input, label')) return;
       x = e.clientX; y = e.clientY;
-      timer = setTimeout(() => { pressed = true; if (!selecting) { selecting = true; el.classList.add('selecting'); paintTools(); } selected.add(key); render({ focus: key + '|check' }); syncBar(); if (navigator.vibrate) navigator.vibrate(12); }, 500);
+      timer = setTimeout(() => { pressed = true; setSelecting(true); selected.add(key); render({ focus: key + '|check' }); syncBar(); if (navigator.vibrate) navigator.vibrate(12); }, 500);
     });
     tr.addEventListener('pointermove', (e) => { if (Math.hypot(e.clientX - x, e.clientY - y) > 8) stop(); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) tr.addEventListener(ev, stop);
-    tr.addEventListener('contextmenu', (e) => { if (selection && e.pointerType !== 'mouse' && matchMedia('(max-width: 639px)').matches) e.preventDefault(); });
+    tr.addEventListener('contextmenu', (e) => { if (selection && e.pointerType !== 'mouse' && el.clientWidth < 640) e.preventDefault(); });     // two-line rows (the container query)
   }
 
   function render({ focus } = {}) {
@@ -575,8 +908,10 @@ export function table(options) {
     set(next) { if (next.rows) rows = next.rows; if (next.groups) groups = next.groups; render(); syncBar(); },
     flash(key) { return flash(tbody.querySelector(`tr.t-row[data-key="${CSS.escape(String(key))}"]`)); },
     selected: () => [...selected].map((k) => byKey.get(k)).filter(Boolean),
-    clearSelection() { selected.clear(); render(); syncBar(); },
-    destroy() { if (bar) { bar.close(); bar = null; } },
+    clearSelection() { selected.clear(); if (onDemand) setSelecting(false); else { render(); syncBar(); } },
+    choose(on = !selecting) { setSelecting(!!on); },
+    choosing: () => selecting,
+    destroy() { if (bar) { bar.close(); bar = null; } document.removeEventListener('keydown', onKey); },
   };
   window.addEventListener('hashchange', api.destroy, { once: true });     // the selection bar belongs to the page: it goes with it
   render();

@@ -157,6 +157,17 @@ body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--t
 .nav-foot { padding-top: var(--s2); border-top: 1px solid var(--glass-edge); }
 
 .avatar { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: var(--r-full); background: var(--accent-soft); color: var(--on-accent-soft); font: 500 var(--text-s)/1 var(--font); text-transform: uppercase; }
+/* avatar() (0.4.5): a picture, a symbol on its category colour or an initial; 32 px in the menu, .av-row 40 px, .av-head 64 px. Round unless .av-square */
+.avatar.av-row { width: 40px; height: 40px; font: 600 var(--text-m)/1 var(--font); }
+.avatar.av-head { width: 64px; height: 64px; font: 600 26px/1 var(--font); }
+.avatar.av-square { border-radius: 28%; }
+.avatar.av-image { overflow: hidden; background: var(--surface-2); }
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.avatar .icon { width: 55%; height: 55%; }
+.avatar.av-row .icon { width: 22px; height: 22px; }
+/* one list, one shape (decision 88): table({ shape }) and dayList({ shape }) set it for every mark inside */
+.marks-round :is(.avatar, .cat-mark, .tick) { border-radius: 50%; }
+.marks-square :is(.avatar, .cat-mark, .tick) { border-radius: 28%; }
 .person { display: flex; align-items: center; gap: var(--s3); min-height: var(--touch); width: 100%; padding: var(--s1) var(--s2); border: 0; background: none; border-radius: var(--r-full); text-align: left; }
 .person:hover { background: color-mix(in oklab, var(--text) 8%, transparent); }
 .person-name { flex: 1 1 auto; min-width: 0; font: 500 var(--text-s)/1.3 var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -746,13 +757,15 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .table.rich :is(th, td):first-child { padding-left: 20px; }
 .table.rich :is(th, td):last-child { padding-right: 20px; }
 .table.rich tr.t-row.clickable { cursor: pointer; }
+.table.rich tr.t-row.t-child > td { background: var(--t-tint); }
 .table.rich tr.t-row:hover > td { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+.table.rich tr.t-row.t-child:hover > td { background: color-mix(in oklab, var(--accent) 7%, var(--t-tint)); }
 .table.rich tr.t-row.opened > td, .table.rich tr.t-detail > td { background: var(--surface-1); }
 .table.rich tr.t-row.selected > td { background: var(--accent-soft); }
 .table.rich tr.t-detail > td { height: auto; border-top: 0; padding: 4px 20px 18px 56px; white-space: normal; }
 .table.rich tr.t-detail[hidden] { display: none; }
 .table.rich tr.t-row.off > td:not(.c-act):not(.c-active):not(.c-sel) { opacity: 0.45; }
-.table.rich tr.t-group > td { height: 50px; padding: 0 12px 0 14px; background: var(--surface-1); border-top: 0; }
+.table.rich tr.t-group > td { height: 50px; padding: 0 12px 0 20px; background: var(--surface-1); border-top: 0; }
 .table.rich tr.t-group:not(:first-child) > td { border-top: 8px solid var(--surface); }
 .table.rich tr.t-group.off .t-gname, .table.rich tr.t-group.off .t-gcount { opacity: 0.45; }
 .table.rich tr.t-group + tr.t-row > td, .table.rich tr.t-detail + tr.t-row > td { border-top-color: var(--hair); }
@@ -767,11 +780,23 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .t-fold .icon { width: 18px; height: 18px; transition: transform var(--dur) var(--ease); }
 .t-fold[aria-expanded="false"] .icon { transform: rotate(-90deg); }
 .t-fold:focus-visible { outline: 2px solid var(--accent-ink); }
-/* tree lines: one 22 px cell per level; the last is a branch (mid or end), the ones before are the lines that go on (pass) or not (blank) */
-.t-ln { position: relative; flex: none; align-self: stretch; width: 22px; }
-.t-ln.pass::before, .t-ln.mid::before, .t-ln.end::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; border-left: 1.5px solid color-mix(in oklab, var(--text) 14%, transparent); }
-.t-ln.end::before { bottom: 50%; }
-.t-ln.mid::after, .t-ln.end::after { content: ""; position: absolute; left: 10px; top: 50%; width: 10px; border-top: 1.5px solid color-mix(in oklab, var(--text) 14%, transparent); }
+/* the tree (0.4.5, decision 91): one cell of --t-step per level. A rounded rail in --accent-soft runs down a level, a round node in --accent sits where a row
+ * branches off it, and the rail goes on from the fold button of an open row; child rows are tinted. A rail cell reaches --t-down into the next row, so it has
+ * no gap between rows (that row always has the rail at the same place, and its node is drawn above it). */
+.table-panel { --t-step: 28px; --t-rail: 5px; --t-down: 24px; --t-stub: 34px; --t-tint: color-mix(in oklab, var(--accent-soft) 25%, var(--surface)); }
+.t-ln { position: relative; flex: none; align-self: stretch; width: var(--t-step); }
+.t-ln:is(.pass, .mid, .end)::before { content: ""; position: absolute; left: calc(50% - var(--t-rail) / 2); width: var(--t-rail); top: -1px; bottom: calc(var(--t-down) * -1); background: var(--accent-soft); pointer-events: none; }
+.t-ln.end::before { bottom: calc(50% - var(--t-rail) / 2); border-radius: 0 0 var(--t-rail) var(--t-rail); }
+.t-ln:is(.mid, .end)::after { content: ""; position: absolute; z-index: 1; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent); pointer-events: none; }
+.t-ln:is(.mid, .end) { background: linear-gradient(var(--accent-soft) 0 0) right center / 50% var(--t-rail) no-repeat; }     /* the branch from the node to the row */
+.t-fold-gap { position: relative; }
+.t-ln:is(.mid, .end) + .t-fold-gap::before { content: ""; position: absolute; left: 0; top: calc(50% - var(--t-rail) / 2); width: 12px; height: var(--t-rail); border-radius: 0 var(--t-rail) var(--t-rail) 0; background: var(--accent-soft); }
+.t-fold { position: relative; }
+.t-open .t-fold::after { content: ""; position: absolute; left: calc(50% - var(--t-rail) / 2); top: calc(100% + 2px); width: var(--t-rail); height: var(--t-stub); border-radius: var(--t-rail) var(--t-rail) 0 0; background: var(--accent-soft); pointer-events: none; }
+.t-group.t-open .t-fold::after { display: none; }      /* the rows of a group begin their own rail: the head moves when a selection column shows */
+tr.t-group + tr.t-row .t-ln:first-child::before { top: 6px; border-radius: var(--t-rail) var(--t-rail) 0 0; }
+tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rail); }
+.table.rich tr.t-detail { position: relative; z-index: 2; }
 .table.rich .c-sel { width: 44px; padding-right: 0; }
 .table.rich .c-act { width: 1%; text-align: right; }
 .t-acts, .t-acts-m { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
@@ -781,9 +806,22 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .t-switch { min-height: 0; }
 .t-sub-m { display: none; }
 .table-tools { display: none; }
+/* choosing only after "Select" (selection.mode 'button', 0.4.5, decision 94): plain rows until then; the button stands above the table at every width */
+.table-panel.on-demand:not(.selecting) .c-sel { display: none; }
+.table-panel.on-demand .table-tools { display: flex; justify-content: flex-end; padding: 10px 14px 6px; }
+.marks-round :is(.t-check, .check input)::before { border-radius: 50%; }
+.marks-round :is(.t-check, .check input) { border-radius: 50%; }     /* the focus ring follows */
 .table-empty .empty { border: 0; background: none; box-shadow: none; }
-@media (max-width: 639px) {
+/* which layout and which columns: by the width of the table's own panel (a container query, 0.4.5, decision 92), not of the window,
+ * so a table beside another card or in a dialog is laid out for the room it has. Below 640 px rows have two lines; a column with from: 'm' | 'l' | 'xl'
+ * shows only from 800, 1000 or 1200 px of the panel's width. */
+.table-panel { container: t-table / inline-size; }
+@container t-table (max-width: 799px) { .table.rich .t-from-m { display: none; } }
+@container t-table (max-width: 999px) { .table.rich .t-from-l { display: none; } }
+@container t-table (max-width: 1199px) { .table.rich .t-from-xl { display: none; } }
+@container t-table (max-width: 639px) {
   .table-wrap { overflow: visible; }
+  .table.rich { --t-down: 38px; --t-stub: 44px; }     /* two-line rows are taller and padded: the rail reaches further */
   .table.rich, .table.rich tbody { display: block; }
   .table.rich thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .table.rich tr { display: block; }
@@ -791,6 +829,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .table.rich tr.t-row:first-child, .table.rich tr.t-group + tr.t-row { border-top: 0; }
   .table.rich tr.t-row > td { display: block; height: auto; padding: 0; border: 0; background: none !important; }
   .table.rich tr.t-row:hover { background: none; }
+  .table.rich tr.t-row.t-child { background: var(--t-tint); }
   .table.rich tr.t-row.opened, .table.rich tr.t-row.selected { background: var(--surface-1); }
   .table.rich tr.t-row.selected { background: var(--accent-soft); }
   .table.rich tr.t-row.off { opacity: 1; }
@@ -798,8 +837,8 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .table.rich td.c-title { grid-area: title; min-width: 0; white-space: normal; }
   .t-name { min-height: 0; }
   .t-text { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .table.rich .t-sub-m { display: flex; flex-wrap: nowrap; gap: 0 8px; margin-left: calc(var(--depth, 0) * 22px); font-size: var(--text-xs); color: var(--text-2); overflow: hidden; white-space: nowrap; }
-  .has-folds .t-sub-m { margin-left: calc(var(--depth, 0) * 22px + 34px); }
+  .table.rich .t-sub-m { display: flex; flex-wrap: nowrap; gap: 0 8px; margin-left: calc(var(--depth, 0) * var(--t-step)); font-size: var(--text-xs); color: var(--text-2); overflow: hidden; white-space: nowrap; }
+  .has-folds .table.rich .t-sub-m { margin-left: calc(var(--depth, 0) * var(--t-step) + 34px); }     /* under the text, not under the fold button (wrong since 0.4: the rule lost to the one above) */
   .t-sub-m > span:not(:first-child)::before { content: "·"; margin-right: 8px; }
   .table.rich tr.t-row > td.c-sel { grid-area: ck; display: none; width: auto; margin-right: 12px; }
   .table-panel.selecting tr.t-row > td.c-sel { display: block; }
@@ -809,7 +848,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .t-acts-m { display: inline-flex; }
   .table.rich tr.t-row.off > td:not(.c-act):not(.c-active):not(.c-sel) { opacity: 0.45; }
   .table.rich tr.t-detail > td { padding: 4px 14px 14px; }
-  .table.rich tr.t-group > td { padding: 0 8px 0 10px; display: block; }
+  .table.rich tr.t-group > td { padding: 0 8px 0 14px; display: block; }
   .table.rich tr.t-group:not(:first-child) > td { border-top: 8px solid var(--surface); }
   .table-tools { display: flex; justify-content: flex-end; padding: 10px 14px 6px; }
   .has-select tr.t-row { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -819,6 +858,52 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .panel, .number-box, .timeline-card, .tabbar, .chip { border: 1px solid CanvasText; }
   .tabbar-item[aria-selected="true"], .chip[aria-pressed="true"] { outline: 2px solid Highlight; }
   .ch-layer { stroke: Canvas; }
+  .t-ln::before, .t-ln::after, .t-fold::after, .t-fold-gap::before { background: CanvasText; }
+}
+
+/* ---------- dayList (0.4.5, decision 95): a white card per day, its band sticks flush under the top bar (--day-top) and turns to glass while it rides along ---------- */
+.day-list { display: flex; flex-direction: column; overflow-anchor: none; }     /* the list keeps the place itself when rows come in above (Safari has no scroll anchoring) */
+.day-tools { display: flex; justify-content: flex-end; margin-bottom: var(--s2); }
+.day-days { display: flex; flex-direction: column; gap: var(--s3); }
+.day { background: var(--surface); border-radius: var(--r-l); box-shadow: var(--shadow-card); overflow: clip; }
+.day-head { position: sticky; top: var(--day-top, 0px); z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 44px; margin: 0; padding: 8px 16px; background: var(--surface); font: 700 var(--text-s)/1.3 var(--font); transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.day-head.stuck { background: var(--glass-strong); backdrop-filter: var(--blur-bar); -webkit-backdrop-filter: var(--blur-bar); box-shadow: 0 1px 0 var(--glass-edge), 0 8px 18px -12px color-mix(in oklab, var(--text) 40%, transparent); }
+.day-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-label.today { flex: none; padding: 3px 10px; border-radius: var(--r-full); background: var(--text); color: var(--bg); }
+.day.future .day-label:not(.today) { color: var(--text-2); }
+.day-value { flex: none; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.day-rows { list-style: none; margin: 0; padding: 0 0 6px; }
+.day-item { position: relative; }
+.day-item + .day-item::before { content: ""; position: absolute; z-index: 1; top: 0; left: 16px; right: 16px; border-top: 1px solid var(--hair); }
+.day-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 8px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.day-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { button.day-row:hover { background: color-mix(in oklab, var(--accent) 6%, transparent); } }
+button.day-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -3px; border-radius: 14px; }
+.day-item.selected .day-row { background: var(--accent-soft); }
+.day-lead { flex: none; display: grid; place-items: center; min-width: 22px; }
+.day-lead.has-mark { width: 40px; height: 40px; }
+.day-lead > * { grid-area: 1 / 1; }
+.day-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.day-title { font: 600 var(--text-m)/1.3 var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-sub { font-size: var(--text-s); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-amount { flex: none; font: 600 var(--text-m)/1.3 var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.day-row.day-expected :is(.day-title, .day-sub, .day-amount) { font-style: italic; font-weight: 500; color: var(--text-2); }
+.day-edge { display: flex; justify-content: center; min-height: 1px; }
+.day-edge .loading { padding: var(--s4); }
+.day-error { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s3); padding: var(--s3); color: var(--text-2); font-size: var(--text-s); }
+.day-empty .empty { border: 0; background: none; box-shadow: none; }
+/* the tick: the base's check box drawn on a row that is a button (a check box cannot sit inside a button); it takes the place of the lead while choosing */
+.tick { display: none; position: relative; width: 22px; height: 22px; border: 2px solid var(--line-strong); border-radius: 7px; background: var(--surface); transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.tick::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 11px; border: solid transparent; border-width: 0 2.5px 2.5px 0; transform: translate(-50%, -62%) rotate(45deg); }
+.selecting .tick { display: block; }
+.selecting .day-lead > :not(.tick) { display: none; }
+.selected .tick { border-color: var(--accent-ink); background: var(--accent-ink); }
+.selected .tick::after { border-color: var(--surface); }
+@media (forced-colors: active) {
+  .day { border: 1px solid CanvasText; }
+  .tick { border-color: ButtonText; background: Canvas; }
+  .selected .tick { border-color: Highlight; background: Highlight; }
+  .selected .tick::after { border-color: HighlightText; }
 }
 
 /* ---------- categories (0.4.4, decision 87): class="cat-0" ... "cat-9" names the colour (--cat), the parts below use it ---------- */
