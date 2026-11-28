@@ -4,7 +4,7 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
-## 0.4.4 (not released yet)
+## 0.4.4 (2026-11-28)
 
 Three parts the finance app asked for (`table()` and `chart()` use the first two themselves), and the window of the hub.
 
