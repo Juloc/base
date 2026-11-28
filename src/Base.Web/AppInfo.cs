@@ -60,6 +60,12 @@ public sealed record BaseAppOptions(string Id, string Name, Assembly Assembly)
     /// <summary>The roles of the app: a small fixed list, one per person, always with "admin" (SEC-03). Default: admin and member.</summary>
     public IReadOnlyList<AppRole> Roles { get; init; } = AppRoles.Default;
 
+    /// <summary>
+    /// The app may be shown inside a window of the connected hub (contract: <c>about.embed.hub</c>). Only while a hub is connected and switched on does the base then
+    /// allow that one origin as frame ancestor (SEC-01, SEC-02); otherwise nobody may frame the app. Declared in code, so the answer belongs to a version.
+    /// </summary>
+    public bool Embeddable { get; init; }
+
     /// <summary>Paths under /api that accept large bodies (uploads); each of them checks its own limit.</summary>
     public IReadOnlyList<string> LargeBodyPaths { get; init; } = [];
 }

@@ -4,6 +4,10 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.4 (not released yet)
+
+- **New: an app may open inside a window of the hub** (contract `about.embed.hub`, SEC-01, SEC-02 and CONTRACT-02 text changed, decision 85). `BaseAppOptions.Embeddable = true` lets the connected hub frame the app: while a hub is connected and switched on, `frame-ancestors` names its origin (and `X-Frame-Options` is left out) and `/api/about` says `"embed": { "hub": true }`; otherwise nothing changes (`frame-ancestors 'none'`, `DENY`, `embed.hub` false). The session cookie stays `SameSite=Strict`, so it works when hub and app are the same site (https, one domain). `/api/about` always has the new field `embed`.
+
 ## 0.4.3 (2026-11-28)
 
 - **Breaking, Compose: the file is minimal** (OPS-01 and OPS-02 changed, decision 84, the owner's rule). Two services (`app`, `db`), two named volumes (`data` for the key file, `db` for the database), per service only `build`/`image`, `restart`, `ports`, `environment` (with `TZ: Europe/Berlin`), `volumes`, `depends_on`. No init container, no password file, no `security_opt`, `cap_drop`, `tmpfs` or `healthcheck` in the file; the database password is a fixed value (`app`), because the database has no port. The health check moved into the `Dockerfile` (`HEALTHCHECK ... health`); user and data folder were there already. `scripts/check-app.sh` warns about hardening and health check blocks in an app's Compose file and allows two volumes.

@@ -29,13 +29,14 @@ internal static partial class Describe
     public static void MapAbout(this IEndpointRouteBuilder app, AppInfo info, BaseAppOptions options)
     {
         var about = new About(AppInfo.ContractVersion, info.Id, info.Name, options.Description ?? new Base.Core.Localized(info.Name), info.Version, info.BaseVersion,
-            options.Icon, options.AccentHue, options.Start, [.. options.Roles]);
-        app.MapGet("/api/about", (HttpContext ctx, RateLimit limit) =>
+            options.Icon, options.AccentHue, options.Start, [.. options.Roles], new EmbedInfo(false));
+        app.MapGet("/api/about", (HttpContext ctx, RateLimit limit, HubSettingsStore hub) =>
         {
             if (!limit.Allow("about", ctx.ClientIp(), PerMinute, out var wait)) return Base.Core.Error.TooMany(wait).ToHttp();
             // the one answer of the API a proxy or hub may keep for a few minutes: it is the same for everybody and holds nothing private
             ctx.Response.Headers.CacheControl = "public, max-age=300";
-            return Results.Json(about, WebJson.Default.About);
+            // embed.hub: the app allows it and a hub is connected now, so the headers name it as the one allowed frame ancestor (SEC-01)
+            return Results.Json(about with { Embed = new EmbedInfo(options.Embeddable && hub.ActiveOrigin is not null) }, WebJson.Default.About);
         });
     }
 }

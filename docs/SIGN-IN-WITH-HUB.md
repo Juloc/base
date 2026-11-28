@@ -59,3 +59,7 @@ with what worked and what did not: [HUB-TRIAL.md](HUB-TRIAL.md).
 ## Checked and not checked
 
 The tests (`tests/Base.Tests/HubSignInTests.cs`) run the whole flow against a small hub in the test project that signs with a test key: success, wrong `state`, missing flow cookie, repeated callback, wrong `nonce`, issuer, audience, expired, wrong key, `none`, HS256, unknown role, unreachable hub, logout token (valid, wrong signature, wrong audience, expired, repeated, ID token instead of logout token). A sign-in against a real JulOS 0.26.0 on one machine was done by hand on 2026-11-24 (every case of the list a to l, see [plans/HUB-TRIAL.md](plans/HUB-TRIAL.md)); it is not automated. Not tried: a key rotation at the hub with a running app, real https behind a proxy, browsers other than Chromium.
+
+## Inside a window of the hub (0.4.4)
+
+An app that may be shown inside a window of the hub sets `Embeddable = true` in its `BaseAppOptions`. While a hub is connected and switched on, the app then names that hub's origin as the one allowed frame ancestor and says `"embed": { "hub": true }` in `/api/about`; the hub offers its window only for such apps. It works when hub and app are the same site (https, subdomains of one domain): the session cookie stays `SameSite=Strict`.

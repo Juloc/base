@@ -30,11 +30,12 @@ The app serves `/api/health` and `/api/about` (anonymous) and `/api/hub/*` (what
   "accent": "#4F7CAC",
   "start": "/",
   "can": ["hub", "state", "settings", "actions", "notify", "roles", "backup"],
+  "embed": { "hub": true },
   "provides": [ { "name": "notes.search", "version": 1 } ],
   "needs": [ { "name": "calendar.events", "min": 1, "optional": true } ]
 }
 ```
-`id` is a slug, the repository's plain name. `icon` is a name from the base icon set. `start` is a **relative** path, joined by the hub with the address the owner entered. `can` lists what the app implements: a word not listed means "do not call". `provides`/`needs`: section 4.
+`id` is a slug, the repository's plain name. `icon` is a name from the base icon set. `start` is a **relative** path, joined by the hub with the address the owner entered. `can` lists what the app implements: a word not listed means "do not call". `provides`/`needs`: section 4. `embed.hub` (built in base 0.4.4): the app may be shown inside a window of the hub; it is true only while the app allows it (`BaseAppOptions.Embeddable`, so per version) and a hub is connected and switched on, and then the app names exactly that hub's origin in `frame-ancestors`. Missing or false: own window only. The session cookie stays `SameSite=Strict`, so a frame works only when hub and app are the same site (https, same registrable domain); a hub offers its window only then.
 
 **Errors** (every `/api` route): HTTP status plus
 

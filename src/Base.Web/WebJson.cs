@@ -10,6 +10,7 @@ namespace Base.Web;
 [JsonSerializable(typeof(ErrorBody))]
 [JsonSerializable(typeof(Health))]
 [JsonSerializable(typeof(About))]
+[JsonSerializable(typeof(EmbedInfo))]
 [JsonSerializable(typeof(LogoutResponse))]
 [JsonSerializable(typeof(PeopleResponse))]
 [JsonSerializable(typeof(CreatePersonRequest))]

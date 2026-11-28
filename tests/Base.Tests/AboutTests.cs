@@ -21,7 +21,7 @@ public class AboutTests
         var about = JsonDocument.Parse(text).RootElement;
 
         // exactly these fields, nothing else: a new field is a decision (the contract says "fixed fields only")
-        Assert.Equal(["accentHue", "base", "contract", "description", "icon", "id", "name", "roles", "start", "version"], about.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal).ToArray());
+        Assert.Equal(["accentHue", "base", "contract", "description", "embed", "icon", "id", "name", "roles", "start", "version"], about.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal).ToArray());
         Assert.Equal(1, about.GetProperty("contract").GetInt32());
         Assert.Equal("startapp", about.GetProperty("id").GetString());
         Assert.Equal("Start App", about.GetProperty("name").GetString());
@@ -29,6 +29,7 @@ public class AboutTests
         Assert.False(string.IsNullOrWhiteSpace(about.GetProperty("description").GetProperty("de").GetString()));
         Assert.Equal("bookmark", about.GetProperty("icon").GetString());
         Assert.Equal(299, about.GetProperty("accentHue").GetInt32());
+        Assert.False(about.GetProperty("embed").GetProperty("hub").GetBoolean());   // the start app does not allow a hub window
         Assert.Equal("/", about.GetProperty("start").GetString());
         Assert.Equal(["admin", "member", "viewer"], about.GetProperty("roles").EnumerateArray().Select(x => x.GetProperty("key").GetString()).ToArray());
         Assert.Equal("Administrator", about.GetProperty("roles")[0].GetProperty("name").GetProperty("en").GetString());

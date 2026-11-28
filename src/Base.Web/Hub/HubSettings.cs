@@ -32,6 +32,12 @@ public sealed class HubSettingsStore(SettingsStore store, SecretBox box)
     private static string? Text(IReadOnlyDictionary<string, string> all, string key) =>
         all.TryGetValue(key, out var json) && JsonDocument.Parse(json).RootElement is { ValueKind: JsonValueKind.String } e ? e.GetString() : null;
 
+    /// <summary>The origin of the hub while it is connected and switched on, else null: read at start and after every change (it is asked on every answer, SEC-01).</summary>
+    public string? ActiveOrigin { get; private set; }
+
+    /// <summary>Reads the settings once more and keeps <see cref="ActiveOrigin"/> up to date.</summary>
+    public async Task RefreshAsync(CancellationToken ct = default) => ActiveOrigin = (await GetAsync(ct)) is { Active: true, Url: { } url } ? url : null;
+
     public async Task<HubConfig> GetAsync(CancellationToken ct = default)
     {
         var all = await store.GetInstanceAsync(ct);
@@ -54,6 +60,7 @@ public sealed class HubSettingsStore(SettingsStore store, SecretBox box)
         if (newSecret is not null) await store.SetInstanceAsync(SecretKey, Json(Convert.ToBase64String(box.Encrypt(newSecret, SecretOwner))), ct);
         await store.SetInstanceAsync(EnabledKey, JsonSerializer.Serialize(enabled), ct);
         if (url != before.Url) await store.DeleteInstanceAsync(NameKey, ct);          // the name belongs to the address it was read from
+        await RefreshAsync(ct);
     }
 
     /// <summary>Keeps the name the hub gave itself, or forgets it (null: the hub has none to show now).</summary>
@@ -62,6 +69,7 @@ public sealed class HubSettingsStore(SettingsStore store, SecretBox box)
     public async Task ClearAsync(CancellationToken ct = default)
     {
         foreach (var key in new[] { UrlKey, ClientKey, SecretKey, EnabledKey, NameKey }) await store.DeleteInstanceAsync(key, ct);
+        ActiveOrigin = null;
     }
 }
 

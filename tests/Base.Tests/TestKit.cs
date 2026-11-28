@@ -8,6 +8,7 @@ using Base.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
@@ -114,6 +115,9 @@ internal sealed class TestApp(TestDb db, bool https = false) : WebApplicationFac
 
     public string Origin => https ? "https://localhost" : "http://localhost";
 
+    /// <summary>Changes the app's <see cref="Base.Web.BaseAppOptions"/> for one test (for example <c>Embeddable</c>).</summary>
+    public Func<Base.Web.BaseAppOptions, Base.Web.BaseAppOptions>? Options { get; init; }
+
     public HttpClient Http() => CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false, AllowAutoRedirect = false, BaseAddress = new Uri(Origin) });
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -122,6 +126,13 @@ internal sealed class TestApp(TestDb db, bool https = false) : WebApplicationFac
         builder.UseSetting("BASE_SETUP_CODE", SetupCode);
         builder.UseSetting("BASE_SECRET_KEY", Key);
         builder.ConfigureServices(s => s.AddTransient<IStartupFilter, LoopbackFilter>());
+        if (Options is { } change)
+            builder.ConfigureTestServices(s =>
+            {
+                var given = s.Single(d => d.ServiceType == typeof(Base.Web.BaseAppOptions));
+                s.Remove(given);
+                s.AddSingleton(change((Base.Web.BaseAppOptions)given.ImplementationInstance!));
+            });
     }
 
     private sealed class LoopbackFilter : IStartupFilter

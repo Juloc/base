@@ -81,6 +81,7 @@ public static class BaseApp
         var proxies = app.Services.GetRequiredService<ProxyTrust>();
         (await app.Services.GetRequiredService<SettingsStore>().GetInstanceAsync()).TryGetValue(ProxyTrust.SettingKey, out var trusted);
         proxies.Apply(trusted);
+        await app.Services.GetRequiredService<HubSettingsStore>().RefreshAsync();
         if (proxies.Unset)
             log.LogInformation("Trusted proxies are not set: X-Forwarded-* is believed from every private network. Behind a reverse proxy, restrict it in the app (Settings, Installation).");
 
@@ -94,7 +95,9 @@ public static class BaseApp
         var proxies = app.Services.GetRequiredService<ProxyTrust>();
         app.UseWhen(ctx => proxies.IsTrusted(ctx.Connection.RemoteIpAddress), branch => branch.UseForwardedHeaders());
         app.UseMiddleware<ErrorBoundary>();
-        app.Use((ctx, next) => { SecurityHeaders.Apply(ctx); return next(ctx); });
+        var embeddable = app.Services.GetRequiredService<BaseAppOptions>().Embeddable;
+        var hub = app.Services.GetRequiredService<HubSettingsStore>();
+        app.Use((ctx, next) => { SecurityHeaders.Apply(ctx, embeddable ? hub.ActiveOrigin : null); return next(ctx); });
 
         // While working on the look itself: BASE_UI_DIR points at the folder ui/ and files are read from disk, without a rebuild
         if (app.Configuration["BASE_UI_DIR"] is { Length: > 0 } uiDir && Directory.Exists(uiDir))

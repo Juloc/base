@@ -3,7 +3,10 @@ namespace Base.Web.Auth;
 /// <summary>ok/db/app/version/base are the first answer of the base and stay; status, contract and time are the contract of the family (CONTRACT-01).</summary>
 public sealed record Health(bool Ok, bool Db, string App, string Version, string Base, string Status, int Contract, string Time);
 /// <summary>What an app says about itself without a session (CONTRACT-02): fixed fields, nothing private.</summary>
-public sealed record About(int Contract, string Id, string Name, Base.Core.Localized Description, string Version, string Base, string Icon, int AccentHue, string Start, Base.Accounts.AppRole[] Roles);
+public sealed record About(int Contract, string Id, string Name, Base.Core.Localized Description, string Version, string Base, string Icon, int AccentHue, string Start, Base.Accounts.AppRole[] Roles, EmbedInfo Embed);
+
+/// <summary>Whether a hub may show the app in a window of its own (contract: <c>about.embed.hub</c>).</summary>
+public sealed record EmbedInfo(bool Hub);
 public sealed record AppDto(string Id, string Name, string Version, string? Commit, string Base);
 public sealed record SetupStatus(bool Needed);
 public sealed record SetupBeginRequest(string? Code, string? User, string? Password);

@@ -22,10 +22,10 @@ public class HubSignInTests
         public required HttpClient Http;
         public required string Admin;
 
-        public static async Task<World> CreateAsync(bool configure = true, bool enabled = true)
+        public static async Task<World> CreateAsync(bool configure = true, bool enabled = true, bool embeddable = false)
         {
             var db = await TestDb.CreateAsync();
-            var app = new TestApp(db);
+            var app = new TestApp(db) { Options = embeddable ? o => o with { Embeddable = true } : null };
             var hub = await TestHub.StartAsync();
             var http = app.Http();
             var (admin, _) = await app.SignedInAsync(http);
@@ -482,5 +482,32 @@ public class HubSignInTests
         // and the ordinary rule for requests that change something stays in force everywhere else (SEC-04)
         var plain = await w.Http.PostAsync("/api/auth/logout", new StringContent(""));
         Assert.Equal(HttpStatusCode.Forbidden, plain.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_embeddable_app_lets_only_the_connected_hub_frame_it()
+    {
+        // SEC-01, SEC-02, contract about.embed: the hub's origin is the one frame ancestor while the app allows it and the hub is on; otherwise nobody
+        await using var w = await World.CreateAsync(embeddable: true);
+        var page = await w.Http.GetAsync("/");
+        Assert.Contains("frame-ancestors " + w.Hub.Url + ";", page.Headers.GetValues("Content-Security-Policy").Single());
+        Assert.False(page.Headers.Contains("X-Frame-Options"));
+        Assert.True((await w.GetAsync("/api/about")).GetProperty("embed").GetProperty("hub").GetBoolean());
+
+        await w.ConfigureAsync(enabled: false);                                 // switched off: back to no framing at all
+        page = await w.Http.GetAsync("/");
+        Assert.Contains("frame-ancestors 'none'", page.Headers.GetValues("Content-Security-Policy").Single());
+        Assert.Equal("DENY", page.Headers.GetValues("X-Frame-Options").Single());
+        Assert.False((await w.GetAsync("/api/about")).GetProperty("embed").GetProperty("hub").GetBoolean());
+    }
+
+    [Fact]
+    public async Task An_app_that_does_not_allow_it_is_never_framed_even_with_a_hub()
+    {
+        await using var w = await World.CreateAsync();
+        var page = await w.Http.GetAsync("/");
+        Assert.Contains("frame-ancestors 'none'", page.Headers.GetValues("Content-Security-Policy").Single());
+        Assert.Equal("DENY", page.Headers.GetValues("X-Frame-Options").Single());
+        Assert.False((await w.GetAsync("/api/about")).GetProperty("embed").GetProperty("hub").GetBoolean());
     }
 }
