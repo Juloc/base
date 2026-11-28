@@ -57,7 +57,8 @@ before=$problems
 compose="$app/docker-compose.yml"
 if [ -f "$compose" ]; then
   ! grep -nE '\$\{|\$[A-Za-z_]|env_file' "$compose" >/dev/null || bad OPS-02 "docker-compose.yml uses variables or an env file"
-  [ "$(grep -cE '^  [a-z0-9_-]+:$' <(sed -n '/^volumes:/,$p' "$compose"))" -le 1 ] || bad OPS-01 "docker-compose.yml has more than one volume"
+  ! grep -nE '^\s+(security_opt|cap_drop|cap_add|read_only|tmpfs|healthcheck|user|entrypoint|command):' "$compose" >/dev/null || bad OPS-02 "docker-compose.yml is not minimal: user, rights, health check and start command belong in the image"
+  [ "$(grep -cE '^  [a-z0-9_-]+:$' <(sed -n '/^volumes:/,$p' "$compose"))" -le 2 ] || bad OPS-01 "docker-compose.yml has more than two volumes (data and db)"
 else bad OPS-01 "docker-compose.yml is missing"; fi
 [ -z "$(find "$app" -name package.json -not -path '*/node_modules/*' -not -path '*/bin/*' -not -path '*/obj/*' | head -1)" ] || bad CODE-06 "there is a package.json: the browser side has no build step"
 while IFS= read -r -d '' f; do

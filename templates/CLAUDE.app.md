@@ -22,4 +22,4 @@ Built on the shared base of the app family. base version: **{{BASE_VERSION}}** (
 | `src/{{NS}}/Migrations/` | The app's numbered SQL scripts (`NNN_name.sql`). |
 | `src/{{NS}}/wwwroot/` | `index.html`, `app.css` (the accent), `app.js` (pages), `i18n/` (texts), the PWA files. |
 | `base/` | The copy of the base: C# modules (`src/Base.*`), the look (`ui/`), `RULES.md`, `VERSION`, `MANIFEST`. |
-| `Dockerfile`, `docker-compose.yml` | One container plus PostgreSQL, one volume (OPS-01). |
+| `Dockerfile`, `docker-compose.yml` | One container plus PostgreSQL, volumes `data` and `db` (OPS-01); the Compose file is minimal, the rest is in the image (OPS-02). |

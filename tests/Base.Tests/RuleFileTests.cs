@@ -126,28 +126,31 @@ public partial class RuleFileTests
     [Fact]
     public void The_compose_file_has_one_app_one_database_one_volume_and_no_variables()
     {
+        // OPS-01, OPS-02 (minimal since 0.4.3): two services, two volumes, only the plain keys; the rest is in the image
         var compose = Repo.Read("samples", "StartApp", "docker-compose.yml");
-        var code = string.Join('\n', compose.Split('\n').Where(l => !l.TrimStart().StartsWith('#')));
+        var code = string.Join('\n', compose.Split('\n').Select(l => Regex.Replace(l, @"\s+#.*$", "")).Where(l => !l.TrimStart().StartsWith('#')));
         Assert.DoesNotMatch(@"\$\{|\$[A-Za-z_(]", code);                                  // no variables, no interpolation
         Assert.DoesNotContain("env_file", code);
-        Assert.DoesNotMatch(@"(?i)(password|secret|key|token)\s*:\s*[""']?[A-Za-z0-9+/=_-]{6,}", code.Replace("POSTGRES_PASSWORD_FILE: /run/db-secret/password", "").Replace("BASE_DB_PASSWORD_FILE: /run/db-secret/password", ""));
-        Assert.DoesNotMatch(@"(?i)password=", code);
+        Assert.DoesNotMatch(@"(?m)^\s+(security_opt|cap_drop|cap_add|read_only|tmpfs|healthcheck|user|entrypoint|command):", code);   // what the container needs is in the image
 
         var services = Regex.Matches(Regex.Match(code, @"(?s)^services:\n(.*?)^volumes:", RegexOptions.Multiline).Groups[1].Value, @"^  ([a-z0-9_-]+):\s*$", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(["init", "db", "app"], services);                                     // one app, one PostgreSQL, and the one-shot step that prepares the volume
+        Assert.Equal(["app", "db"], services);                                             // one app, one PostgreSQL, no init container
+        var allowed = new[] { "build", "image", "restart", "ports", "environment", "volumes", "networks", "depends_on" };
+        foreach (Match key in Regex.Matches(code, @"(?m)^    ([a-z_]+):"))
+            Assert.Contains(key.Groups[1].Value, allowed);
         var volumes = Regex.Matches(Regex.Match(code, @"(?s)^volumes:\n(.*)$", RegexOptions.Multiline).Groups[1].Value, @"^  ([a-z0-9_-]+):", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(["data"], volumes);
+        Assert.Equal(["data", "db"], volumes);
         Assert.DoesNotMatch(@"(?m)^\s+- (\.|/|~)[^:\n]*:/", code);                         // no folder of the host is mounted
 
-        var app = Regex.Match(code, @"(?s)^  app:\n(.*?)^volumes:", RegexOptions.Multiline).Groups[1].Value;
-        Assert.Contains("no-new-privileges:true", app);
-        Assert.Matches(@"cap_drop:\s*\n\s*- ALL", app);
+        var app = Regex.Match(code, @"(?s)^  app:\n(.*?)^  db:", RegexOptions.Multiline).Groups[1].Value;
+        var db = Regex.Match(code, @"(?s)^  db:\n(.*?)^volumes:", RegexOptions.Multiline).Groups[1].Value;
         Assert.Matches(@"ports:\s*\n\s*- ""127\.0\.0\.1:\d+:8080""", app);                 // only this machine reaches the port
-        Assert.DoesNotMatch(@"(?m)^\s+ports:", Regex.Match(code, @"(?s)^  db:\n(.*?)^  app:", RegexOptions.Multiline).Groups[1].Value);   // the database is not published
-        Assert.Matches(@"healthcheck:", app);
+        Assert.DoesNotMatch(@"(?m)^\s+ports:", db);                                       // the database is not published: that is why its password may stand here
+        Assert.Matches(@"POSTGRES_PASSWORD: \S+", db);
 
         var dockerfile = Repo.Read("samples", "StartApp", "Dockerfile");
         Assert.Contains("USER $APP_UID", dockerfile);                                      // not root
+        Assert.Matches(@"(?m)^HEALTHCHECK .*""health""", dockerfile);
         Assert.Single(Regex.Matches(dockerfile, @"(?m)^ENTRYPOINT"));
     }
 

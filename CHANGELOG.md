@@ -4,6 +4,13 @@ The base follows SemVer; the version stands in `VERSION` (OPS-05). An app carrie
 `scripts/check-app.sh` shows how far a copy is behind, `scripts/sync-base.sh` brings it up to date. Before 1.0.0 a minor version may change
 what apps rely on; such changes are marked **Breaking**.
 
+## 0.4.3 (not released yet)
+
+- **Breaking, Compose: the file is minimal** (OPS-01 and OPS-02 changed, decision 84, the owner's rule). Two services (`app`, `db`), two named volumes (`data` for the key file, `db` for the database), per service only `build`/`image`, `restart`, `ports`, `environment` (with `TZ: Europe/Berlin`), `volumes`, `depends_on`. No init container, no password file, no `security_opt`, `cap_drop`, `tmpfs` or `healthcheck` in the file; the database password is a fixed value (`app`), because the database has no port. The health check moved into the `Dockerfile` (`HEALTHCHECK ... health`); user and data folder were there already. `scripts/check-app.sh` warns about hardening and health check blocks in an app's Compose file and allows two volumes.
+  - **A new app** gets the new file from `new-app.sh`.
+  - **An existing installation** may keep its old Compose file: `BASE_DB_PASSWORD_FILE` still works. To move to the new file, dump the database in the old stack (`docker compose exec db pg_dump -U app app > app.sql`), copy the key file out of the old volume (sub-folder `app/secret.key`), start the new stack, put the key file into the `data` volume (owner: the app's user), restore the dump (`docker compose exec -T db psql -U app app < app.sql`), and restart the app. Without the key file, the stored secrets (authenticator, hub) cannot be read.
+  - An app adds the `HEALTHCHECK` line to its own `Dockerfile`.
+
 ## 0.4.2 (2026-11-28)
 
 - **Look: pages use the whole width on a wide screen** (decision 83, the owner's word). `.page` and `.page-head` have no limit any more and the main area keeps only a margin (no column of 920 px in the middle); tables and grids grow with the screen. `.page.narrow` (640 px) stays for forms and a detail with text. The token `--content-w` is gone: an app that used it for its own limit gets no limit (it should drop the rule, or keep one of its own on purpose).

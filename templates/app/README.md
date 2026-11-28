@@ -15,7 +15,7 @@ docker compose logs app
 Open `http://localhost:8080`. At the first start the setup assistant asks for the setup code from the log, then creates the first account
 (password, authenticator app, recovery codes). There is nothing to configure in files: the Compose file has no variables, settings live in the app.
 
-Everything that must be kept is in the one volume `data` (database, the server's key file, the database password). Back up that volume.
+Everything that must be kept is in two volumes: `db` (the database) and `data` (the server's key file). Back up both.
 
 For anything but this machine, put a reverse proxy with HTTPS in front and set its address in the app (Settings, Installation, trusted proxies).
 
