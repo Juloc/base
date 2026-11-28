@@ -307,7 +307,20 @@ body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--t
 .switch.reverse { flex-direction: row-reverse; }
 
 .check { display: flex; align-items: center; gap: var(--s3); min-height: var(--touch); cursor: pointer; }
-.check input { width: 22px; height: 22px; flex: none; margin: 0; accent-color: var(--accent-ink); cursor: pointer; }
+/* the check box (0.4.4): our own drawing on a real <input type="checkbox">, so the keyboard, a form and a screen reader work as before. The input is a 44 px target
+ * (MOBILE-01) that takes the room of its 22 px box (the negative margin); ::before is the box, ::after the tick or, when indeterminate, the dash.
+ * On it is filled with the ink of the accent (design 0.4: "check box in the accent ink"), the tick in the colour of the card. One look for .check and the table (.t-check). */
+.check input, .t-check { -webkit-appearance: none; appearance: none; position: relative; flex: none; width: var(--touch); height: var(--touch); margin: calc((22px - var(--touch)) / 2); padding: 0; border: 0; border-radius: 16px; background: none; cursor: pointer; vertical-align: middle; }
+.check input::before, .t-check::before { content: ""; position: absolute; inset: calc((var(--touch) - 22px) / 2); border: 2px solid var(--line-strong); border-radius: 7px; background: var(--surface); transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.check input::after, .t-check::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 11px; border: solid transparent; border-width: 0 2.5px 2.5px 0; transform: translate(-50%, -62%) rotate(45deg); }
+.check input:hover::before, .t-check:hover::before { border-color: var(--accent-ink); }
+.check input:checked::before, .t-check:checked::before, .check input:indeterminate::before, .t-check:indeterminate::before { border-color: var(--accent-ink); background: var(--accent-ink); }
+.check input:checked::after, .t-check:checked::after { border-color: var(--surface); }
+.check input:indeterminate::after, .t-check:indeterminate::after { width: 10px; height: 0; border-width: 0 0 2.5px; border-color: var(--surface); transform: translate(-50%, -50%); }
+.check input:focus-visible, .t-check:focus-visible { outline-offset: calc((22px - var(--touch)) / 2 + 4px); }     /* the ring of every control, drawn 2 px around the box, not around the 44 px target */
+.check input:disabled, .t-check:disabled { cursor: default; }
+.check input:disabled::before, .t-check:disabled::before, .check input:disabled::after, .t-check:disabled::after { opacity: 0.45; }
+.check:has(input:disabled) { cursor: default; }
 
 /* segmented choice (0.4): the chosen part is white with a light shadow on a light track. capsule (links to places) keeps its outline until the tabs are restyled. */
 .seg { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--r-btn); background: var(--seg-track); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
@@ -756,7 +769,6 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .t-ln.pass::before, .t-ln.mid::before, .t-ln.end::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; border-left: 1.5px solid color-mix(in oklab, var(--text) 14%, transparent); }
 .t-ln.end::before { bottom: 50%; }
 .t-ln.mid::after, .t-ln.end::after { content: ""; position: absolute; left: 10px; top: 50%; width: 10px; border-top: 1.5px solid color-mix(in oklab, var(--text) 14%, transparent); }
-.t-check { width: 18px; height: 18px; margin: 0; accent-color: var(--accent-ink); cursor: pointer; }
 .table.rich .c-sel { width: 44px; padding-right: 0; }
 .table.rich .c-act { width: 1%; text-align: right; }
 .t-acts, .t-acts-m { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
@@ -806,6 +818,16 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .ch-layer { stroke: Canvas; }
 }
 
+/* ---------- categories (0.4.4, decision 87): class="cat-0" ... "cat-9" names the colour (--cat), the parts below use it ---------- */
+.cat-0 { --cat: var(--cat-0); } .cat-1 { --cat: var(--cat-1); } .cat-2 { --cat: var(--cat-2); } .cat-3 { --cat: var(--cat-3); } .cat-4 { --cat: var(--cat-4); }
+.cat-5 { --cat: var(--cat-5); } .cat-6 { --cat: var(--cat-6); } .cat-7 { --cat: var(--cat-7); } .cat-8 { --cat: var(--cat-8); } .cat-9 { --cat: var(--cat-9); }
+/* a dot before a name */
+.cat-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--cat, var(--text-2)); vertical-align: middle; }
+/* the soft surface of a category and its text: a chip, a badge, an icon square (.cat-mark). The text is the colour mixed with the text colour, so it reads in both schemes */
+.cat-soft, .chip.cat-soft, .badge.cat-soft { border-color: transparent; background: color-mix(in oklab, var(--cat, var(--text-2)) 18%, var(--surface)); color: color-mix(in oklab, var(--cat, var(--text-2)) 48%, var(--text)); }
+.cat-mark { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: var(--r-m); }
+.cat-mark .icon { width: 20px; height: 20px; }
+
 /* ---------- forced colours: the system takes over the colours; what colour carried, a line or an outline carries ---------- */
 @media (forced-colors: active) {
   body::before { display: none; }
@@ -814,4 +836,8 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
   .switch-track { border: 1px solid ButtonText; }
   .nav-badge { border: 1px solid ButtonText; }
   .switch input:checked + .switch-track::after { background: Highlight; }
+  .cat-dot { border: 1px solid CanvasText; }
+  .check input::before, .t-check::before { border-color: ButtonText; background: Canvas; }
+  .check input:checked::before, .t-check:checked::before, .check input:indeterminate::before, .t-check:indeterminate::before { border-color: Highlight; background: Highlight; }
+  .check input:checked::after, .t-check:checked::after, .check input:indeterminate::after, .t-check:indeterminate::after { border-color: HighlightText; }
 }

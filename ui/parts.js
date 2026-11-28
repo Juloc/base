@@ -269,11 +269,12 @@ function niceMax(v, whole) {
 /**
  * A stacked area chart (0.4), SVG without a library: smooth layers, a thin line in the colour of the card between them, three faint guide lines, an axis below,
  * a legend that hides a series on click, a dark box with every value on hover (a mouse), on a tap, and with the arrow keys.
- * { title, series: [{ key, label, color }] (the first is the bottom layer; colour is any CSS colour, e.g. 'var(--accent)' or 'oklch(0.82 0.11 75)'),
+ * { title, series: [{ key, label, color? }] (the first is the bottom layer; colour is any CSS colour, e.g. 'var(--accent)'; without one the n-th series takes the category colour --cat-n, 0.4.4),
  *   data: [{ label, title?, [key]: number }], format?: (n) => text, actions?: node (at the right of the title, for example tabs({ size: 's' })), height? (px, default 190) }.
  * Returns { el, update(data) }. A text that sums the chart up (sizes, peaks) stands in the page for a screen reader.
  */
 export function chart({ title, series, data, format = (n) => fmtNumber(n), actions, height = 190 }) {
+  series = series.map((s, i) => (s.color ? s : { ...s, color: `var(--cat-${i % 10})` }));     // decision 87
   const hidden = new Set();
   let points = data || [];
   let at = -1;

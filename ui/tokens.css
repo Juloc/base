@@ -67,6 +67,21 @@
   --warn-soft: light-dark(oklch(0.96 0.05 85), oklch(0.31 0.05 80));
   --on-warn-soft: light-dark(oklch(0.42 0.12 70), oklch(0.91 0.07 85));
 
+  /* ---- categories (0.4.4, decision 87): ten calm colours for things an app sorts into kinds (a dot, a chip, a series of a chart), the same in every app and not
+   * tied to the accent. Ordered so that neighbours differ (chart() takes them in this order when the app gives no colour). Distinct from each other in both schemes
+   * (oklab distance at least 0.095), but ten colours cannot all be told apart by everyone: a category also has its name and, where there is room, its icon.
+   * Its soft surface and text come from a formula, not twenty more tokens: class="cat-3 cat-soft" (base.css). ---- */
+  --cat-0: light-dark(oklch(0.57 0.13 258), oklch(0.70 0.12 258));     /* blue */
+  --cat-1: light-dark(oklch(0.77 0.14 78), oklch(0.83 0.12 78));       /* amber */
+  --cat-2: light-dark(oklch(0.60 0.12 152), oklch(0.70 0.12 152));     /* green */
+  --cat-3: light-dark(oklch(0.74 0.11 350), oklch(0.83 0.09 350));     /* rose */
+  --cat-4: light-dark(oklch(0.67 0.10 195), oklch(0.82 0.09 195));     /* teal */
+  --cat-5: light-dark(oklch(0.66 0.14 46), oklch(0.73 0.12 45));       /* orange */
+  --cat-6: light-dark(oklch(0.55 0.12 305), oklch(0.70 0.12 305));     /* purple */
+  --cat-7: light-dark(oklch(0.70 0.13 125), oklch(0.86 0.12 125));     /* lime */
+  --cat-8: light-dark(oklch(0.55 0.15 20), oklch(0.66 0.14 20));       /* coral red */
+  --cat-9: light-dark(oklch(0.53 0.06 55), oklch(0.64 0.05 55));       /* brown */
+
   /* ---- glass: tinted, clearly translucent surfaces with a fine light edge, over the gradient of the page ---- */
   --glass: color-mix(in oklab, var(--surface) 56%, transparent);
   --glass-strong: color-mix(in oklab, var(--surface) 84%, transparent);

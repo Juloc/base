@@ -48,3 +48,9 @@
 .look-gradient { height: 120px; border-radius: var(--r-l); background: var(--page-bg); border: 1px solid var(--line); display: grid; place-items: center; }
 .cat-demo .shell-tabs { position: static; margin-inline: 0; }
 @media (min-width: 900px) { .cat-item.wide .cat-pair { grid-template-columns: minmax(0, 1fr); } }
+/* the category colours */
+.cat-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s4) var(--s3); }
+.cat-cat { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
+.cat-cat-name { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+.cat-strip { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.cat-strip i { height: 40px; border-radius: var(--r-s); background: var(--cat); }
