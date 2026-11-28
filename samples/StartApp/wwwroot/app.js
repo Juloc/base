@@ -1,11 +1,12 @@
 /* The start app: a list of things to remember. It shows the pattern of every app on the base:
  *   texts through t() (I18N-01), the frame from shell(), pages from router(), data through api(), forms with field() and submit(),
- *   a list as a table() with chips() above it and the add button in the actionBar() (design 0.4, /base/catalog.html),
+ *   a list as a table() with chips() above it and the add button in the actionBar() (design 0.4, /base/catalog.html), choosing several after "Select",
+ *   the same entries by day in an endless dayList() with an avatar() per row,
  *   a dialog for adding and editing, a confirmation before deleting, an empty state, settings that follow the person.
  * Replace the list by what the app is for; keep the pattern. */
-import { addMessages, t, fmtAgo, fmtDate } from '/base/i18n.js';
+import { addMessages, t, tp, fmtAgo, fmtDate } from '/base/i18n.js';
 import { h, icon, api, pwa, shell, router, openDialog, confirmDialog, actionBar, toast, field, switchField, formValues, showErrors, clearErrors, emptyState, badge, prefs, errorText, ApiError } from '/base/base.js';
-import { table, chips } from '/base/parts.js';
+import { table, chips, dayList, dayKey, avatar } from '/base/parts.js';
 import { start } from '/base/auth.js';
 import { appearanceCard, securityCard, devicesCard, historyCard, installationCard, aboutCard } from '/base/account.js';
 import { peopleCard } from '/base/people.js';
@@ -24,6 +25,7 @@ function run(me) {
     app: { name: me.app.name, icon: 'bookmark' },
     nav: [
       { label: t('nav.items'), icon: 'list', href: '#/' },
+      { label: t('nav.days'), icon: 'clock', href: '#/days' },
       { label: t('shell.settings'), icon: 'sliders', href: '#/settings', foot: true },
     ],
     person: { name: me.user },
@@ -32,7 +34,7 @@ function run(me) {
     onSignOut: async () => { const r = await api('POST', '/api/auth/logout'); if (r && r.hubLogoutUrl) location.assign(r.hubLogoutUrl); else location.reload(); },
   });
   document.body.append(frame.el);
-  const pages = router({ '/': listPage, '/items/:id': itemPage, '/settings': () => settingsPage(me) }, frame);
+  const pages = router({ '/': listPage, '/days': daysPage, '/items/:id': itemPage, '/settings': () => settingsPage(me) }, frame);
 
   // the bar at the bottom belongs to the page that made it: a page makes it anew each time it is drawn, and it goes when the page changes
   let bar = null;
@@ -54,13 +56,25 @@ function run(me) {
       columns: [
         { key: 'title', label: t('items.field.title'), render: (r) => h('a', { href: '#/items/' + r.id, text: r.title }) },
         { key: 'done', label: t('items.state'), render: (r) => (r.done ? badge(t('items.done'), 'ok') : badge(t('items.open'), 'accent')) },
-        { key: 'updatedAt', label: t('items.updated'), render: (r) => fmtAgo(r.updatedAt) },
+        { key: 'updatedAt', label: t('items.updated'), render: (r) => fmtAgo(r.updatedAt), from: 'm' },     // only where the table itself is 800 px wide; on a phone in the second line
       ],
       // the next step is the main action (a text button that stays at the right on a phone); the rest are quiet icon buttons (on a phone in the ⋮ menu)
       actions: (r) => [r.done ? { label: t('items.markOpen'), icon: 'refresh', run: () => put(r, false) }
                               : { label: t('items.tick'), icon: 'check', kind: 'main', run: () => put(r, true) }],
       onRowClick: (r) => pages.go('/items/' + r.id),
+      // plain rows until "Auswählen": then a tap ticks a row and the dark bar acts on all of them
+      selection: { mode: 'button', actions: [
+        { label: t('items.tick'), icon: 'check', run: async (picked, tb) => { for (const r of picked.filter((x) => !x.done)) await put(r, true); tb.clearSelection(); } },
+        { label: t('common.delete'), icon: 'trash', kind: 'danger', run: (picked, tb) => removeMany(picked, tb) },
+      ] },
     });
+    const removeMany = async (picked, tb) => {
+      if (!await confirmDialog({ title: tp('items.deleteMany', picked.length), text: t('items.deleteManyText'), confirmLabel: t('common.delete'), danger: true })) return;
+      try { for (const r of picked) await api('DELETE', '/api/items/' + r.id); toast(tp('items.deletedMany', picked.length), { kind: 'ok' }); }
+      catch (e) { toast(errorText(e), { kind: 'danger' }); }
+      tb.clearSelection();
+      await load(true);
+    };
     const holder = h('div', null, list.el);        // an empty list shows the empty state instead
     const more = h('button', { class: 'btn ghost wide', type: 'button', text: t('common.more'), hidden: true, onclick: () => load(false) });
 
@@ -92,6 +106,26 @@ function run(me) {
       title: t('items.title'), sub: t('items.sub'),
       body: h('div', { class: 'page stack' }, h('div', { class: 'toolbar' }, search, filter), holder, more),
     };
+  }
+
+  /* ---------- the same entries by the day they were made: an endless list that loads older days as one scrolls ---------- */
+  async function daysPage() {
+    const list = dayList({
+      label: t('days.title'),
+      // the server pages newest first after a cursor (LIST-01): that is the "older" direction; nothing is newer than now
+      load: ({ dir, cursor, limit }) => (dir === 'newer' ? { items: [], next: null }
+        : api('GET', `/api/items?limit=${limit}` + (cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''))),
+      day: (item) => dayKey(new Date(item.createdAt)),
+      row: (item) => ({
+        lead: item.done ? avatar({ name: item.title, icon: 'check', cat: 2 }) : avatar({ name: item.title }),
+        title: item.title,
+        sub: item.done ? t('items.done') : item.note || t('items.open'),
+      }),
+      dayValue: (items) => tp('days.count', items.length),
+      onRowClick: (item) => pages.go('/items/' + item.id),
+      empty: { icon: 'bookmark', title: t('items.empty.title'), text: t('items.empty.text') },
+    });
+    return { title: t('days.title'), sub: t('days.sub'), body: h('div', { class: 'page' }, list.el) };
   }
 
   /* ---------- one entry ---------- */
