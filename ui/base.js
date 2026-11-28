@@ -5,8 +5,10 @@
  *   api, ApiError, errorText talk to the own server (adds the header the guard asks for, turns error codes into text)
  *   theme, prefs            light or dark, and the person's settings on the server
  *   toast                   a short message that goes away by itself
- *   openDialog, confirmDialog, closeDialogs  a big window that does not block the page, one at a time; a sheet on a phone; closes when the page changes (DIALOG-01)
+ *   openDialog, confirmDialog, closeDialogs  a big window that does not block the page, one at a time; a sheet on a phone; closes when the page changes (DIALOG-01);
+ *                           actions: [{ label, icon?, kind?, side?, enter?, run(dialog), more?: [{ label, icon?, danger?, run(dialog) }] }]
  *   openMenu                a small menu at a button
+ *   splitButton             a main action with an arrow that opens a menu of alternatives (also as a dialog action with more: [...])
  *   field, passwordField, submit, showErrors   forms with errors at the fields (FORM-01, FORM-02)
  *   dropdown, switchField, segmented, choiceTiles   the choosing controls of the family
  *   actionBar, selectionBar, floatBar   the bars above the content; navBadge  a dot or a count on a place of the menu
@@ -232,14 +234,21 @@ export function openDialog({ title, body, actions = [], onClose, wide = false, s
   const head = h('div', { class: 'dialog-head' },
     h('h2', { class: 'dialog-title', id: titleId, text: title }),
     h('button', { class: 'btn ghost icon-only', type: 'button', 'aria-label': t('common.close'), onclick: () => close() }, icon('x')));
+  // an action runs, shows itself busy and closes the dialog unless run returns false; an ApiError becomes a toast
+  const perform = async (btn, run) => {
+    if (!run) { close(); return; }
+    try { if (await busy(btn, run(dialog)) !== false) close(); }
+    catch (e) { if (!(e instanceof ApiError)) throw e; toast(errorText(e), { kind: 'danger' }); }
+  };
+  let enterButton = null;
   const button = (a) => {
-    const btn = h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', text: a.label });
-    btn.addEventListener('click', async () => {
-      if (!a.run) { close(); return; }
-      try { if (await busy(btn, a.run(dialog)) !== false) close(); }
-      catch (e) { if (!(e instanceof ApiError)) throw e; toast(errorText(e), { kind: 'danger' }); }
-    });
-    return btn;
+    // with a symbol the name is also the button's label: on a phone a button at the start shows only its symbol (base.css)
+    const btn = h('button', { class: `btn ${a.kind || ''}`.trim(), type: 'button', 'aria-label': a.icon ? a.label : null, title: a.icon && a.side === 'start' ? a.label : null }, a.icon ? icon(a.icon) : null, h('span', { text: a.label }));
+    btn.addEventListener('click', () => perform(btn, a.run));
+    if (a.enter || (a.more && a.more.length)) enterButton = btn;
+    if (!a.more || !a.more.length) return btn;
+    // a split button (0.4.5): the main action and a small arrow with a menu of alternatives; the menu items run like actions of the dialog
+    return splitOf(btn, a, (item) => perform(btn, item.run));
   };
   const foot = actions.length ? h('div', { class: 'dialog-foot' },
     actions.some((a) => a.side === 'start') ? h('div', { class: 'dialog-foot-start' }, actions.filter((a) => a.side === 'start').map(button)) : null,
@@ -260,6 +269,13 @@ export function openDialog({ title, body, actions = [], onClose, wide = false, s
     if (onClose) onClose();
   }
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
+  // Enter in a field runs the action marked enter (or the one with a menu): one key for the usual way out
+  bodyEl.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || !enterButton || e.isComposing || e.defaultPrevented || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!(e.target instanceof HTMLInputElement) || ['checkbox', 'radio', 'button', 'submit', 'file'].includes(e.target.type)) return;
+    e.preventDefault();
+    enterButton.click();
+  });
   makeMovable(el, head);
   openDialogs.add(dialog);
   document.body.append(scrim, el);
@@ -295,7 +311,7 @@ function makeMovable(el, handle) {
 }
 
 /** Asks before something that cannot be undone (DIALOG-01). Resolves to true when the person confirms. The button says what happens, never just "OK". */
-export function confirmDialog({ title, text, confirmLabel, danger = false }) {
+export function confirmDialog({ title, text, confirmLabel, danger = false, icon: symbol }) {
   return new Promise((resolve) => {
     let answer = false;
     openDialog({
@@ -303,7 +319,7 @@ export function confirmDialog({ title, text, confirmLabel, danger = false }) {
       body: h('p', { class: 'muted', text }),
       actions: [
         { label: t('common.cancel'), kind: 'ghost' },
-        { label: confirmLabel, kind: danger ? 'danger' : 'primary', run: () => { answer = true; } },
+        { label: confirmLabel, icon: symbol, kind: danger ? 'danger' : 'primary', run: () => { answer = true; } },
       ],
       onClose: () => resolve(answer),
     });
@@ -347,6 +363,23 @@ export function openMenu(anchor, items) {
   const first = menu.querySelector('.menu-item');
   if (first) first.focus();
   return close;
+}
+
+/**
+ * A split button (0.4.5): a main action and a small arrow beside it that opens a menu of alternatives, e.g. "Speichern und anwenden" with "Nur speichern".
+ * splitButton({ label, icon?, kind?: 'primary' | 'danger' | 'ghost', run, more: [{ label, icon?, danger?, run }] }) returns the element.
+ * The arrow is a button of its own (aria-haspopup=menu) and opens openMenu(). In a dialog write the same as an action: { label, kind, run, more }.
+ */
+export function splitButton({ label, icon: symbol, kind = 'primary', run, more = [] }) {
+  const btn = h('button', { class: `btn ${kind}`.trim(), type: 'button' }, symbol ? icon(symbol) : null, h('span', { text: label }));
+  btn.addEventListener('click', () => busy(btn, run && run()));
+  return splitOf(btn, { kind, more }, (item) => busy(btn, item.run && item.run()));
+}
+
+function splitOf(main, { kind, more }, choose) {
+  const arrow = h('button', { class: `btn ${kind || ''} split-more`.trim(), type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': t('common.moreChoices') }, icon('down'));
+  arrow.addEventListener('click', () => openMenu(arrow, more.map((m) => ({ label: m.label, icon: m.icon, danger: m.danger, run: () => choose(m) }))));
+  return h('div', { class: 'btn-split' }, main, arrow);
 }
 
 /* ---------- forms ---------- */

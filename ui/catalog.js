@@ -1,6 +1,6 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
-import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
+import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, splitButton, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
 import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash, avatar, dayList, dayKey } from './parts.js';
 import { authCard, stateCard } from './gate.js';
 import { GLYPHS } from './icons.js';
@@ -25,9 +25,9 @@ const demos = {
         field({ label: 'List', name: 'list', type: 'select', value: 'home', options: [['home', 'Home'], ['work', 'Work'], ['later', 'Later']] }),
         field({ label: 'Note', name: 'note', type: 'textarea', placeholder: 'Anything to remember' })),
       actions: [
-        { label: 'Delete', kind: 'danger', side: 'start', run: () => { toast('Entry deleted'); } },
+        { label: 'Delete', icon: 'trash', kind: 'danger', side: 'start', run: () => { toast('Entry deleted'); } },
         { label: 'Cancel', kind: 'ghost' },
-        { label: 'Save', kind: 'primary', run: () => { toast('Entry saved', { kind: 'ok' }); } },
+        { label: 'Save', icon: 'check', kind: 'primary', enter: true, run: () => { toast('Entry saved', { kind: 'ok' }); } },
       ],
     });
   },
@@ -43,11 +43,21 @@ const demos = {
         h('div', { class: 'dialog-col' },
           choiceTiles({ name: 'mode', label: 'Mode', value: 'proxy', options: [['proxy', 'Forward', 'Pass the request on.'], ['static', 'Files', 'Serve a folder.']] }),
           field({ label: 'Certificate', name: 'cert', type: 'select', value: 'auto', options: [['auto', 'Automatic'], ['own', 'Own certificate'], ['none', 'None']] }))),
-      actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Add route', kind: 'primary', run: () => { toast('Route added', { kind: 'ok' }); } }],
+      actions: [
+        { label: 'Deactivate', icon: 'power', side: 'start', run: () => { toast('Route switched off'); } },
+        { label: 'Cancel', kind: 'ghost' },
+        { label: 'Save and apply', icon: 'check', kind: 'primary', run: () => { toast('Route saved and applied', { kind: 'ok' }); },
+          more: [{ label: 'Only save', icon: 'download', run: () => { toast('Route saved, not applied yet'); } }] },
+      ],
     });
   },
+  split() {
+    return h('div', { class: 'cluster' },
+      splitButton({ label: 'Save and apply', icon: 'check', run: () => toast('Saved and applied', { kind: 'ok' }), more: [{ label: 'Only save', icon: 'download', run: () => toast('Saved') }, { label: 'Apply later', icon: 'clock', run: () => toast('Planned') }] }),
+      splitButton({ label: 'Export', icon: 'download', kind: '', run: () => toast('CSV'), more: [{ label: 'As JSON', run: () => toast('JSON') }] }));
+  },
   async ask() {
-    const yes = await confirmDialog({ title: 'Delete this entry?', text: '“Buy milk” is deleted for good.', confirmLabel: 'Delete', danger: true });
+    const yes = await confirmDialog({ title: 'Delete this entry?', text: '“Buy milk” is deleted for good.', confirmLabel: 'Delete', icon: 'trash', danger: true });
     toast(yes ? 'Deleted' : 'Kept');
   },
   menu(button) {

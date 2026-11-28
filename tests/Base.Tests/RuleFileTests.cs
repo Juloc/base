@@ -376,7 +376,7 @@ public partial class RuleFileTests
         var catalogue = Repo.Read("ui", "catalog.html") + Repo.Read("ui", "catalog.js");
         string[] classes = ["btn", "field", "input", "textarea", "select", "switch", "check", "seg", "card", "list", "row", "table", "badge", "notice", "empty", "spinner", "skeleton", "capsule", "chip", "tile", "tiles", "search", "panel", "tabbar"];
         Assert.All(classes, c => Assert.Matches($@"class=""[^""]*\b{c}\b", catalogue));
-        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule(", "dropdown(", "choiceTiles(", "actionBar(", "selectionBar(", "navBadge(", "closeDialogs(", "table(", "tabs(", "chips(", "numberBox(", "chart(", "liveFeed(", "timeline(", "ring(", "foldCard(", "flash(", "authCard(", "stateCard(", "mountAuth(", "pwa(", "avatar(", "dayList(", "dayKey("];
+        string[] functions = ["toast(", "openDialog(", "confirmDialog(", "openMenu(", "splitButton(", "field(", "passwordField(", "submit(", "segmented(", "shell(", "router(", "floatBar(", "capsule(", "dropdown(", "choiceTiles(", "actionBar(", "selectionBar(", "navBadge(", "closeDialogs(", "table(", "tabs(", "chips(", "numberBox(", "chart(", "liveFeed(", "timeline(", "ring(", "foldCard(", "flash(", "authCard(", "stateCard(", "mountAuth(", "pwa(", "avatar(", "dayList(", "dayKey("];
         Assert.All(functions, f => Assert.Contains(f, catalogue));
         Assert.Contains("Object.keys(GLYPHS)", catalogue);                                 // every icon, by itself
         // every colour token is shown

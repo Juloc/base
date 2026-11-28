@@ -217,6 +217,13 @@ body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--t
 .btn.ghost.icon-only:hover { background: color-mix(in oklab, var(--text) 8%, transparent); }
 .btn.wide { width: 100%; }
 .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
+.btn > span:empty { display: none; }
+/* split button (0.4.5): the main action and an arrow with a menu, one shape with a fine seam */
+.btn-split { display: inline-flex; align-items: stretch; }
+.btn-split > .btn:first-child { border-start-end-radius: 0; border-end-end-radius: 0; }
+.btn-split > .split-more { width: 40px; padding: 0; border-start-start-radius: 0; border-end-start-radius: 0; box-shadow: inset 1px 0 color-mix(in oklab, currentColor 22%, transparent); }
+.btn-split > .split-more .icon { width: 18px; height: 18px; }
+.btn-split > .split-more[aria-expanded="true"] .icon { transform: rotate(180deg); }
 .btn.busy { position: relative; color: transparent !important; pointer-events: none; }
 .btn.busy::after { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--on-secondary-soft); border-top-color: transparent; animation: spin 0.7s linear infinite; }
 .btn.primary.busy::after, .btn.mini.busy::after { border-color: var(--on-accent-soft); border-top-color: transparent; }
@@ -463,6 +470,10 @@ a.tile:hover, button.tile:hover { border-color: color-mix(in oklab, var(--accent
 .dialog-body { flex: 1 1 auto; min-height: 0; padding: var(--s2) var(--s4) var(--s4); overflow-y: auto; overscroll-behavior: contain; }
 .dialog-foot { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom)); border-top: 1px solid var(--hair); }
 .dialog-foot .btn { flex: 1 1 auto; padding-inline: var(--s3); }
+.dialog-foot .btn-split { flex: 1 1 auto; }
+.dialog-foot .btn-split > .btn:first-child { flex: 1 1 auto; }
+.dialog-foot .btn-split > .split-more { flex: none; padding: 0; }
+@media (max-width: 599px) { .dialog-foot-start .btn:has(> .icon) { flex: none; width: var(--control-h); padding: 0; } .dialog-foot-start .btn:has(> .icon) > span { display: none; } }     /* the phone: a start button with a symbol shows the symbol, so the main action keeps its room */
 .dialog-foot-start, .dialog-foot-end { display: flex; align-items: center; gap: var(--s2); }
 .dialog-foot-end { flex: 1 1 auto; justify-content: flex-end; }
 /* two columns in the body: put .dialog-cols in the body and one .dialog-col in each column; below 760 px they stack */

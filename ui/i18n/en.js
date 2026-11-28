@@ -15,6 +15,7 @@ export default {
   'common.delete': 'Delete',
   'common.edit': 'Edit',
   'common.more': 'Load more',
+  'common.moreChoices': 'More choices',
   'common.search': 'Search',
   'toast.region': 'Messages',
   'form.showPassword': 'Show password',
