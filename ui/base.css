@@ -806,6 +806,11 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
 .t-switch { min-height: 0; }
 .t-sub-m { display: none; }
 .table-tools { display: none; }
+/* choosing only after "Select" (selection.mode 'button', 0.4.5, decision 93): plain rows until then; the button stands above the table at every width */
+.table-panel.on-demand:not(.selecting) .c-sel { display: none; }
+.table-panel.on-demand .table-tools { display: flex; justify-content: flex-end; padding: 10px 14px 6px; }
+.marks-round :is(.t-check, .check input)::before { border-radius: 50%; }
+.marks-round :is(.t-check, .check input) { border-radius: 50%; }     /* the focus ring follows */
 .table-empty .empty { border: 0; background: none; box-shadow: none; }
 /* which layout and which columns: by the width of the table's own panel (a container query, 0.4.5, decision 91), not of the window,
  * so a table beside another card or in a dialog is laid out for the room it has. Below 640 px rows have two lines; a column with from: 'm' | 'l' | 'xl'

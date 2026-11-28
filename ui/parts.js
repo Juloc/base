@@ -415,13 +415,18 @@ export function chart({ title, series, data, format = (n) => fmtNumber(n), actio
  *   actions     (row) => [{ label, icon?, kind?: 'main' | 'danger', run(row, button) }]   the action column: at most one 'main' (a tonal text button), the others quiet icon buttons
  *   active      { label?, get(row) -> boolean, set(row, on) -> promise }   the switch of a row, always the last column; a row that is off is greyed
  *   detail      (row) => node   a row folds open to this (several at once); a row with children folds its children instead
- *   selection   { actions: [{ label, icon?, kind?, run(rows, table) }] }   check boxes and the selection bar; on a phone through the "Select" button or a long press
+ *   selection   { actions: [{ label, icon?, kind?, run(rows, table) }], mode?: 'always' | 'button', button?: boolean }   check boxes and the selection bar.
+ *               'always' (default): check boxes on a wide table; on two-line rows through the "Select" button or a long press.
+ *               'button' (0.4.5): plain rows until "Select" (or choose(true), or a long press) turns choosing on; Esc, "Done", clearing the bar or unticking
+ *               the last row turn it off. button: false leaves the button out, for an app that puts its own (e.g. in its bar) and calls choose().
+ *   shape       'round' | 'square'   the shape of every mark in the table (avatars, the category square, the check box), so one list never mixes them
  *   onRowClick  (row) => void   what a click on the row does (instead of folding the detail)
  *   empty       { icon?, title, text?, action? }   what stands in place of the table when there is no row
- * Returns { el, set({ rows?, groups? }), flash(key), selected(), clearSelection(), destroy() }; set() draws again and keeps what is open and what is selected.
+ * Returns { el, set({ rows?, groups? }), flash(key), selected(), clearSelection(), choose(on), choosing(), destroy() }; set() draws again and keeps what is open and what is selected.
  */
 export function table(options) {
-  const { label, columns, rowKey = (r) => r.id, actions, active, detail, selection, onRowClick, empty } = options;
+  const { label, columns, rowKey = (r) => r.id, actions, active, detail, selection, onRowClick, empty, shape } = options;
+  const onDemand = !!selection && selection.mode === 'button';
   let rows = options.rows || [], groups = options.groups || null;
   const open = new Set(), shut = new Set(), selected = new Set();
   let selecting = false, bar = null, byKey = new Map();
@@ -435,6 +440,7 @@ export function table(options) {
 
   const selectAll = h('input', { class: 't-check', type: 'checkbox', 'aria-label': t('table.selectAll'), onchange: (e) => {
     if (e.currentTarget.checked) for (const k of byKey.keys()) selected.add(k); else selected.clear();
+    if (onDemand && !selected.size) { setSelecting(false); return; }
     render(); syncBar();
   } });
   const head = h('tr', null,
@@ -443,15 +449,19 @@ export function table(options) {
     actions ? h('th', { class: 'c-act', scope: 'col' }, h('span', { class: 'sr-only', text: t('table.actions') })) : null,
     active ? h('th', { class: 'c-active', scope: 'col', text: active.label || t('table.active') }) : null);
   const tbody = h('tbody');
-  const selectBtn = selection ? h('button', { class: 'btn mini', type: 'button', 'aria-pressed': 'false', onclick: () => setSelecting(!selecting) }) : null;
-  const tools = selection ? h('div', { class: 'table-tools' }, selectBtn) : null;
+  const selectBtn = selection && selection.button !== false ? h('button', { class: 'btn mini', type: 'button', 'aria-pressed': 'false', onclick: () => setSelecting(!selecting) }) : null;
+  const tools = selectBtn ? h('div', { class: 'table-tools' }, selectBtn) : null;
   const tableEl = h('table', { class: 'table rich', 'aria-label': label }, h('thead', null, head), tbody);
   const emptyEl = empty ? h('div', { class: 'table-empty', hidden: true }, emptyState(empty)) : null;
-  const el = h('div', { class: 'panel table-panel' + (selection ? ' has-select' : '') }, tools, h('div', { class: 'table-wrap' }, tableEl), emptyEl);
+  const el = h('div', { class: `panel table-panel${selection ? ' has-select' : ''}${onDemand ? ' on-demand' : ''}${shape === 'round' || shape === 'square' ? ' marks-' + shape : ''}` }, tools, h('div', { class: 'table-wrap' }, tableEl), emptyEl);
 
+  // Esc leaves choosing (not when it closes a menu or a list of choices first)
+  const onKey = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && !(e.target.closest && e.target.closest('.menu, .dd-list, .dialog'))) setSelecting(false); };
   function setSelecting(on) {
+    if (selecting === on) return;
     selecting = on;
     el.classList.toggle('selecting', on);
+    if (on) document.addEventListener('keydown', onKey); else document.removeEventListener('keydown', onKey);
     if (!on) { selected.clear(); render(); syncBar(); }
     paintTools();
   }
@@ -470,11 +480,12 @@ export function table(options) {
     bar = selectionBar({
       count: n,
       actions: selection.actions.map((a) => ({ ...a, run: () => a.run([...selected].map((k) => byKey.get(k)).filter(Boolean), api) })),
-      onClear: () => { bar = null; selected.clear(); render(); },
+      onClear: () => { bar = null; selected.clear(); if (onDemand) setSelecting(false); else render(); },
     });
   }
   function toggleSelected(key) {
     if (selected.has(key)) selected.delete(key); else selected.add(key);
+    if (onDemand && !selected.size) { setSelecting(false); return; }     // unticking the last row leaves choosing
     render({ focus: key + '|check' }); syncBar();
   }
 
@@ -586,7 +597,7 @@ export function table(options) {
     tr.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'touch' || e.target.closest('button, a, input, label')) return;
       x = e.clientX; y = e.clientY;
-      timer = setTimeout(() => { pressed = true; if (!selecting) { selecting = true; el.classList.add('selecting'); paintTools(); } selected.add(key); render({ focus: key + '|check' }); syncBar(); if (navigator.vibrate) navigator.vibrate(12); }, 500);
+      timer = setTimeout(() => { pressed = true; setSelecting(true); selected.add(key); render({ focus: key + '|check' }); syncBar(); if (navigator.vibrate) navigator.vibrate(12); }, 500);
     });
     tr.addEventListener('pointermove', (e) => { if (Math.hypot(e.clientX - x, e.clientY - y) > 8) stop(); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) tr.addEventListener(ev, stop);
@@ -612,8 +623,10 @@ export function table(options) {
     set(next) { if (next.rows) rows = next.rows; if (next.groups) groups = next.groups; render(); syncBar(); },
     flash(key) { return flash(tbody.querySelector(`tr.t-row[data-key="${CSS.escape(String(key))}"]`)); },
     selected: () => [...selected].map((k) => byKey.get(k)).filter(Boolean),
-    clearSelection() { selected.clear(); render(); syncBar(); },
-    destroy() { if (bar) { bar.close(); bar = null; } },
+    clearSelection() { selected.clear(); if (onDemand) setSelecting(false); else { render(); syncBar(); } },
+    choose(on = !selecting) { setSelecting(!!on); },
+    choosing: () => selecting,
+    destroy() { if (bar) { bar.close(); bar = null; } document.removeEventListener('keydown', onKey); },
   };
   window.addEventListener('hashchange', api.destroy, { once: true });     // the selection bar belongs to the page: it goes with it
   render();

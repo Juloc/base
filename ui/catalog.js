@@ -142,6 +142,26 @@ const demos = {
       h('div', { class: 'cluster' }, avatar({ name: 'Ada', size: 's' }), avatar({ name: 'Ada' }), avatar({ name: 'Ada', size: 'head', icon: 'bank', cat: 4, label: 'Bank account' }),
         avatar({ name: 'Ada', shape: 'square', icon: 'card', cat: 6 }), avatar({ name: 'Ada', size: 'head', shape: 'square', image: picture })));
   },
+  tableChoose() {
+    const rows = [
+      { id: 1, who: 'Market Hall', what: 'Groceries', icon: 'cart', cat: 0, amount: '−42.80 €' },
+      { id: 2, who: 'Corner Café', what: 'Eating out', icon: 'coffee', cat: 1, amount: '−6.40 €' },
+      { id: 3, who: 'Example Energy', what: 'Home', icon: 'plug', cat: 2, amount: '−58.00 €' },
+      { id: 4, who: 'Zora Example', what: 'Transfer', amount: '+120.00 €' },
+    ];
+    const t = table({
+      label: 'Bookings',
+      rows,
+      shape: 'round',                                   // round marks: the avatars and the tick
+      columns: [
+        { key: 'who', label: 'Who', render: (r) => h('span', { class: 'cluster' }, avatar({ name: r.who, icon: r.icon, cat: r.cat }), h('b', { text: r.who })) },
+        { key: 'what', label: 'Category' },
+        { key: 'amount', label: 'Amount', align: 'end' },
+      ],
+      selection: { mode: 'button', actions: [{ label: 'Category', icon: 'tag', run: (picked) => toast(picked.length + ' to sort') }, { label: 'Delete', icon: 'trash', kind: 'danger', run: (picked, tb) => { toast(picked.length + ' deleted'); tb.clearSelection(); } }] },
+    });
+    return t.el;
+  },
   tableRoom() {
     const people = [
       { id: 1, name: 'Ada Example', mail: 'ada@example.com', role: 'Admin', team: 'Platform', seen: 'today' },
