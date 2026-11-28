@@ -694,7 +694,7 @@ export function chart({ title, series, data, format = (n) => fmtNumber(n), actio
  *   columns     [{ key, label, render?(row) -> node or text, align?: 'end', phone?: 'title' | 'sub' | 'hide', from?: 'm' | 'l' | 'xl' }]; the first column is the title on a phone, the others the second line (or hidden).
  *               The layout follows the width of the table's own panel, not of the window (a container query, 0.4.5): below 640 px the rows have two lines,
  *               and a column with from shows only from 800 ('m'), 1000 ('l') or 1200 px ('xl'); on two-line rows phone decides instead.
- *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree: a rounded rail per level, a round node where a row branches off it, child rows tinted (0.4.5)
+ *   rows        [{ id, ..., children?: [rows] }]   rows with children fold open as a tree: the children in a rounded block, a deeper level a block inside it (0.4.5)
  *   groups      [{ id, title, count?, rows, onAdd?(g), addLabel?, menu?: [openMenu items] or (g) => items, active?: boolean, onActive?(on, g), activeLabel? }]  folding groups with a head; an inactive group greys its rows
  *   rowKey      (row) => key, default row.id
  *   actions     (row) => [{ label, icon?, kind?: 'main' | 'danger', run(row, button) }]   the action column: at most one 'main' (a tonal text button), the others quiet icon buttons
@@ -784,6 +784,7 @@ export function table(options) {
     const clickable = !!(onRowClick || (detail && !kids) || selection);
     const tr = h('tr', { class: `t-row${off ? ' off' : ''}${selected.has(key) ? ' selected' : ''}${isOpen && !kids ? ' opened' : ''}${clickable && (onRowClick || detail) ? ' clickable' : ''}${ctx.child ? ' t-child' : ''}${kids && !folded ? ' t-open' : ''}`, dataset: { key } });
     tr.style.setProperty('--depth', ctx.lines.length);
+    if (ctx.level) { tr.dataset.level = ctx.level; tr.style.setProperty('--level', ctx.level); }
     if (selection) tr.append(h('td', { class: 'c-sel' }, h('input', { class: 't-check', type: 'checkbox', checked: selected.has(key), 'aria-label': t('table.selectRow'), dataset: { focus: key + '|check' }, onchange: () => toggleSelected(key) })));
     const sub = columns.filter((c, i) => phoneOf(c, i) === 'sub');
     columns.forEach((c, i) => {
@@ -811,7 +812,7 @@ export function table(options) {
       dtr._row = row;
       out.push(dtr);
     }
-    if (kids && !folded) row.children.forEach((child, i) => addRow(out, child, { off, lines: [...ctx.lines.slice(0, -1), ctx.lines.length ? (ctx.last ? 'blank' : 'pass') : null, i === row.children.length - 1 ? 'end' : 'mid'].filter(Boolean), last: i === row.children.length - 1, child: true }));
+    if (kids && !folded) row.children.forEach((child, i) => addRow(out, child, { off, lines: [...ctx.lines.slice(0, -1), ctx.lines.length ? (ctx.last ? 'blank' : 'pass') : null, i === row.children.length - 1 ? 'end' : 'mid'].filter(Boolean), last: i === row.children.length - 1, child: true, level: (ctx.level || 0) + 1 }));
   }
   function addRows(out, list, ctx) {
     list.forEach((row, i) => addRow(out, row, { off: ctx.off, lines: ctx.root ? [] : [ctx.in ? (i === list.length - 1 ? 'end' : 'mid') : null].filter(Boolean), last: i === list.length - 1 }));
@@ -894,6 +895,15 @@ export function table(options) {
     const out = [];
     if (groups) groups.forEach((g) => addGroup(out, g)); else addRows(out, rows, { root: true });
     for (const k of [...selected]) if (!byKey.has(k)) selected.delete(k);
+    // the children of a row form a block, a deeper level a block inside it (decision 91): mark where each begins and ends, for the round corners
+    const trs = out.filter((n) => n.classList.contains('t-row')), level = (n) => Number(n?.dataset.level || 0);
+    trs.forEach((r, i) => {
+      const l = Math.min(level(r), 2), before = Math.min(level(trs[i - 1]), 2), after = Math.min(level(trs[i + 1]), 2);
+      if (!l) return;
+      if (before < l) r.classList.add('t-top');
+      if (after < l) r.classList.add('t-bot');
+      if (l > 1 && after < 1) r.classList.add('t-end1');
+    });
     tbody.replaceChildren(...out);
     const none = byKey.size === 0 && !(groups && groups.length);
     tableEl.hidden = none && !!empty;

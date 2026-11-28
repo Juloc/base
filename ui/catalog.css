@@ -55,3 +55,11 @@
 .cat-strip { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 .cat-strip i { height: 40px; border-radius: var(--r-s); background: var(--cat); }
 .cat-resize { resize: horizontal; overflow: auto; width: 100%; max-width: 100%; min-width: 260px; padding: 0 12px 12px 0; border-right: 2px dashed var(--line-strong); }
+.cat-host { display: inline-flex; align-items: center; gap: var(--s3); min-width: 0; }
+.cat-host.quiet { color: var(--text-2); }
+.cat-host.quiet .avatar { background: var(--surface-2); color: var(--text-2); }
+.cat-host-name { display: inline-flex; align-items: baseline; min-width: 0; }
+.cat-host-mark { display: inline-flex; color: var(--text-2); }
+.cat-host-mark .icon { width: 15px; height: 15px; }
+.cat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 9px; background: var(--surface-2); color: var(--text-2); font-size: var(--text-xs); }
+.cat-chip .icon { width: 13px; height: 13px; }

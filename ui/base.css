@@ -757,14 +757,12 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .table.rich :is(th, td):first-child { padding-left: 20px; }
 .table.rich :is(th, td):last-child { padding-right: 20px; }
 .table.rich tr.t-row.clickable { cursor: pointer; }
-.table.rich tr.t-row.t-child > td { background: var(--t-tint); }
 .table.rich tr.t-row:hover > td { background: color-mix(in oklab, var(--accent) 7%, transparent); }
-.table.rich tr.t-row.t-child:hover > td { background: color-mix(in oklab, var(--accent) 7%, var(--t-tint)); }
 .table.rich tr.t-row.opened > td, .table.rich tr.t-detail > td { background: var(--surface-1); }
 .table.rich tr.t-row.selected > td { background: var(--accent-soft); }
 .table.rich tr.t-detail > td { height: auto; border-top: 0; padding: 4px 20px 18px 56px; white-space: normal; }
 .table.rich tr.t-detail[hidden] { display: none; }
-.table.rich tr.t-row.off > td:not(.c-act):not(.c-active):not(.c-sel) { opacity: 0.45; }
+.table.rich tr.t-row.off > td:not(.c-active):not(.c-sel) > * { opacity: 0.45; }     /* the content, so a block behind the row keeps its colour; its actions too (the owner) */
 .table.rich tr.t-group > td { height: 50px; padding: 0 12px 0 20px; background: var(--surface-1); border-top: 0; }
 .table.rich tr.t-group:not(:first-child) > td { border-top: 8px solid var(--surface); }
 .table.rich tr.t-group.off .t-gname, .table.rich tr.t-group.off .t-gcount { opacity: 0.45; }
@@ -780,22 +778,50 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .t-fold .icon { width: 18px; height: 18px; transition: transform var(--dur) var(--ease); }
 .t-fold[aria-expanded="false"] .icon { transform: rotate(-90deg); }
 .t-fold:focus-visible { outline: 2px solid var(--accent-ink); }
-/* the tree (0.4.5, decision 91): one cell of --t-step per level. A rounded rail in --accent-soft runs down a level, a round node in --accent sits where a row
- * branches off it, and the rail goes on from the fold button of an open row; child rows are tinted. A rail cell reaches --t-down into the next row, so it has
- * no gap between rows (that row always has the rail at the same place, and its node is drawn above it). */
-.table-panel { --t-step: 28px; --t-rail: 5px; --t-down: 24px; --t-stub: 34px; --t-tint: color-mix(in oklab, var(--accent-soft) 25%, var(--surface)); }
-.t-ln { position: relative; flex: none; align-self: stretch; width: var(--t-step); }
-.t-ln:is(.pass, .mid, .end)::before { content: ""; position: absolute; left: calc(50% - var(--t-rail) / 2); width: var(--t-rail); top: -1px; bottom: calc(var(--t-down) * -1); background: var(--accent-soft); pointer-events: none; }
-.t-ln.end::before { bottom: calc(50% - var(--t-rail) / 2); border-radius: 0 0 var(--t-rail) var(--t-rail); }
-.t-ln:is(.mid, .end)::after { content: ""; position: absolute; z-index: 1; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent); pointer-events: none; }
-.t-ln:is(.mid, .end) { background: linear-gradient(var(--accent-soft) 0 0) right center / 50% var(--t-rail) no-repeat; }     /* the branch from the node to the row */
-.t-fold-gap { position: relative; }
-.t-ln:is(.mid, .end) + .t-fold-gap::before { content: ""; position: absolute; left: 0; top: calc(50% - var(--t-rail) / 2); width: 12px; height: var(--t-rail); border-radius: 0 var(--t-rail) var(--t-rail) 0; background: var(--accent-soft); }
-.t-fold { position: relative; }
-.t-open .t-fold::after { content: ""; position: absolute; left: calc(50% - var(--t-rail) / 2); top: calc(100% + 2px); width: var(--t-rail); height: var(--t-stub); border-radius: var(--t-rail) var(--t-rail) 0 0; background: var(--accent-soft); pointer-events: none; }
-.t-group.t-open .t-fold::after { display: none; }      /* the rows of a group begin their own rail: the head moves when a selection column shows */
-tr.t-group + tr.t-row .t-ln:first-child::before { top: 6px; border-radius: var(--t-rail) var(--t-rail) 0 0; }
-tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rail); }
+/* the tree (0.4.5, decision 91, the owner's choice): rows are indented one --t-step per level, and the children of a row lie in a soft, rounded block that
+ * begins at the children themselves (their fold button), not under the parent. A deeper level is a smaller block of its own inside it, a shade stronger,
+ * with its own round corners. No lines. Drawn by pseudo-elements, because a table row has no round corners:
+ *   the title cell  ::after the outer block (from --t-x1), ::before the row's own block (from --t-x);  the last cell the same two at the right end;
+ *   the cells between carry the row's own colour, and at the top and bottom of a block a gap in the colour behind it (box-shadow).
+ * table() sets data-level (1 = a child) and t-top / t-bot where a block of the row's level begins or ends, t-end1 where the outer block ends. */
+.table-panel { --t-step: 28px; --t-block: color-mix(in oklab, var(--accent-soft) 50%, var(--surface)); --t-block-in: color-mix(in oklab, var(--accent-soft) 85%, var(--surface)); --t-gap: 4px; --t-edge: 12px; --t-r: var(--r-m); }
+.t-ln { flex: none; align-self: stretch; width: var(--t-step); }
+.table.rich tbody { isolation: isolate; }
+.table.rich tr.t-child > td { position: relative; border-top-color: transparent; --t-own: var(--t-block); --t-behind: var(--surface); }
+.table.rich tr.t-child:not([data-level="1"]) > td { --t-own: var(--t-block-in); --t-behind: var(--t-block); }
+.table.rich td.c-title { --t-pad: 8px; }
+.table.rich td.c-title:first-child { --t-pad: 20px; }     /* the cell's own padding: 20 px at the edge, 8 px after the column of check boxes */
+.table.rich tr.t-child > td.c-title { --t-x1: calc(var(--t-pad) + (var(--depth) - var(--level) + 1) * var(--t-step) - 8px); --t-x: calc(var(--t-x1) + (min(var(--level), 2) - 1) * var(--t-step)); }
+.table.rich tr.t-child > td.c-title { background: none; }
+.table.rich tr.t-child > td.c-title ~ td { background: var(--t-own); }
+.table.rich tr.t-child > td:last-child { background: none !important; }
+.table.rich tr.t-child > td.c-title::before, .table.rich tr.t-child > td.c-title::after, .table.rich tr.t-child > td:last-child::before, .table.rich tr.t-child > td:last-child::after { content: ""; position: absolute; top: 0; bottom: 0; pointer-events: none; }
+.table.rich tr.t-child > td.c-title::before { z-index: -1; left: var(--t-x); right: 0; background: var(--t-own); }
+.table.rich tr.t-child > td:last-child::after { z-index: -1; left: 0; right: var(--t-edge); background: var(--t-own); }
+.table.rich tr.t-child > td.c-title:last-child::before { right: var(--t-edge); }
+.table.rich tr.t-child > td.c-title:last-child::after { display: none; }
+/* the outer block behind a deeper row */
+.table.rich tr.t-child:not([data-level="1"]) > td.c-title::after { z-index: -2; left: var(--t-x1); right: 0; background: var(--t-block); }
+.table.rich tr.t-child:not([data-level="1"]) > td:last-child::before { z-index: -2; left: 0; right: var(--t-edge); background: var(--t-block); }
+.table.rich tr.t-child:not([data-level="1"]) > td:last-child::after { right: calc(var(--t-edge) + 8px); }
+.table.rich tr.t-child.t-end1 > td.c-title::after { bottom: var(--t-gap); border-bottom-left-radius: var(--t-r); }
+.table.rich tr.t-child.t-end1 > td:last-child::before { bottom: var(--t-gap); border-bottom-right-radius: var(--t-r); }
+.table.rich tr.t-child.t-end1 > td.c-title ~ td:not(:last-child) { box-shadow: inset 0 calc(var(--t-gap) * -1) var(--surface); }
+/* the corners and the gaps of the row's own block */
+.table.rich tr.t-child.t-top > td.c-title::before { top: var(--t-gap); border-top-left-radius: var(--t-r); }
+.table.rich tr.t-child.t-bot > td.c-title::before { bottom: var(--t-gap); border-bottom-left-radius: var(--t-r); }
+.table.rich tr.t-child.t-top > td:last-child::after, .table.rich tr.t-child.t-top > td.c-title:last-child::before { top: var(--t-gap); border-top-right-radius: var(--t-r); }
+.table.rich tr.t-child.t-bot > td:last-child::after, .table.rich tr.t-child.t-bot > td.c-title:last-child::before { bottom: var(--t-gap); border-bottom-right-radius: var(--t-r); }
+.table.rich tr.t-child.t-top > td.c-title ~ td:not(:last-child) { box-shadow: inset 0 var(--t-gap) var(--t-behind); }
+.table.rich tr.t-child.t-bot > td.c-title ~ td:not(:last-child) { box-shadow: inset 0 calc(var(--t-gap) * -1) var(--t-behind); }
+.table.rich tr.t-child.t-top.t-bot > td.c-title ~ td:not(:last-child) { box-shadow: inset 0 var(--t-gap) var(--t-behind), inset 0 calc(var(--t-gap) * -1) var(--t-behind); }
+.table.rich tr.t-child.t-bot.t-end1 > td.c-title ~ td:not(:last-child) { box-shadow: inset 0 calc(var(--t-gap) * -1) var(--surface), inset 0 calc(var(--t-gap) * -2) var(--t-block); }
+.table.rich tr.t-child.t-top.t-bot.t-end1 > td.c-title ~ td:not(:last-child) { box-shadow: inset 0 var(--t-gap) var(--t-block), inset 0 calc(var(--t-gap) * -1) var(--surface), inset 0 calc(var(--t-gap) * -2) var(--t-block); }
+.table.rich tr.t-child.t-bot.t-end1 > td.c-title::before, .table.rich tr.t-child.t-bot.t-end1 > td:last-child::after { bottom: calc(var(--t-gap) * 2); }
+/* hover and choice tint the row's own block */
+.table.rich tr.t-child:hover > td.c-title ~ td:not(:last-child), .table.rich tr.t-child:hover > td.c-title::before, .table.rich tr.t-child:hover > td:last-child::after { background: color-mix(in oklab, var(--accent) 9%, var(--t-own)); }
+.table.rich tr.t-child.selected > td.c-title ~ td:not(:last-child), .table.rich tr.t-child.selected > td.c-title::before, .table.rich tr.t-child.selected > td:last-child::after { background: var(--accent-soft); }
+.table.rich tr.t-row:not(.t-child) + tr.t-child > td, .table.rich tr.t-child + tr.t-row:not(.t-child) > td { border-top-color: transparent; }
 .table.rich tr.t-detail { position: relative; z-index: 2; }
 .table.rich .c-sel { width: 44px; padding-right: 0; }
 .table.rich .c-act { width: 1%; text-align: right; }
@@ -808,6 +834,7 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
 .table-tools { display: none; }
 /* choosing only after "Select" (selection.mode 'button', 0.4.5, decision 94): plain rows until then; the button stands above the table at every width */
 .table-panel.on-demand:not(.selecting) .c-sel { display: none; }
+.table-panel.on-demand:not(.selecting) .table.rich :is(th, td).c-title { padding-left: 20px; --t-pad: 20px; }     /* the check column is hidden: the title is at the edge */
 .table-panel.on-demand .table-tools { display: flex; justify-content: flex-end; padding: 10px 14px 6px; }
 .marks-round :is(.t-check, .check input)::before { border-radius: 50%; }
 .marks-round :is(.t-check, .check input) { border-radius: 50%; }     /* the focus ring follows */
@@ -821,7 +848,6 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
 @container t-table (max-width: 1199px) { .table.rich .t-from-xl { display: none; } }
 @container t-table (max-width: 639px) {
   .table-wrap { overflow: visible; }
-  .table.rich { --t-down: 38px; --t-stub: 44px; }     /* two-line rows are taller and padded: the rail reaches further */
   .table.rich, .table.rich tbody { display: block; }
   .table.rich thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .table.rich tr { display: block; }
@@ -829,8 +855,21 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
   .table.rich tr.t-row:first-child, .table.rich tr.t-group + tr.t-row { border-top: 0; }
   .table.rich tr.t-row > td { display: block; height: auto; padding: 0; border: 0; background: none !important; }
   .table.rich tr.t-row:hover { background: none; }
-  .table.rich tr.t-row.t-child { background: var(--t-tint); }
   .table.rich tr.t-row.opened, .table.rich tr.t-row.selected { background: var(--surface-1); }
+  /* the block of children on a phone: the rows themselves are blocks here, so the row gets the colour, the indent and the corners; a deeper level draws
+   * its own block inside the row (::before), the row keeps the colour of the outer block around it */
+  .table.rich tr.t-child { position: relative; isolation: isolate; margin: 0 var(--t-edge) 0 calc((var(--depth) - var(--level)) * var(--t-step) + 8px); padding-left: 6px; background: var(--t-block); border-top-color: transparent; }
+  .table.rich tr.t-child[data-level="1"].t-top { margin-top: var(--t-gap); border-top-left-radius: var(--t-r); border-top-right-radius: var(--t-r); }
+  .table.rich tr.t-child[data-level="1"].t-bot, .table.rich tr.t-child.t-end1 { margin-bottom: var(--t-gap); border-bottom-left-radius: var(--t-r); border-bottom-right-radius: var(--t-r); }
+  .table.rich tr.t-child:not([data-level="1"])::before { content: ""; position: absolute; z-index: -1; inset: 0 6px 0 var(--t-step); background: var(--t-block-in); pointer-events: none; }
+  .table.rich tr.t-child:not([data-level="1"]).t-top::before { top: var(--t-gap); border-top-left-radius: var(--t-r); border-top-right-radius: var(--t-r); }
+  .table.rich tr.t-child:not([data-level="1"]).t-bot::before { bottom: var(--t-gap); border-bottom-left-radius: var(--t-r); border-bottom-right-radius: var(--t-r); }
+  .table.rich tr.t-child + tr.t-row:not(.t-child) { border-top-color: transparent; }
+  .table.rich tr.t-child > td::before, .table.rich tr.t-child > td::after { display: none; }
+  .table.rich tr.t-child > td { box-shadow: none !important; }
+  .table.rich tr.t-child.selected { background: var(--accent-soft); }
+  .table.rich { --t-step: 14px; }     /* on a phone a level is a smaller step: the block itself shows what belongs together, and the name keeps its room */
+  .table.rich tr.t-child.selected { background: var(--accent-soft); }
   .table.rich tr.t-row.selected { background: var(--accent-soft); }
   .table.rich tr.t-row.off { opacity: 1; }
   .table.rich tr.t-row > td.m-hide, .table.rich th.m-hide { display: none; }
@@ -846,7 +885,7 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
   .table.rich td.c-active { grid-area: act; width: auto; margin-left: 10px; }
   .t-acts { display: none; }
   .t-acts-m { display: inline-flex; }
-  .table.rich tr.t-row.off > td:not(.c-act):not(.c-active):not(.c-sel) { opacity: 0.45; }
+  .table.rich tr.t-row.off > td:not(.c-active):not(.c-sel) > * { opacity: 0.45; }
   .table.rich tr.t-detail > td { padding: 4px 14px 14px; }
   .table.rich tr.t-group > td { padding: 0 8px 0 14px; display: block; }
   .table.rich tr.t-group:not(:first-child) > td { border-top: 8px solid var(--surface); }
@@ -858,7 +897,6 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
   .panel, .number-box, .timeline-card, .tabbar, .chip { border: 1px solid CanvasText; }
   .tabbar-item[aria-selected="true"], .chip[aria-pressed="true"] { outline: 2px solid Highlight; }
   .ch-layer { stroke: Canvas; }
-  .t-ln::before, .t-ln::after, .t-fold::after, .t-fold-gap::before { background: CanvasText; }
 }
 
 /* ---------- dayList (0.4.5, decision 95): a white card per day, its band sticks flush under the top bar (--day-top) and turns to glass while it rides along ---------- */

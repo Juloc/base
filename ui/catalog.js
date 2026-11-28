@@ -118,15 +118,36 @@ const demos = {
     return t.el;
   },
   tableTree() {
+    // built like the routes page of a real app: a block per domain, the domain's own address, its paths and subdomains under it, paths of a subdomain under that
+    const R = (id, kind, name, target, more = {}) => ({ id, kind, name, target, hits: '', on: true, ...more });
+    const host = (r) => {
+      const sym = { host: 'globe', path: 'list', redirect: 'external', none: 'globe' }[r.kind];
+      const [first, ...rest] = r.kind === 'path' ? [r.name] : r.name.split('.');
+      return h('span', { class: 'cat-host' + (r.kind === 'none' ? ' quiet' : '') },
+        avatar({ name: r.name, icon: sym, size: 's', shape: 'square' }),
+        h('span', { class: 'cat-host-name' }, h('b', { class: r.kind === 'path' ? 'mono' : '', text: first }), rest.length ? h('span', { class: 'muted', text: '.' + rest.join('.') }) : null),
+        r.lock ? h('span', { class: 'cat-host-mark', title: 'Sign-in required' }, icon('lock')) : null,
+        r.cert ? badge(r.cert, 'warn') : null);
+    };
+    const target = (r) => r.kind === 'redirect' ? h('span', { class: 'cat-chip mono' }, icon('external'), h('span', { text: r.target })) : h('span', { class: 'mono muted', text: r.target || '' });
     const t = table({
       label: 'Routes by domain',
-      columns: [{ key: 'name', label: 'Path' }, { key: 'target', label: 'Target', render: (r) => h('span', { class: 'mono', text: r.target }) }],
+      columns: [{ key: 'name', label: 'Address', render: host }, { key: 'target', label: 'Target', render: target, phone: 'sub' }, { key: 'hits', label: 'Requests', align: 'end', phone: 'hide' }],
       groups: [
-        { id: 'a', title: 'example.com', count: 3, onAdd: () => toast('Add a route'), menu: [{ label: 'Rename', icon: 'edit', run: () => toast('Rename') }], active: true, onActive: (on) => toast(on ? 'Domain on' : 'Domain off'),
-          rows: [{ id: 'a1', name: '/', target: '192.0.2.10:8080' }, { id: 'a2', name: '/api', target: '192.0.2.10:9000', children: [{ id: 'a21', name: '/api/v1', target: '192.0.2.10:9001' }, { id: 'a22', name: '/api/v2', target: '192.0.2.10:9002' }] }, { id: 'a3', name: '/docs', target: '192.0.2.13:80' }] },
-        { id: 'b', title: 'example.org', count: 1, onAdd: () => toast('Add a route'), active: false, rows: [{ id: 'b1', name: '/', target: '192.0.2.14:3000' }] },
+        { id: 'a', title: 'example.com', count: 7, onAdd: () => toast('Add a route'), menu: [{ label: 'Edit domain', icon: 'edit', run: () => toast('Edit') }], active: true, onActive: (on) => toast(on ? 'Domain on' : 'Domain off'),
+          rows: [R('a0', 'host', 'example.com', '192.0.2.10:8080', { hits: '12 480', lock: true, children: [
+            R('a1', 'path', '/api', '192.0.2.10:9000', { hits: '' }),
+            R('a2', 'path', '/status', '192.0.2.10:9100', { hits: '' }),
+            R('a3', 'host', 'app.example.com', '192.0.2.11:3000', { hits: '3 902', cert: '9 days', children: [R('a31', 'path', '/admin', '192.0.2.11:3001', { lock: true })] }),
+            R('a4', 'redirect', 'www.example.com', '301 example.com', { hits: '611' }),
+            R('a5', 'host', 'files.example.com', '192.0.2.12:9000', { hits: '87', on: false }),
+          ] })] },
+        { id: 'b', title: 'example.org', count: 1, onAdd: () => toast('Add a route'), active: true,
+          rows: [R('b0', 'none', 'example.org', '', { children: [R('b1', 'host', 'blog.example.org', '192.0.2.14:2368', { hits: '1 204' })] })] },
       ],
-      actions: () => [{ label: 'Edit', icon: 'edit', run: () => toast('Edit') }],
+      actions: (r) => r.kind === 'none' ? [{ label: 'Add a route', icon: 'plus', run: () => toast('Add') }] : [{ label: 'Traffic', icon: 'activity', run: () => toast('Traffic') }, { label: 'Edit', icon: 'edit', run: () => toast('Edit') }],
+      active: { label: 'Active', get: (r) => r.on, set: async (r, on) => { r.on = on; toast(on ? 'On' : 'Off'); } },
+      selection: { actions: [{ label: 'Delete', icon: 'trash', kind: 'danger', run: (rows, tb) => { toast(rows.length + ' deleted'); tb.clearSelection(); } }] },
     });
     return t.el;
   },
