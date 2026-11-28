@@ -780,7 +780,7 @@ a.chip:hover, button.chip:hover { background: var(--surface); }
 .t-fold .icon { width: 18px; height: 18px; transition: transform var(--dur) var(--ease); }
 .t-fold[aria-expanded="false"] .icon { transform: rotate(-90deg); }
 .t-fold:focus-visible { outline: 2px solid var(--accent-ink); }
-/* the tree (0.4.5, decision 90): one cell of --t-step per level. A rounded rail in --accent-soft runs down a level, a round node in --accent sits where a row
+/* the tree (0.4.5, decision 91): one cell of --t-step per level. A rounded rail in --accent-soft runs down a level, a round node in --accent sits where a row
  * branches off it, and the rail goes on from the fold button of an open row; child rows are tinted. A rail cell reaches --t-down into the next row, so it has
  * no gap between rows (that row always has the rail at the same place, and its node is drawn above it). */
 .table-panel { --t-step: 28px; --t-rail: 5px; --t-down: 24px; --t-stub: 34px; --t-tint: color-mix(in oklab, var(--accent-soft) 25%, var(--surface)); }
@@ -806,13 +806,13 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
 .t-switch { min-height: 0; }
 .t-sub-m { display: none; }
 .table-tools { display: none; }
-/* choosing only after "Select" (selection.mode 'button', 0.4.5, decision 93): plain rows until then; the button stands above the table at every width */
+/* choosing only after "Select" (selection.mode 'button', 0.4.5, decision 94): plain rows until then; the button stands above the table at every width */
 .table-panel.on-demand:not(.selecting) .c-sel { display: none; }
 .table-panel.on-demand .table-tools { display: flex; justify-content: flex-end; padding: 10px 14px 6px; }
 .marks-round :is(.t-check, .check input)::before { border-radius: 50%; }
 .marks-round :is(.t-check, .check input) { border-radius: 50%; }     /* the focus ring follows */
 .table-empty .empty { border: 0; background: none; box-shadow: none; }
-/* which layout and which columns: by the width of the table's own panel (a container query, 0.4.5, decision 91), not of the window,
+/* which layout and which columns: by the width of the table's own panel (a container query, 0.4.5, decision 92), not of the window,
  * so a table beside another card or in a dialog is laid out for the room it has. Below 640 px rows have two lines; a column with from: 'm' | 'l' | 'xl'
  * shows only from 800, 1000 or 1200 px of the panel's width. */
 .table-panel { container: t-table / inline-size; }
@@ -861,7 +861,7 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
   .t-ln::before, .t-ln::after, .t-fold::after, .t-fold-gap::before { background: CanvasText; }
 }
 
-/* ---------- dayList (0.4.5, decision 94): a white card per day, its band sticks flush under the top bar (--day-top) and turns to glass while it rides along ---------- */
+/* ---------- dayList (0.4.5, decision 95): a white card per day, its band sticks flush under the top bar (--day-top) and turns to glass while it rides along ---------- */
 .day-list { display: flex; flex-direction: column; overflow-anchor: none; }     /* the list keeps the place itself when rows come in above (Safari has no scroll anchoring) */
 .day-tools { display: flex; justify-content: flex-end; margin-bottom: var(--s2); }
 .day-days { display: flex; flex-direction: column; gap: var(--s3); }
