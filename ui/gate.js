@@ -42,7 +42,7 @@ export function authCard({ icon: mark = 'shield', title, line, target, step, bod
 
 /**
  * One state, in the same card: a round mark, one sentence, one or two buttons.
- * tone: 'run' (soft accent, the mark turns), 'ok' (green), 'danger' (raspberry). actions: [{ label, icon?, href?, run? }]; the first is the main one.
+ * tone: 'run' (soft accent, the mark turns), 'ok' (green), 'danger' (red). actions: [{ label, icon?, href?, run? }]; the first is the main one.
  */
 export function stateCard({ icon: mark = 'info', tone = 'run', title, text, actions = [], foot = false }) {
   const buttons = actions.map((a, i) => {

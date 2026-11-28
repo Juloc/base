@@ -91,7 +91,7 @@ The numbers by area: CODE, DATA, AUTH, SEC, OPS, CONTRACT, SHELL, FORM, LIST, DI
 
 ## COLOR: colours
 
-- **COLOR-01 (MUST)** Colours come from the tokens of the base only. An app sets its own colour with exactly one variable, `--accent-color` (any CSS colour, the accent itself) or `--accent-hue` (only an angle), and writes no other colour value; the tokens derive from it (fill, text on it, ink, soft surfaces) and the contrast test checks the derived pairs for every hue and for a set of hard colours. The look follows JulOS (tonal surfaces, glass over a soft gradient, filled and tonal buttons, radii 20 and 28 px; the catalogue shows the mapping). Light and dark both work; the person chooses (system, light, dark). *Why:* the family looks like one family. *Test:* `RuleFileTests.An_app_sets_its_colour_with_one_variable`
+- **COLOR-01 (MUST)** Colours come from the tokens of the base only. An app sets its own colour with exactly one variable, `--accent-color` (any CSS colour, the accent itself) or `--accent-hue` (only an angle), may turn the red of faults with `--danger-hue` (an angle), and writes no other colour value; the tokens derive from it (fill, text on it, ink, soft surfaces) and the contrast test checks the derived pairs for every hue and for a set of hard colours. The look follows JulOS (tonal surfaces, glass over a soft gradient, filled and tonal buttons, radii 20 and 28 px; the catalogue shows the mapping). Light and dark both work; the person chooses (system, light, dark). *Why:* the family looks like one family. *Test:* `RuleFileTests.An_app_sets_its_colour_with_one_variable`
 
 ## MOBILE: phones
 

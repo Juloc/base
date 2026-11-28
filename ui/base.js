@@ -757,7 +757,7 @@ function applyBadges(root) {
 }
 /**
  * A dot or a count on a place of the menu, for something that happened on another page (0.4).
- * value: true is an accent dot (something new), a number or '!' a raspberry count or mark (needs a look), false, 0 or null takes it away.
+ * value: true is an accent dot (something new), a number or '!' a red count or mark (needs a look), false, 0 or null takes it away.
  * path is the route of the place, with or without the hash ('/items').
  */
 export function navBadge(path, value) {

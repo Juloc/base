@@ -131,7 +131,7 @@ body:has(.action-bar, .selection-bar) .shell-main { padding-bottom: calc(var(--t
 .tab[aria-current="page"] .tab-pill::before { transform: none; opacity: 1; }
 .tab[aria-current="page"] .tab-pill .icon { color: var(--on-accent-soft); }
 
-/* a dot or a count on a place of the menu (navBadge()): an accent dot for something new, raspberry for a count or "!" that needs a look */
+/* a dot or a count on a place of the menu (navBadge()): an accent dot for something new, red for a count or "!" that needs a look */
 .nav-badge { display: grid; place-items: center; flex: none; font: 700 10px/1 var(--font); }
 .nav-badge.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-ink); box-shadow: 0 0 0 3px var(--surface); }
 .nav-badge.count { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: var(--on-danger); }

@@ -241,7 +241,7 @@ public partial class RuleFileTests
             var hue = Regex.Matches(text, @"--accent-hue:\s*\d{1,3};");
             Assert.Equal(1, colour.Count + hue.Count);
             Assert.DoesNotMatch(literal, colour.Count == 1 ? text.Replace(colour[0].Value, "") : text);
-            Assert.DoesNotMatch(@"--(?!accent-hue|accent-color)[a-z0-9-]+\s*:", text);        // an app does not redefine tokens
+            Assert.DoesNotMatch(@"--(?!accent-hue|accent-color|danger-hue)[a-z0-9-]+\s*:", text);        // an app does not redefine tokens (the red of faults may turn by its hue)
         }
         // in the base itself, colour values live in tokens.css; the styles only use the tokens (the white ground of the QR code is the one exception: a scanner needs it)
         var styles = Regex.Replace(Repo.Read("ui", "base.css"), @"/\*.*?\*/|url\(""data:[^""]*""\)", "", RegexOptions.Singleline);
