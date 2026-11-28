@@ -289,7 +289,7 @@ export function dayList(options) {
     const body = clickable
       ? h('button', { class: 'day-row', type: 'button', dataset: { key }, onclick: () => (choosing ? toggle(key) : onRowClick && onRowClick(item)) }, inner)
       : h('div', { class: 'day-row', dataset: { key } }, inner);
-    if (r.quiet) body.classList.add('quiet');
+    if (r.quiet) body.classList.add('day-expected');
     if (selection) longPress(body, key);
     const li = h('li', { class: 'day-item', dataset: { key } }, body);
     li._item = item;

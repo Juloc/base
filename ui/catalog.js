@@ -4,6 +4,7 @@ import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floa
 import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash, avatar, dayList, dayKey } from './parts.js';
 import { authCard, stateCard } from './gate.js';
 import { GLYPHS } from './icons.js';
+import { fmtNumber } from './i18n.js';
 
 /* ---------- the examples that are JavaScript: the source shown is the function itself ---------- */
 const demos = {
@@ -284,7 +285,7 @@ const demos = {
       }
       return { items, next: offset >= -30 && offset <= 10 ? String(offset) : null };
     };
-    const euro = (cents) => (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', signDisplay: 'exceptZero' });
+    const euro = (cents) => (cents > 0 ? '+' : '') + fmtNumber(cents / 100, 2) + ' €';
     const list = dayList({
       label: 'Bookings',
       load,
