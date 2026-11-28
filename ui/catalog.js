@@ -1,7 +1,7 @@
 /* The script of the catalogue page: shows the code of every example (read from the example itself), runs the examples that are
  * JavaScript, and lets one try light, dark and any accent hue. English only: the page is for people who build apps. */
 import { h, icon, hydrateIcons, toast, openDialog, confirmDialog, openMenu, floatBar, actionBar, selectionBar, navBadge, dropdown, choiceTiles, switchField, field, passwordField, submit, segmented, theme, badge, ApiError } from './base.js';
-import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash, avatar } from './parts.js';
+import { table, tabs, chips, numberBox, numberStrip, chart, liveFeed, timeline, ring, foldCard, flash, avatar, dayList, dayKey } from './parts.js';
 import { authCard, stateCard } from './gate.js';
 import { GLYPHS } from './icons.js';
 
@@ -265,6 +265,37 @@ const demos = {
         { state: 'warn', title: 'Renewal retried', time: '03:00', meta: 'blog.example.org', body: 'The provider answered slowly; the second try worked.' }] },
       { label: 'Yesterday', items: [{ state: 'danger', title: 'Record could not be set', time: '22:40', meta: 'files.example.net', body: 'The token of the provider was refused.' }] },
     ] });
+  },
+  dayList() {
+    // a made-up account: a few bookings per day, 30 days back and 10 ahead; a real app asks its server (GET /api/bookings?dir=older&cursor=...)
+    const shops = [['Market Hall', 'cart', 0, 'Groceries'], ['Corner Café', 'coffee', 1, 'Eating out'], ['Example Energy', 'plug', 2, 'Home'], ['City Transit', 'bus', 4, 'Transport'], ['Zora Example', null, null, 'Transfer']];
+    const bookingsOf = (offset) => Array.from({ length: (((offset * 7 + 11) % 4) + 4) % 4 }, (_, n) => {
+      const [who, symbol, cat, what] = shops[(offset * 3 + n * 2 + 150) % shops.length];
+      const date = new Date(); date.setDate(date.getDate() + offset); date.setHours(18 - n * 3, 0, 0, 0);
+      return { id: `${offset}.${n}`, who, symbol, cat, what, at: date, cents: who === 'Zora Example' ? 12000 : -((offset * 37 + n * 113 + 9999) % 9000 + 250), planned: offset > 0 };
+    });
+    const load = async ({ dir, cursor }) => {
+      await new Promise((done) => setTimeout(done, 400));
+      let offset = cursor !== null ? Number(cursor) : dir === 'older' ? 0 : 1, items = [];
+      while (items.length < 12 && offset >= -30 && offset <= 10) {
+        const day = bookingsOf(offset);
+        items.push(...(dir === 'older' ? day : day.reverse()));                   // older: newest first; newer: oldest first
+        offset += dir === 'older' ? -1 : 1;
+      }
+      return { items, next: offset >= -30 && offset <= 10 ? String(offset) : null };
+    };
+    const euro = (cents) => (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', signDisplay: 'exceptZero' });
+    const list = dayList({
+      label: 'Bookings',
+      load,
+      day: (b) => dayKey(b.at),
+      row: (b) => ({ lead: avatar({ name: b.who, icon: b.symbol, cat: b.cat }), title: b.who, sub: b.planned ? b.what + ' · expected' : b.what, value: euro(b.cents), quiet: b.planned }),
+      dayValue: (items) => euro(items.reduce((sum, b) => sum + b.cents, 0)),
+      onRowClick: (b) => toast(b.who),
+      selection: { actions: [{ label: 'Category', icon: 'tag', run: (picked) => toast(picked.length + ' to sort') }] },
+      top: () => document.querySelector('.cat-head').offsetHeight,           // the catalogue's own bar; in an app the shell's bar is found by itself
+    });
+    return list.el;
   },
   foldCard() {
     return h('div', { class: 'stack' },

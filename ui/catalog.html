@@ -385,6 +385,12 @@ import { start } from '/base/auth.js';      // setup assistant and sign-in, then
         <div class="cat-demo" data-run="timeline" data-inline></div>
       </section>
 
+      <section class="cat-item wide" id="daylist">
+        <h2 class="h1">Day list (endless)</h2>
+        <p class="muted"><code class="mono">dayList({ label, load, day, row, dayValue, selection, shape })</code> (0.4.5) is the endless list by day: a white card per day whose band (the date, and at the right a value such as the day's sum or the balance at its end) sticks flush under the top bar while the day is read, turns to glass and is pushed away by the next day. Scrolling down loads older days, scrolling up newer ones; the page keeps its place when rows come in above. <code class="mono">load({ dir, cursor, limit })</code> answers like a list of the server, <code class="mono">{ items, next }</code>. With <code class="mono">selection</code>, "Select" turns choosing on: the round tick takes the place of the avatar and a tap ticks a row. Expected rows (<code class="mono">quiet</code>) are in italics. The example has 30 days back and 10 ahead.</p>
+        <div class="cat-demo" data-run="dayList" data-inline></div>
+      </section>
+
       <section class="cat-item wide" id="foldcard">
         <h2 class="h1">Folding card</h2>
         <p class="muted"><code class="mono">foldCard({ title, sub, lead, actions, body })</code>: a card whose head opens its body (the body can be made on first opening). The head is a button with <code class="mono">aria-expanded</code>; actions sit beside it.</p>

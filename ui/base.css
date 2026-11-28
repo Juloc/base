@@ -861,6 +861,51 @@ tr.t-group + tr.t-row .t-ln.end:first-child::before { border-radius: var(--t-rai
   .t-ln::before, .t-ln::after, .t-fold::after, .t-fold-gap::before { background: CanvasText; }
 }
 
+/* ---------- dayList (0.4.5, decision 94): a white card per day, its band sticks flush under the top bar (--day-top) and turns to glass while it rides along ---------- */
+.day-list { display: flex; flex-direction: column; overflow-anchor: none; }     /* the list keeps the place itself when rows come in above (Safari has no scroll anchoring) */
+.day-tools { display: flex; justify-content: flex-end; margin-bottom: var(--s2); }
+.day-days { display: flex; flex-direction: column; gap: var(--s3); }
+.day { background: var(--surface); border-radius: var(--r-l); box-shadow: var(--shadow-card); overflow: clip; }
+.day-head { position: sticky; top: var(--day-top, 0px); z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 44px; margin: 0; padding: 8px 16px; background: var(--surface); font: 700 var(--text-s)/1.3 var(--font); transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.day-head.stuck { background: var(--glass-strong); backdrop-filter: var(--blur-bar); -webkit-backdrop-filter: var(--blur-bar); box-shadow: 0 1px 0 var(--glass-edge), 0 8px 18px -12px color-mix(in oklab, var(--text) 40%, transparent); }
+.day-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-label.today { flex: none; padding: 3px 10px; border-radius: var(--r-full); background: var(--text); color: var(--bg); }
+.day.future .day-label:not(.today) { color: var(--text-2); }
+.day-value { flex: none; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.day-rows { list-style: none; margin: 0; padding: 0 0 6px; }
+.day-item { position: relative; }
+.day-item + .day-item::before { content: ""; position: absolute; z-index: 1; top: 0; left: 16px; right: 16px; border-top: 1px solid var(--hair); }
+.day-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 8px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.day-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { button.day-row:hover { background: color-mix(in oklab, var(--accent) 6%, transparent); } }
+button.day-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -3px; border-radius: 14px; }
+.day-item.selected .day-row { background: var(--accent-soft); }
+.day-lead { flex: none; display: grid; place-items: center; min-width: 22px; }
+.day-lead.has-mark { width: 40px; height: 40px; }
+.day-lead > * { grid-area: 1 / 1; }
+.day-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.day-title { font: 600 var(--text-m)/1.3 var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-sub { font-size: var(--text-s); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-amount { flex: none; font: 600 var(--text-m)/1.3 var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.day-row.quiet :is(.day-title, .day-sub, .day-amount) { font-style: italic; font-weight: 500; color: var(--text-2); }
+.day-edge { display: flex; justify-content: center; min-height: 1px; }
+.day-edge .loading { padding: var(--s4); }
+.day-error { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s3); padding: var(--s3); color: var(--text-2); font-size: var(--text-s); }
+.day-empty .empty { border: 0; background: none; box-shadow: none; }
+/* the tick: the base's check box drawn on a row that is a button (a check box cannot sit inside a button); it takes the place of the lead while choosing */
+.tick { display: none; position: relative; width: 22px; height: 22px; border: 2px solid var(--line-strong); border-radius: 7px; background: var(--surface); transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.tick::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 11px; border: solid transparent; border-width: 0 2.5px 2.5px 0; transform: translate(-50%, -62%) rotate(45deg); }
+.selecting .tick { display: block; }
+.selecting .day-lead > :not(.tick) { display: none; }
+.selected .tick { border-color: var(--accent-ink); background: var(--accent-ink); }
+.selected .tick::after { border-color: var(--surface); }
+@media (forced-colors: active) {
+  .day { border: 1px solid CanvasText; }
+  .tick { border-color: ButtonText; background: Canvas; }
+  .selected .tick { border-color: Highlight; background: Highlight; }
+  .selected .tick::after { border-color: HighlightText; }
+}
+
 /* ---------- categories (0.4.4, decision 87): class="cat-0" ... "cat-9" names the colour (--cat), the parts below use it ---------- */
 .cat-0 { --cat: var(--cat-0); } .cat-1 { --cat: var(--cat-1); } .cat-2 { --cat: var(--cat-2); } .cat-3 { --cat: var(--cat-3); } .cat-4 { --cat: var(--cat-4); }
 .cat-5 { --cat: var(--cat-5); } .cat-6 { --cat: var(--cat-6); } .cat-7 { --cat: var(--cat-7); } .cat-8 { --cat: var(--cat-8); } .cat-9 { --cat: var(--cat-9); }
