@@ -52,11 +52,11 @@ jobs:
         with:
           global-json-file: global.json
       - name: Make an app
-        run: scripts/new-app.sh ci-probe "$RUNNER_TEMP/ci-probe" --accent 152
+        run: scripts/new-app.sh ci-probe "$RUNNER_TEMP/ci-probe" --accent 152 --head
       - name: The made app builds
         run: dotnet build "$RUNNER_TEMP/ci-probe/CiProbe.slnx"
       - name: The made app is clean
-        run: scripts/check-app.sh "$RUNNER_TEMP/ci-probe"
+        run: scripts/check-app.sh "$RUNNER_TEMP/ci-probe" --head
       - name: Its image builds
         run: docker build -t ci-probe:ci "$RUNNER_TEMP/ci-probe"
       - name: The image of the start app builds

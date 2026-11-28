@@ -2,14 +2,17 @@
 # Shows how far an app is from the base: its copy of the base against the version it was taken from and against this repository,
 # and a few rules that can be checked from the files alone.
 #
-#   scripts/check-app.sh <app folder>
+#   scripts/check-app.sh <app folder> [--head]
 #
+# The copy is compared with the newest release (tag v*), with --head with this working tree as it is.
 # Exit code 0: clean (the base may still be newer; that is said, not failed). 1: files of the base were edited in the app, or a rule is broken.
 set -uo pipefail
 source "$(dirname "$0")/lib.sh"
 
-app="${1:-}"
-[ -n "$app" ] && [ -d "$app" ] || fail "usage: check-app.sh <app folder>"
+app="${1:-}"; source_mode=release
+[ "${2:-}" != --head ] || source_mode=head
+[ -z "${2:-}" ] || [ "$2" = --head ] || fail "unknown argument: $2"
+[ -n "$app" ] && [ -d "$app" ] || fail "usage: check-app.sh <app folder> [--head]"
 app="$(cd "$app" && pwd)"
 [ -f "$app/base/MANIFEST" ] || fail "$app has no base/MANIFEST: it was not made with new-app.sh"
 
@@ -18,9 +21,10 @@ note() { printf '  %s\n' "$*"; }
 bad() { printf '  %-8s %s\n' "$1" "$2"; problems=$((problems + 1)); }
 
 app_version="$(tr -d '[:space:]' < "$app/base/VERSION")"
-repo_version="$(tr -d '[:space:]' < "$BASE_ROOT/VERSION")"
+use_source "$source_mode"
+repo_version="$(tr -d '[:space:]' < "$BASE_SRC/VERSION")"
 echo "App:  $app"
-echo "Base: copy is $app_version, this repository is $repo_version"
+echo "Base: copy is $app_version, the base is $repo_version ($BASE_FROM)"
 
 # ---- 1. the copy against its own manifest: was anything in base/ edited in the app? ----
 echo
@@ -39,8 +43,8 @@ done < <(find "$app/base" -type f -print0)
 
 # ---- 2. the copy against this repository: what would sync-base.sh bring? ----
 echo
-echo "Copy of the base against this repository"
-tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+echo "Copy of the base against $BASE_FROM"
+tmp="$BASE_TMP/check"; mkdir -p "$tmp"
 copy_base "$tmp"
 behind="$(diff <(sort -k2 "$app/base/MANIFEST") <(sort -k2 "$tmp/base/MANIFEST") | grep '^[<>]' | awk '{print $3}' | sort -u)"
 if [ -z "$behind" ]; then note "up to date"

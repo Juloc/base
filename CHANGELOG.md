@@ -6,6 +6,7 @@ what apps rely on; such changes are marked **Breaking**.
 
 ## 0.4.5 (not released yet)
 
+- **Scripts: an app gets the newest release, not the working tree** (found by finance; decision 90). `sync-base.sh`, `new-app.sh` and `check-app.sh` take the base from the tag `v*` with the highest version, unpacked from git; until now they copied the working tree, unreleased changes included. `--head` takes the working tree on purpose (to try something in an app before the release). `check-app.sh` names what it compared with.
 - **Fix: an app's own icon and worker win** (found by caddy; wrong since 0.4.0). A file in the app's `wwwroot` with the name of one the base makes (`/icon.svg`, `/icon-maskable.svg`, the PNG icons, `/manifest.webmanifest`, `/sw.js`) is now served instead of the made one; until now the base's endpoint always answered first. What the app does not bring is still made by the base. An app with only its own `icon.svg` gets it in the tab and the menu; for the installed app (PNGs, apple-touch) it brings the PNGs too, because the base draws those from `Icon` and cannot read an SVG.
 
 ## 0.4.4 (2026-11-28)
